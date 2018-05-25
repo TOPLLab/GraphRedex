@@ -80,10 +80,6 @@
     [`((store (x ,x)) (threads ,t1 ,t2))
        (list (cons 'x x))]))
 
-
 (define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
 
 (run-server reductions term->kv)
-
-
-

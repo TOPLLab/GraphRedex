@@ -1,3 +1,13 @@
+/*
+  ________                    .__      __________           .___             
+ /  _____/___________  ______ |  |__   \______   \ ____   __| _/____ ___  ___
+/   \  __\_  __ \__  \ \____ \|  |  \   |       _// __ \ / __ |/ __ \\  \/  /
+\    \_\  \  | \// __ \|  |_> >   Y  \  |    |   \  ___// /_/ \  ___/ >    < 
+ \______  /__|  (____  /   __/|___|  /  |____|_  /\___  >____ |\___  >__/\_ \
+        \/           \/|__|        \/          \/     \/     \/    \/      \/
+ Christophe.Scholliers@UGent and Thomas.Dupriez@ens-paris-saclay.fr
+*/
+
 function connectToNeo4jDatabase() {
     var authToken = neo4j.v1.auth.basic("neo4j", "neo4j-js-password");
     console.log(authToken);
@@ -41,7 +51,7 @@ window.onload = function() {
     sock.onmessage = function(e) {
         var obj = JSON.parse(e.data);
         console.log("obj= " + obj);
-        // obj = obj.next;
+        obj = obj.next;
         console.log("obj.next= " + obj);
         for (var i in obj) {
             console.log(obj[i]);
@@ -72,7 +82,7 @@ window.onload = function() {
         console.log("close", arguments);
     };
     window.send = function() {
-        var term = document.getElementById("Term").value;
+        var term = editor.getValue();
         sock.send(term);
     };
 };

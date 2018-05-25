@@ -1,6 +1,7 @@
 #lang racket
 (require redex)
 (require graph)
+(require net/websocket)
 
 (provide make-graph-with-relation show-dot)
 
@@ -23,3 +24,26 @@
 
 ;; Function to print out the dot information 
 (define (show-dot g) (display (graphviz g)))
+
+
+
+
+(ws-serve
+ #:port 8080
+ (λ (wsc _)
+   (let loop ()
+     (define m (ws-recv wsc))
+     (printf "~a\n" m)
+     (unless (eof-object? m)
+       (ws-send! wsc m)
+       (loop))))
+ #:conn-headers
+ (λ (_ hs)
+   (define origin
+     (header-value (headers-assq* #"Origin" hs)))
+   (values
+    (list
+     (make-header #"Sec-WebSocket-Origin" origin)
+     (make-header #"Sec-WebSocket-Location"
+                  #"ws://localhost:8080/"))
+    #f)))
