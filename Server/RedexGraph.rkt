@@ -5,8 +5,19 @@
 (require redex)
 (require graph)
 (require json)
+(require file/md5)
+(require file/sha1)
+;  ________                    .__      __________           .___             
+; /  _____/___________  ______ |  |__   \______   \ ____   __| _/____ ___  ___
+;/   \  __\_  __ \__  \ \____ \|  |  \   |       _// __ \ / __ |/ __ \\  \/  /
+;\    \_\  \  | \// __ \|  |_> >   Y  \  |    |   \  ___// /_/ \  ___/ >    < 
+; \______  /__|  (____  /   __/|___|  /  |____|_  /\___  >____ |\___  >__/\_ \
+;        \/           \/|__|        \/          \/     \/     \/    \/      \/
+; Christophe.Scholliers@UGent and Thomas.Dupriez@ens-paris-saclay.fr
+;
 
-;; Code to make a graph from the reductions 
+; Code to make a graph from a reduction relation and a term
+; This will only work for finite expansions
 (define (make-graph-with-relation relation term) 
   (define g (unweighted-graph/directed '()))
   (define (add-if-new v)
@@ -23,39 +34,45 @@
   (expand-term term)
   g)
 
-(define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
 ;; Function to print out the dot information 
 (define (show-dot g) (display (graphviz g)))
 
+
+(define (add-kv k v l)
+  (cons (cons k v) l))
+
 (define (jsont t)
   (lambda (e)
-   (let ((kv_list (cons (cons 'term (expr->string e)) (t e))))
-     (make-hash kv_list))))
+   (let* ((term (expr->string e))
+          (kv_list (add-kv  'term term (t e)))
+          (id  (bytes->hex-string (md5 term))))
+     (make-hash (add-kv 'md5 id kv_list)))))
 
-(define (new-handler relation transform)	
+(define (trans->json t ts trans)
+ (jsexpr->string 
+  (make-hash
+   (list 
+    (cons 'from (trans t))
+    (cons 'next (map trans ts))))))
+
+(define (new-handler relation trans)	
  (define (echo-handler c state) 
   (define (loop)
-   (let* ((received (ws-recv c #:payload-type 'text))
-	  (term (read-from-string received))
-    	  (next-terms 
-	   (jsexpr->string 
-	    (make-hash
-	     (list 
-	      (cons 'from (expr->string term))
-	      (cons 'next (map transform (apply-reduction-relation relation term))))))))
+   (let* ((received   (ws-recv c #:payload-type 'text))
+	  (term       (read-from-string received))
+	  (next-terms (apply-reduction-relation relation term))
+	  (json       (trans->json term next-terms trans)))
     (unless (eof-object? received)
-     (printf "next values for term: ~a => ~a\n" term  next-terms)
-     (ws-send! c next-terms))
+     (printf "Sending ~a\n" json)
+     (ws-send! c json))
     (loop)))
   (loop)
-  (display "Web Socked was closed\n")
+  (printf "Web Socked was closed\n")
   (ws-close! c))
  echo-handler)
 
-
-(define (run-server relation t)
- (let ((stop-service (ws-serve #:port 8081 (new-handler relation (jsont t)))))
-  (printf "Redex-Server Running. Hit enter to stop service.\n")
+(define (run-server relation trans)
+ (let ((stop-service (ws-serve #:port 8081 (new-handler relation (jsont trans)))))
+  (printf "Graph-Redex-Server Running. Hit enter to stop service.\n")
   (void (read-line))
   (stop-service)))
-
