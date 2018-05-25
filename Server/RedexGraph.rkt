@@ -1,0 +1,51 @@
+#lang racket
+(require net/rfc6455)
+(require mzlib/string)
+(provide run-server make-graph-with-relation show-dot)
+(require redex)
+(require graph)
+
+;; Code to make a graph from the reductions 
+(define (make-graph-with-relation relation term) 
+  (define g (unweighted-graph/directed '()))
+  (define (add-if-new v)
+    (when (not (has-vertex? g v))
+      (add-vertex! g v)))
+  (define (add-edge! g u)
+    (lambda (v) (add-directed-edge! g u v))) 
+  (define (expand-term term)
+    (let ((next-terms (apply-reduction-relation relation term)))
+      (add-if-new term)
+      (map add-if-new next-terms) 
+      (map (add-edge! g term) next-terms)
+      (map expand-term next-terms)))
+  (expand-term term)
+  g)
+
+(define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
+;; Function to print out the dot information 
+(define (show-dot g) (display (graphviz g)))
+
+(define (new-handler relation)	
+ (define (echo-handler c state) 
+  (define (loop)
+   (let* ((received (ws-recv c #:payload-type 'text))
+	  (term (read-from-string received))
+    	  (next-terms (apply-reduction-relation relation term)))
+    (unless (eof-object? received)
+     (printf "next values for term: ~a => ~a\n" term  next-terms)
+     (ws-send! c (format "Next-Terms: ~v " next-terms)))
+    (loop)))
+  (loop)
+  (display "Web Socked was closed\n")
+  (ws-close! c))
+ echo-handler)
+
+(define (run-server relation)
+ (let ((stop-service (ws-serve #:port 8081 (new-handler relation))))
+  (display (read-from-string "'(+ 2 3)"))
+  (printf "Redex-Server Running. Hit enter to stop service.\n")
+  (void (read-line))
+  (stop-service)))
+
+
