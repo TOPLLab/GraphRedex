@@ -1,3 +1,28 @@
+function connectToNeo4jDatabase() {
+    var authToken = neo4j.v1.auth.basic("neo4j", "neo4j-js-password");
+    console.log(authToken);
+    var driver = neo4j.v1.driver("bolt://localhost", authToken, {
+        encrypted: false,
+    });
+    var session = driver.session();
+}
+
+function runCypherStatement(statement) {
+    session.run(statement, parameters).subscribe({
+        onNext: function(record) {
+            // On receipt of RECORD
+            var tr = document.createElement("tr");
+            record.forEach(function(value) {
+                var td = document.createElement("td");
+                td.appendChild(document.createTextNode(value));
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        },
+        onCompleted: function(metadata) {},
+    });
+}
+
 window.onload = function() {
     var sock = new WebSocket("ws://localhost:8081/");
     var messagecounter = 0;
@@ -10,6 +35,9 @@ window.onload = function() {
             console.log(obj[i]);
             for (k in obj[i]) {
                 console.log("K: " + k + " V: " + obj[i][k]);
+                runCypherStatement(
+                    "CREATE (e:Term {" + k + ": " + obj[i][k] + "}) RETURN e",
+                );
             }
         }
 
