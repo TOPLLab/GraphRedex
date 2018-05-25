@@ -4,6 +4,7 @@
 (provide run-server make-graph-with-relation show-dot)
 (require redex)
 (require graph)
+(require json)
 
 ;; Code to make a graph from the reductions 
 (define (make-graph-with-relation relation term) 
@@ -26,24 +27,28 @@
 ;; Function to print out the dot information 
 (define (show-dot g) (display (graphviz g)))
 
-(define (new-handler relation)	
+(define (jsont t)
+  (lambda (e)
+   (let ((kv_list (cons (cons 'term (expr->string e)) (t e))))
+     (make-hash kv_list))))
+
+(define (new-handler relation transform)	
  (define (echo-handler c state) 
   (define (loop)
    (let* ((received (ws-recv c #:payload-type 'text))
 	  (term (read-from-string received))
-    	  (next-terms (apply-reduction-relation relation term)))
+    	  (next-terms (jsexpr->string (map transform (apply-reduction-relation relation term)))))
     (unless (eof-object? received)
      (printf "next values for term: ~a => ~a\n" term  next-terms)
-     (ws-send! c (format "Next-Terms: ~v " next-terms)))
+     (ws-send! c next-terms))
     (loop)))
   (loop)
   (display "Web Socked was closed\n")
   (ws-close! c))
  echo-handler)
 
-(define (run-server relation)
- (let ((stop-service (ws-serve #:port 8081 (new-handler relation))))
-  (display (read-from-string "'(+ 2 3)"))
+(define (run-server relation t)
+ (let ((stop-service (ws-serve #:port 8081 (new-handler relation (jsont t)))))
   (printf "Redex-Server Running. Hit enter to stop service.\n")
   (void (read-line))
   (stop-service)))

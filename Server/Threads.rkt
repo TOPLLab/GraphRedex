@@ -75,6 +75,15 @@
     [(? number?) 0]
     [`(+ ,e1 ,e2) (+ 1 (count e1) (count e2))]))
 
+(define (term->kv exp)
+  (match exp
+    [`((store (x ,x)) (threads ,t1 ,t2))
+       (list (cons 'x x))]))
+
 
 (define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
-(run-server reductions)
+
+(run-server reductions term->kv)
+
+
+
