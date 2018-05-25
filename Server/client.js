@@ -4,26 +4,35 @@ function connectToNeo4jDatabase() {
     var driver = neo4j.v1.driver("bolt://localhost", authToken, {
         encrypted: false,
     });
-    var session = driver.session();
+    session = driver.session();
 }
 
 function runCypherStatement(statement) {
-    session.run(statement, parameters).subscribe({
+    session.run(statement).subscribe({
         onNext: function(record) {
             // On receipt of RECORD
-            var tr = document.createElement("tr");
-            record.forEach(function(value) {
-                var td = document.createElement("td");
-                td.appendChild(document.createTextNode(value));
-                tr.appendChild(td);
-            });
-            table.appendChild(tr);
+            // var tr = document.createElement("tr");
+            // record.forEach( function( value ) {
+            //     var td = document.createElement("td");
+            //     td.appendChild(document.createTextNode(value));
+            //     tr.appendChild(td);
+            // });
+            // table.appendChild(tr);
         },
         onCompleted: function(metadata) {},
     });
 }
 
+function valueToStringForCypherStatement(value) {
+    if (typeof value === "string") {
+        return '"' + value + '"';
+    } else {
+        return "" + value;
+    }
+}
+
 window.onload = function() {
+    connectToNeo4jDatabase();
     var sock = new WebSocket("ws://localhost:8081/");
     var messagecounter = 0;
     sock.onopen = function() {
@@ -31,14 +40,30 @@ window.onload = function() {
     };
     sock.onmessage = function(e) {
         var obj = JSON.parse(e.data);
+        console.log("obj= " + obj);
+        // obj = obj.next;
+        console.log("obj.next= " + obj);
         for (var i in obj) {
             console.log(obj[i]);
+            var cypherStatement = "CREATE (e:Term {";
+            cypherStatementEnd = "}) RETURN e";
+            var addComma = false;
             for (k in obj[i]) {
                 console.log("K: " + k + " V: " + obj[i][k]);
-                runCypherStatement(
-                    "CREATE (e:Term {" + k + ": " + obj[i][k] + "}) RETURN e",
-                );
+                if (addComma) {
+                    cypherStatement = cypherStatement + ", ";
+                } else {
+                    addComma = true;
+                }
+                cypherStatement =
+                    cypherStatement +
+                    k +
+                    ": " +
+                    valueToStringForCypherStatement(obj[i][k]);
             }
+            cypherStatement = cypherStatement + cypherStatementEnd;
+            console.log("Cypher statement: " + cypherStatement);
+            runCypherStatement(cypherStatement);
         }
 
         //console.log('message', e.data);
