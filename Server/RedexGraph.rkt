@@ -37,7 +37,12 @@
   (define (loop)
    (let* ((received (ws-recv c #:payload-type 'text))
 	  (term (read-from-string received))
-    	  (next-terms (jsexpr->string (map transform (apply-reduction-relation relation term)))))
+    	  (next-terms 
+	   (jsexpr->string 
+	    (make-hash
+	     (list 
+	      (cons 'from (expr->string term))
+	      (cons 'next (map transform (apply-reduction-relation relation term))))))))
     (unless (eof-object? received)
      (printf "next values for term: ~a => ~a\n" term  next-terms)
      (ws-send! c next-terms))
@@ -47,10 +52,10 @@
   (ws-close! c))
  echo-handler)
 
+
 (define (run-server relation t)
  (let ((stop-service (ws-serve #:port 8081 (new-handler relation (jsont t)))))
   (printf "Redex-Server Running. Hit enter to stop service.\n")
   (void (read-line))
   (stop-service)))
-
 
