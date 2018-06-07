@@ -85,4 +85,8 @@ window.onload = function() {
         var term = editor.getValue();
         sock.send(term);
     };
+    window.emptyDatabase = function() {
+        runCypherStatement("MATCH (n) DELETE n");
+        console.log("Neo4j Database emptied");
+    };
 };
