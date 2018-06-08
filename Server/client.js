@@ -50,30 +50,18 @@ window.onload = function() {
     };
     sock.onmessage = function(e) {
         var obj = JSON.parse(e.data);
-        console.log("obj= " + obj);
+        // console.log("obj= "+obj)
+        var from = obj.from;
+        console.log("from object:");
+        console.log(from);
         obj = obj.next;
-        console.log("obj.next= " + obj);
+        console.log("next object:");
+        console.log(obj);
         for (var i in obj) {
-            console.log(obj[i]);
-            var cypherStatement = "CREATE (e:Term {";
-            cypherStatementEnd = "}) RETURN e";
-            var addComma = false;
-            for (k in obj[i]) {
-                console.log("K: " + k + " V: " + obj[i][k]);
-                if (addComma) {
-                    cypherStatement = cypherStatement + ", ";
-                } else {
-                    addComma = true;
-                }
-                cypherStatement =
-                    cypherStatement +
-                    k +
-                    ": " +
-                    valueToStringForCypherStatement(obj[i][k]);
+            console.log(obj[i].term);
+            if (!isTermAlreadyInTheDatabase(obj[i].term)) {
+                addTermNodeToDatabase(obj[i]);
             }
-            cypherStatement = cypherStatement + cypherStatementEnd;
-            console.log("Cypher statement: " + cypherStatement);
-            runCypherStatement(cypherStatement);
         }
 
         //console.log('message', e.data);
@@ -88,5 +76,55 @@ window.onload = function() {
     window.emptyDatabase = function() {
         runCypherStatement("MATCH (n) DELETE n");
         console.log("Neo4j Database emptied");
+    };
+    window.isTermAlreadyInTheDatabase = function(term) {
+        // Returns false if a node with the same term as the argument is in the database
+        // Otherwise, returns the id of a node that has the same term as the argument.
+        var statement = 'MATCH (e) WHERE e.term = "' + term + '" RETURN ID(e)';
+        console.log("isTermAlreadyInTheDatabase");
+        session.run(statement).then(
+            (result) => {
+                var records = result.records;
+                var summary = result.summary;
+                console.log("records= ");
+                console.log(records);
+                if (records.length >= 1) {
+                    console.log("Yes. ID= ");
+                    console.log(records[0]);
+                    for (var k in records[0]) {
+                        console.log("k=");
+                        console.log(k);
+                        console.log("v=");
+                        console.log(records[0][k]);
+                    }
+                } else {
+                    console.log("No");
+                }
+            },
+            (error) => {
+                console.log("cypher statement error");
+            },
+        );
+    };
+    window.addTermNodeToDatabase = function(termObject) {
+        console.log(termObject);
+        var cypherStatement = "CREATE (e:Term {";
+        cypherStatementEnd = "}) RETURN e";
+        var addComma = false;
+        for (k in termObject) {
+            if (addComma) {
+                cypherStatement = cypherStatement + ", ";
+            } else {
+                addComma = true;
+            }
+            cypherStatement =
+                cypherStatement +
+                k +
+                ": " +
+                valueToStringForCypherStatement(termObject[k]);
+        }
+        cypherStatement = cypherStatement + cypherStatementEnd;
+        console.log("Cypher statement: " + cypherStatement);
+        runCypherStatement(cypherStatement);
     };
 };
