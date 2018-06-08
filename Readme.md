@@ -1,3 +1,4 @@
+## Installation Instructions
 - Get neo4j desktop. https://neo4j.com/download/
 - Clone our github repository (it's a private repository). https://github.com/chscholl/GraphRedex
 - Run neo4j desktop, then:
