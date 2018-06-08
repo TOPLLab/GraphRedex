@@ -6,9 +6,9 @@
 	- Create a graph(=database) with password "neo4j-js-password" (this password is hardcoded in client.js)
 	- Start it
 	- Click "Manage", then "Open Browser"
-- $ ./installRequiredRacketPackages.sh
+- `./installRequiredRacketPackages.sh`
 	to install the required racket packages
-- $ racket Threads.rkt
+- `racket Threads.rkt`
 	to run the racket server
 - Open web.html in your browser
 	- Click "Send term"
