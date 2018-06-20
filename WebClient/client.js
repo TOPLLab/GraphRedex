@@ -141,6 +141,26 @@ window.refreshGraph = function() {
     return false;
 };
 
+var redexMessageId = 0;
+function getRedexMessageId() {
+    var result = redexMessageId;
+    redexMessageId = redexMessageId + 1;
+    return result;
+}
+var redexMessagePromises = [];
+
+function socketSendReturnPromise(socket, message) {
+    var messageId = getRedexMessageId();
+    var messageWithId = messageId + "#####" + message;
+    console.log("Sending to redex:");
+    console.log(messageWithId);
+    var promise = new Promise((resolve, reject) => {
+        redexMessagePromises[messageId] = (result) => resolve(result);
+        socket.send(messageWithId);
+    });
+    return promise;
+}
+
 window.onload = function() {
     document.getElementById("divbody").onclick = (e) => {
         closeContextualMenu();
@@ -169,6 +189,8 @@ window.onload = function() {
         //         addTermObjectToDatabase(obj[i]);
         //     }
         // }
+        var messageId = parseInt(obj.messageId);
+        redexMessagePromises[messageId](obj);
 
         getOrCreateNodeForTermObject(obj.from, (fromNodeID) => {
             var reductionTermObjects = obj.next;
@@ -196,9 +218,16 @@ window.onload = function() {
         sendTerm(term);
     };
     window.sendTerm = function(term) {
-        console.log("Sending to redex:");
-        console.log(term);
-        sock.send(term);
+        var promise = socketSendReturnPromise(sock, term);
+        promise.then(
+            (result) => {
+                console.log("Promise resolved. Result:");
+                console.log(result);
+            },
+            (error) => {
+                console.log("error");
+            },
+        );
     };
     window.emptyDatabase = function() {
         runCypherStatement("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");

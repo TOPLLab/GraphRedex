@@ -48,10 +48,11 @@
           (id  (bytes->hex-string (md5 term))))
      (make-hash (add-kv 'md5 id kv_list)))))
 
-(define (trans->json t ts trans)
+(define (trans->json messageId t ts trans)
  (jsexpr->string 
   (make-hash
    (list 
+    (cons 'messageId messageId)
     (cons 'from (trans t))
     (cons 'next (map trans ts))))))
 
@@ -59,12 +60,14 @@
  (define (echo-handler c state) 
   (define (loop)
    (let* ((received   (ws-recv c #:payload-type 'text))
-    (term       (read-from-string received))
+    ;(term       (read-from-string received))
+    (messageId  (list-ref (string-split received "#####") 0))
+    (term       (read-from-string (list-ref (string-split received "#####") 1)))
     (next-terms (apply-reduction-relation relation term))
-    (json       (trans->json term next-terms trans)))
-    (printf "Receiving ~a\n" received)
+    (json       (trans->json messageId term next-terms trans)))
+    (printf "Receiving: ~a\n" received)
     (unless (eof-object? received)
-     (printf "Sending ~a\n" json)
+     (printf "Sending: ~a\n" json)
      (ws-send! c json))
     (loop)))
   (loop)
