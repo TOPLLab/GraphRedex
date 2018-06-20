@@ -49,9 +49,101 @@ window.onNodeClicked = function(node) {
     // Called in neod3.js when a node is clicked on the graph visualisation
     console.log(node);
     editor.setValue(node.propertyMap.term);
+
+    var graphArea = document.getElementById("graph");
+    // console.log(graphArea);
+    var rect = graphArea.getBoundingClientRect();
+    // console.log(rect.top, rect.right, rect.bottom, rect.left);
+
+    document.getElementById("rmenu").className = "show";
+    document.getElementById("rmenu").style.top =
+        node.py + graphArea.offsetTop + "px";
+    document.getElementById("rmenu").style.left = node.px + "px";
+    // document.getElementById("rmenu").style.left = rect.bottom + 'px';
+    // document.getElementById("rmenu").style.left = rect.left + 'px';
+    setNodeForContextualMenu(node);
+};
+
+var nodeForContextualMenu = null;
+window.getNodeForContextualMenu = function() {
+    return nodeForContextualMenu;
+};
+function setNodeForContextualMenu(node) {
+    nodeForContextualMenu = node;
+}
+
+function closeContextualMenu() {
+    document.getElementById("rmenu").className = "hide";
+}
+
+window.contextualMenuAction_ReduceOnce = function(node) {
+    console.log(node);
+};
+
+window.refreshGraph = function() {
+    var graphId, tableId, sourceId, execId, urlSource, renderGraph, query;
+    graphId = "graph";
+    tableId = "datatable";
+    sourceId = "cypher";
+    execId = "execute";
+    urlSource = function() {
+        return {
+            url: $("#neo4jUrl").val(),
+            user: $("#neo4jUser").val(),
+            pass: $("#neo4jPass").val(),
+        };
+    };
+    renderGraph = true;
+    var cbResult = null;
+    query = " MATCH (n)-[r]->(m) RETURN n,r,m LIMIT 50;";
+    var neod3 = new Neod3Renderer();
+    var neo = new Neo(urlSource);
+    try {
+        console.log("Executing Query", query);
+        var execButton = $(this).find("i");
+        execButton.toggleClass("fa-play-circle-o fa-spinner fa-spin");
+        neo.executeQuery(query, {}, function(err, res) {
+            execButton.toggleClass("fa-spinner fa-spin fa-play-circle-o");
+            res = res || {};
+            var graph = res.graph;
+            if (renderGraph) {
+                if (graph) {
+                    var c = $("#" + graphId);
+                    c.empty();
+                    neod3.render(graphId, c, graph);
+                    renderResult(tableId, res.table);
+                } else {
+                    if (err) {
+                        console.log(err);
+                        if (err.length > 0) {
+                            sweetAlert(
+                                "Cypher error",
+                                err[0].code + "\n" + err[0].message,
+                                "error",
+                            );
+                        } else {
+                            sweetAlert(
+                                "Ajax " + err.statusText,
+                                "Status " + err.status + ": " + err.state(),
+                                "error",
+                            );
+                        }
+                    }
+                }
+            }
+            if (cbResult) cbResult(res);
+        });
+    } catch (e) {
+        console.log(e);
+        sweetAlert("Catched error", e, "error");
+    }
+    return false;
 };
 
 window.onload = function() {
+    document.getElementById("divbody").onclick = (e) => {
+        closeContextualMenu();
+    };
     connectToNeo4jDatabase();
     var sock = new WebSocket("ws://localhost:8081/");
     var messagecounter = 0;
@@ -99,6 +191,10 @@ window.onload = function() {
     };
     window.send = function() {
         var term = editor.getValue();
+        // sock.send(term);
+        sendTerm(term);
+    };
+    window.sendTerm = function(term) {
         sock.send(term);
     };
     window.emptyDatabase = function() {

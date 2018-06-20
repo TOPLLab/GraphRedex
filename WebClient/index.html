@@ -24,8 +24,10 @@
   <link rel="stylesheet" href="styles/sweet-alert.css">
   <link rel="stylesheet" href="styles/gh-fork-ribbon.css">
   <title>Cy2NeoD3 - Tiny Neo4j Cypher Workbench</title>
+  <link rel="stylesheet" href="contextmenu.css" />
 </head>
 <body>
+  <div id="divbody">
   <div>
   <input class="form-control" type="url" value="http://localhost:7474" id="neo4jUrl"/><br/>
   <input class="form-control" type="text" size="8" value="neo4j" id="neo4jUser"/>
@@ -51,6 +53,7 @@
   <button style="color: white" onclick="send()">Send Term</button>
   <button style="color: white" onclick="emptyDatabase()">Empty Database</button>
   <button style="color: white" onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button>
+  <button style="color: white" onclick="refreshGraph()">Refresh Graph</button>
 
 <div role="tabpanel">
 
@@ -99,5 +102,23 @@
 		new Cy2NeoD3(config,"graph","datatable","cypher","execute", connection , true);
 	});
 </script>
+
+
+  <div class="hide" id="rmenu">
+      <ul>
+          <li>
+              <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu())">Reduce Once</button>
+          </li>
+
+          <li>
+              <a href="http://localhost:8080/login">Localhost</a>
+          </li>
+
+          <li>
+              <a href="C:\">C</a>
+          </li>
+      </ul>
+  </div>
+  </div>
 </body>
 </html>
