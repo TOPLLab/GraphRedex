@@ -8,8 +8,13 @@
 	- Click "Manage", then "Open Browser"
 - `./installRequiredRacketPackages.sh`
 	to install the required racket packages
-- `racket Threads.rkt`
+- `racket RedexServer/Threads.rkt`
 	to run the racket server
-- Open web.html in your browser
+- Open WebClient/index.html in your browser
 	- Click "Send term"
-- In the neo4j browser, run the query "MATCH (e) RETURN e" to show all the nodes in the graph. "MATCH (e) DELETE e" to remove them.
+- Click the blue triangle button to show the graph in the webpage
+- Click on any graph node to have its term written in the text area
+- Click "Send term" again...
+
+## Credits
+- Cy2Neo: https://github.com/jexp/cy2neo

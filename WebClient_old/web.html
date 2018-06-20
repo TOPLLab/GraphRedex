@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Graph Redex</title>
+    <script type="text/javascript" src="client.js"></script>
+    <script src="neo4j-web.js"></script>
+    <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <style type="text/css" media="screen">
+    #Term { 
+/*        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;*/
+        /*height: 200px;*/
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+  </head>
+   <body bgcolor="#898484"> 
+    <h1>Graph Redex</h1>
+    <p>
+
+	<div id="Term" style="height:100px;">
+((store (x 1)) 
+ (threads 
+  (set! x (+ x -1)) 
+  (set! x (+ x 1))))
+	</div>
+
+	<script>
+	var editor = ace.edit("Term");
+	editor.setTheme("ace/theme/monokai");
+	editor.session.setMode("ace/mode/scheme");
+	</script>
+
+
+    <button onclick="send()">Send Term</button>
+    <button onclick="emptyDatabase()">Empty Database</button>
+    <button onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button>
+    </p>
+  </body>
+</html>
