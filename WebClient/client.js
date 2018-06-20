@@ -78,6 +78,7 @@ function closeContextualMenu() {
 
 window.contextualMenuAction_ReduceOnce = function(node) {
     console.log(node);
+    window.sendTerm(node.propertyMap.term);
 };
 
 window.refreshGraph = function() {
@@ -151,7 +152,10 @@ window.onload = function() {
         console.log("open", arguments);
     };
     sock.onmessage = function(e) {
+        console.log("Received from redex: " + e);
         var obj = JSON.parse(e.data);
+        console.log("Received from redex (parsed):");
+        console.log(obj);
         // console.log("obj= "+obj)
         // var from = obj.from;
         // console.log("from object:");
@@ -181,11 +185,8 @@ window.onload = function() {
                 );
             }
         });
-
-        // MATCH (e) WHERE ID(e)=99 MATCH (f) WHERE ID(f)=100 CREATE (e)-[:REDUCESTO]->(f)
-
-        //console.log('message', e.data);
     };
+    refreshGraph();
     sock.onclose = function() {
         console.log("close", arguments);
     };
@@ -195,6 +196,8 @@ window.onload = function() {
         sendTerm(term);
     };
     window.sendTerm = function(term) {
+        console.log("Sending to redex:");
+        console.log(term);
         sock.send(term);
     };
     window.emptyDatabase = function() {
@@ -259,12 +262,7 @@ window.onload = function() {
             " CREATE (e)-[:REDUCESTO]->(f)";
         session.run(cypherStatement).then(
             (result) => {
-                console.log(
-                    "Set ReducesTo relation from node of ID " +
-                        sourceNodeID +
-                        " to node of ID " +
-                        targetNodeID,
-                );
+                // console.log("Set ReducesTo relation from node of ID "+sourceNodeID+" to node of ID "+targetNodeID);
             },
             (error) => {
                 console.log(
@@ -349,9 +347,7 @@ window.onload = function() {
             (result) => {
                 var records = result.records;
                 var nodeID = records[0]._fields[0].low;
-                console.log(
-                    "Added term node of ID " + nodeID + " to database.",
-                );
+                // console.log("Added term node of ID "+nodeID+" to database.");
                 callback(nodeID);
             },
             (error) => {
