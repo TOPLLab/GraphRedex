@@ -8,62 +8,66 @@
  Christophe.Scholliers@UGent and Thomas.Dupriez@ens-paris-saclay.fr
 */
 
+// #############################
+// ##### Notes (Start)
+
 // The fact that the nodes in the visualisation have their id as label instead of something else
 //  has been obtained by replacing the line "captionText = style.interpolate(template, node.id, node.propertyMap);"
 //  with "captionText = style.interpolate(node.id);" in neod3.js
 
-function connectToNeo4jDatabase() {
-    var authToken = neo4j.v1.auth.basic("neo4j", "neo4j-js-password");
-    console.log(authToken);
-    var driver = neo4j.v1.driver("bolt://localhost", authToken, {
-        encrypted: false,
-    });
-    session = driver.session();
-}
+// Good introduction to the cypher query language: https://neo4j.com/developer/cypher-query-language/
 
-function runCypherStatement(statement) {
-    session.run(statement).subscribe({
-        onNext: function(record) {
-            // On receipt of RECORD
-            // var tr = document.createElement("tr");
-            // record.forEach( function( value ) {
-            //     var td = document.createElement("td");
-            //     td.appendChild(document.createTextNode(value));
-            //     tr.appendChild(td);
-            // });
-            // table.appendChild(tr);
-        },
-        onCompleted: function(metadata) {},
-    });
-}
+// ##### Notes (End)
+// #############################
 
-function valueToStringForCypherStatement(value) {
-    if (typeof value === "string") {
-        return '"' + value + '"';
-    } else {
-        return "" + value;
-    }
-}
+window.onload = function() {
+    setBehaviourClosingContextualMenu();
+    connectToNeo4jDatabase();
+    setUpConnectionWithRacketServer("8081");
+    refreshGraph();
+};
 
+// #############################
+// ##### Generic (Start)
+var logErrorFunction = (error) => {
+    console.log(error);
+};
+function logErrorAndRejectPromiseFunctionFactory(reject) {
+    return (error) => {
+        console.log(error);
+        reject(error);
+    };
+}
+function cypherErrorPrintAndRejectPromiseFunctionFactory(reject) {
+    return (error) => {
+        console.log("Cypher error:");
+        console.log(error);
+        reject(error);
+    };
+}
+// ##### Generic (End)
+// #############################
+
+// #############################
+// ##### Contextual Menu (Start)
+
+// This function is called in neod3.js when a node is clicked on the graph visualisation
 window.onNodeClicked = function(node) {
-    // Called in neod3.js when a node is clicked on the graph visualisation
-    console.log(node);
+    // Sets the text displayed in the ace editor to the term of the node that was clicked
     editor.setValue(node.propertyMap.term);
-
-    var graphArea = document.getElementById("graph");
-    // console.log(graphArea);
-    var rect = graphArea.getBoundingClientRect();
-    // console.log(rect.top, rect.right, rect.bottom, rect.left);
-
-    document.getElementById("rmenu").className = "show";
-    document.getElementById("rmenu").style.top =
-        node.py + graphArea.offsetTop + "px";
-    document.getElementById("rmenu").style.left = node.px + "px";
-    // document.getElementById("rmenu").style.left = rect.bottom + 'px';
-    // document.getElementById("rmenu").style.left = rect.left + 'px';
+    showContextualMenuForNode(node);
+    // Stores which node was clicked on, so that the buttons of the contextual menu know on which node to act
     setNodeForContextualMenu(node);
 };
 
+// Have it so that any click closes the contextual menu
+function setBehaviourClosingContextualMenu() {
+    document.getElementById("divbody").onclick = (e) => {
+        closeContextualMenu();
+    };
+}
+
+// Stores which node was clicked last. To be used by the buttons of the contextual menu to know on which node to act.
 var nodeForContextualMenu = null;
 window.getNodeForContextualMenu = function() {
     return nodeForContextualMenu;
@@ -72,15 +76,289 @@ function setNodeForContextualMenu(node) {
     nodeForContextualMenu = node;
 }
 
+// Takes a node of the visualisation and show a contextual menu for it
+function showContextualMenuForNode(node) {
+    var graphArea = document.getElementById("graph");
+    // Makes the contextual menu visible
+    document.getElementById("rmenu").className = "show";
+    // Positions the contextual menu on the node that was clicked
+    document.getElementById("rmenu").style.top =
+        node.py + graphArea.offsetTop + "px";
+    document.getElementById("rmenu").style.left = node.px + "px";
+}
+
 function closeContextualMenu() {
     document.getElementById("rmenu").className = "hide";
 }
 
 window.contextualMenuAction_ReduceOnce = function(node) {
     console.log(node);
-    return window.sendTerm(node.propertyMap.term);
+    return window.reduceTermOneStepAndUpdateDatabase(node.propertyMap.term);
 };
 
+// ##### Contextual Menu (End)
+// #############################
+
+// #############################
+// ##### Communication with Racket server (Start)
+
+// Each message sent to the Racket server has an ID, and the server is expected to return the ID of the original message in the answer.
+var redexMessageId = 0;
+function getFreshRedexMessageId() {
+    var result = redexMessageId;
+    redexMessageId = redexMessageId + 1;
+    return result;
+}
+// Contains a resolver function for each promise that was generated when a message was sent to the racket server. Key = id of the message sent to racket.
+var redexMessagePromisesResolvers = [];
+var racketServerSocket = null;
+
+function setUpConnectionWithRacketServer(port) {
+    address = "ws://localhost:" + port + "/";
+    racketServerSocket = new WebSocket(address);
+    racketServerSocket.onopen = function() {
+        console.log("socket to racket server opened", arguments);
+    };
+    racketServerSocket.onclose = function() {
+        console.log("socket to racket server closed", arguments);
+    };
+    racketServerSocket.onmessage = function(e) {
+        console.log("Received from redex: " + e);
+        var obj = JSON.parse(e.data);
+        console.log("Received from redex (parsed):");
+        console.log(obj);
+        var messageId = parseInt(obj.messageId);
+        // Calls the resolver of the promise for the receiver message
+        redexMessagePromisesResolvers[messageId](obj);
+    };
+}
+
+// Input: a string (message) to send to the racket server
+// Prefixes the message with a message ID, creates a promise on which the caller can wait to get the answer of the racket server and returns it. Sends the message with its ID to the racket server.
+function socketSendReturnPromise(message) {
+    var messageId = getFreshRedexMessageId();
+    var messageWithId = messageId + "#####" + message;
+    console.log("Sending to redex:");
+    console.log(messageWithId);
+    var promise = new Promise((resolve, reject) => {
+        // Stores a resolver for this promise
+        redexMessagePromisesResolvers[messageId] = (result) => resolve(result);
+        racketServerSocket.send(messageWithId);
+    });
+    return promise;
+}
+
+// ##### Communication with Racket server (End)
+// #############################
+
+// #############################
+// ##### Neo4j interaction (Start)
+
+// Contains the neo4j session, used to run cypher statements on the database
+var neo4jSession = null;
+
+function connectToNeo4jDatabase() {
+    var authToken = neo4j.v1.auth.basic("neo4j", "neo4j-js-password");
+    console.log(authToken);
+    var driver = neo4j.v1.driver("bolt://localhost", authToken, {
+        encrypted: false,
+    });
+    neo4jSession = driver.session();
+}
+
+// Converts non-string values to strings, and surrounds string values with quotation marks
+function valueToStringForUseInCypherStatement(value) {
+    if (typeof value === "string") {
+        return '"' + value + '"';
+    } else {
+        return "" + value;
+    }
+}
+
+// Asynchronous: returns a promise
+// Takes a term, sends it to the racket server, gets back a term object for it (object containing the term and additional attributes) and a term object for each of its one-step reductions
+// Create nodes in the database for each of these term objects, with attributes the attributes present in the term objects, and adds the reduction relation between these nodes.
+window.reduceTermOneStepAndUpdateDatabase = function(term) {
+    console.log("reduceTermOneStepAndUpdateDatabase:");
+    console.log(term);
+    var promise = new Promise((resolve, reject) => {
+        socketSendReturnPromise(term).then((racketAnswer) => {
+            getOrCreateNodeForTermObject(racketAnswer.from).then(
+                (fromNodeID) => {
+                    var reductionTermObjects = racketAnswer.next;
+                    for (var i in reductionTermObjects) {
+                        var reductionTermObject = reductionTermObjects[i];
+                        getOrCreateNodeForTermObject(reductionTermObject).then(
+                            (reductionNodeID) => {
+                                var promise = setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(
+                                    fromNodeID,
+                                    reductionNodeID,
+                                );
+                                resolve(promise);
+                            },
+                            logErrorAndRejectPromiseFunctionFactory(reject),
+                        );
+                    }
+                },
+                logErrorAndRejectPromiseFunctionFactory(reject),
+            );
+        }, logErrorAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Clears the database of all of its nodes
+window.emptyDatabase = function() {
+    neo4jSession.run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
+    console.log("Neo4j Database emptied");
+};
+
+// Asynchronous: returns a promise
+// Input: the IDs of two nodes
+// Adds the "REDUCESTO" relation from the first node to the second in the database, provided this relation is not already in place
+window.setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere = function(
+    sourceNodeID,
+    targetNodeID,
+) {
+    var promise = new Promise((resolve, reject) => {
+        doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID).then(
+            (relationExists) => {
+                if (!relationExists) {
+                    resolve(
+                        setReducesToRelationFromSourceNodeToTargetNode(
+                            sourceNodeID,
+                            targetNodeID,
+                        ),
+                    );
+                }
+            },
+            logErrorAndRejectPromiseFunctionFactory(reject),
+        );
+    });
+    return promise;
+};
+
+// Asynchronous: returns a promise
+// Input: the IDs of two nodes
+// Returns whether the first node is related to the second via the "REDUCESTO" relation
+window.doesSourceNodeReducesToTargetNode = function(
+    sourceNodeID,
+    targetNodeID,
+) {
+    var cypherStatement =
+        "MATCH (e)-[:REDUCESTO]->(f) WHERE ID(e)=" +
+        sourceNodeID +
+        " AND ID(f)=" +
+        targetNodeID +
+        " RETURN ID(e)";
+    var promise = new Promise((resolve, reject) => {
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve(result.records.length >= 1);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Asynchronous: returns a promise
+// Input: the IDs of two nodes
+// Adds the "REDUCESTO" relation from the first node to the second in the database
+window.setReducesToRelationFromSourceNodeToTargetNode = function(
+    sourceNodeID,
+    targetNodeID,
+) {
+    // Asynchronous: returns a promise
+    var promise = new Promise((resolve, reject) => {
+        var cypherStatement =
+            "MATCH (e) WHERE ID(e)=" +
+            sourceNodeID +
+            " MATCH (f) WHERE ID(f)=" +
+            targetNodeID +
+            " CREATE (e)-[:REDUCESTO]->(f)";
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve(null);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Asynchronous: returns a promise.
+// Given a termObject, checks whether a node with the same term exists in the database.
+// If there is one, this function returns its ID.
+// If there is none, it creates one, and returns the ID of the newly created node.
+window.getOrCreateNodeForTermObject = function(termObject) {
+    console.log("getOrCreateNodeForTermObject. termObject=");
+    console.log(termObject);
+    var term = termObject.term;
+    var promise = new Promise((resolve, reject) => {
+        isTermAlreadyInTheDatabase(term).then((falseOrID) => {
+            if (falseOrID == false) {
+                // No node exist already for this termObject. Creating one.
+                addTermObjectToDatabase(termObject).then((id) => {
+                    resolve(id);
+                }, logErrorAndRejectPromiseFunctionFactory(reject));
+            } else {
+                // A node exists for this termObject.
+                resolve(falseOrID);
+            }
+        }, logErrorAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Asynchronous: returns a promise.
+// Returns false if a node with the same term as the argument is in the database
+// Otherwise, returns the id of a node that has the same term as the argument.
+window.isTermAlreadyInTheDatabase = function(term) {
+    var statement = 'MATCH (e) WHERE e.term = "' + term + '" RETURN ID(e)';
+    var promise = new Promise((resolve, reject) => {
+        neo4jSession.run(statement).then((result) => {
+            var records = result.records;
+            var summary = result.summary;
+            if (records.length >= 1) {
+                // Found a node with the same term as the argument
+                var id = records[0]._fields[0].low;
+                resolve(id);
+            } else {
+                // No node found with the same term as the argument
+                resolve(false);
+            }
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Asynchronous: returns a promise.
+// Given a termObject, creates a node for it in the database and returns the created node's ID.
+window.addTermObjectToDatabase = function(termObject) {
+    var promise = new Promise((resolve, reject) => {
+        var term = termObject[term];
+        var cypherStatement = "CREATE (e:Term {";
+        cypherStatementEnd = "}) RETURN ID(e)";
+        // Adds to the cypher statement the attributes of the node. Add a comma before each attribute declaration but the first.
+        var addComma = false;
+        for (k in termObject) {
+            if (addComma) {
+                cypherStatement = cypherStatement + ", ";
+            } else {
+                addComma = true;
+            }
+            cypherStatement =
+                cypherStatement +
+                k +
+                ": " +
+                valueToStringForUseInCypherStatement(termObject[k]);
+        }
+        cypherStatement = cypherStatement + cypherStatementEnd;
+        neo4jSession.run(cypherStatement).then((result) => {
+            var records = result.records;
+            var nodeID = records[0]._fields[0].low;
+            resolve(nodeID);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+};
+
+// Queries the neo4j database and refreshes the graph visualisation on the webpage
 window.refreshGraph = function() {
     console.log("refresh graph");
     var graphId, tableId, sourceId, execId, urlSource, renderGraph, query;
@@ -142,317 +420,5 @@ window.refreshGraph = function() {
     return false;
 };
 
-var redexMessageId = 0;
-function getRedexMessageId() {
-    var result = redexMessageId;
-    redexMessageId = redexMessageId + 1;
-    return result;
-}
-var redexMessagePromises = [];
-
-function socketSendReturnPromise(socket, message) {
-    var messageId = getRedexMessageId();
-    var messageWithId = messageId + "#####" + message;
-    console.log("Sending to redex:");
-    console.log(messageWithId);
-    var promise = new Promise((resolve, reject) => {
-        redexMessagePromises[messageId] = (result) => resolve(result);
-        socket.send(messageWithId);
-    });
-    return promise;
-}
-
-window.onload = function() {
-    document.getElementById("divbody").onclick = (e) => {
-        closeContextualMenu();
-    };
-    connectToNeo4jDatabase();
-    var sock = new WebSocket("ws://localhost:8081/");
-    var messagecounter = 0;
-    sock.onopen = function() {
-        console.log("open", arguments);
-    };
-    sock.onmessage = function(e) {
-        console.log("Received from redex: " + e);
-        var obj = JSON.parse(e.data);
-        console.log("Received from redex (parsed):");
-        console.log(obj);
-        // console.log("obj= "+obj)
-        // var from = obj.from;
-        // console.log("from object:");
-        // console.log(from);
-        // obj = obj.next;
-        // console.log("next object:");
-        // console.log(obj);
-        // for (var i in obj) {
-        //     console.log((obj[i]).term);
-        //     if (!isTermAlreadyInTheDatabase((obj[i]).term)) {
-        //         addTermObjectToDatabase(obj[i]);
-        //     }
-        // }
-        var messageId = parseInt(obj.messageId);
-        redexMessagePromises[messageId](obj);
-
-        // getOrCreateNodeForTermObject(obj.from, (fromNodeID => {
-        //     var reductionTermObjects = obj.next;
-        //     for (var i in reductionTermObjects) {
-        //         var reductionTermObject = reductionTermObjects[i];
-        //         getOrCreateNodeForTermObject(reductionTermObject, (reductionNodeID => {
-        //             setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(fromNodeID, reductionNodeID);
-        //         }))
-        //     }
-        // }));
-    };
-    refreshGraph();
-    sock.onclose = function() {
-        console.log("close", arguments);
-    };
-    window.send = function() {
-        var term = editor.getValue();
-        // sock.send(term);
-        sendTerm(term);
-    };
-    var logErrorFunction = (error) => {
-        console.log(error);
-    };
-    var logErrorFunctionReject = (reject) => {
-        (error) => {
-            console.log(error);
-            reject(error);
-        };
-    };
-    window.sendTerm = function(term) {
-        console.log("sendTerm");
-        // promise.then(
-        //     (result) => {console.log('Promise resolved. Result:'); console.log(result)},
-        //     (error) => {console.log("error")}
-        // )
-        var promise = new Promise((resolve, reject) => {
-            socketSendReturnPromise(sock, term).then((racketAnswer) => {
-                console.log("racketAnswer");
-                getOrCreateNodeForTermObject(racketAnswer.from).then(
-                    (fromNodeID) => {
-                        var reductionTermObjects = racketAnswer.next;
-                        for (var i in reductionTermObjects) {
-                            var reductionTermObject = reductionTermObjects[i];
-                            getOrCreateNodeForTermObject(
-                                reductionTermObject,
-                            ).then((reductionNodeID) => {
-                                var promise = setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(
-                                    fromNodeID,
-                                    reductionNodeID,
-                                );
-                                resolve(promise);
-                            }, logErrorFunctionReject(reject));
-                        }
-                    },
-                    logErrorFunctionReject(reject),
-                );
-            }, logErrorFunctionReject(reject));
-        });
-        return promise;
-    };
-    window.emptyDatabase = function() {
-        runCypherStatement("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
-        console.log("Neo4j Database emptied");
-    };
-    window.setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere = function(
-        sourceNodeID,
-        targetNodeID,
-    ) {
-        console.log(
-            "setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere",
-        );
-        var promise = new Promise((resolve, reject) => {
-            doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID).then(
-                (relationExists) => {
-                    console.log(
-                        "setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere label 1. relationExists=",
-                    );
-                    console.log(relationExists);
-                    if (!relationExists) {
-                        resolve(
-                            setReducesToRelationFromSourceNodeToTargetNode(
-                                sourceNodeID,
-                                targetNodeID,
-                            ),
-                        );
-                    }
-                },
-                logErrorFunctionReject(reject),
-            );
-
-            // doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID, relationExists => {
-            //                 if (!relationExists) {
-            //                     setReducesToRelationFromSourceNodeToTargetNode(sourceNodeID, targetNodeID);
-            //                 }
-            //             })
-        });
-        return promise;
-    };
-    window.doesSourceNodeReducesToTargetNode = function(
-        sourceNodeID,
-        targetNodeID,
-    ) {
-        // console.log("doesSourceNodeReducesToTargetNode");
-        // console.log("sourceNodeID="+sourceNodeID+" targetNodeID="+targetNodeID);
-        var cypherStatement =
-            "MATCH (e)-[:REDUCESTO]->(f) WHERE ID(e)=" +
-            sourceNodeID +
-            " AND ID(f)=" +
-            targetNodeID +
-            " RETURN ID(e)";
-        // console.log("cypherStatement= "+cypherStatement);
-        // return (session.run(cypherStatement));
-        var promise = new Promise((resolve, reject) => {
-            session.run(cypherStatement).then(
-                (result) => {
-                    // console.log("result=");
-                    // console.log(result);
-                    // console.log("answer= "+(result.records.length >= 1));
-                    resolve(result.records.length >= 1);
-                },
-                (error) => {
-                    console.log(
-                        "ERROR: cypher statement error in function doesSourceNodeReducesToTargetNode",
-                    );
-                    console.log("code: " + error.code + " | " + error.message);
-                    reject(error);
-                },
-            );
-        });
-        return promise;
-    };
-    window.setReducesToRelationFromSourceNodeToTargetNode = function(
-        sourceNodeID,
-        targetNodeID,
-    ) {
-        console.log("setReducesToRelationFromSourceNodeToTargetNode");
-        var promise = new Promise((resolve, reject) => {
-            var cypherStatement =
-                "MATCH (e) WHERE ID(e)=" +
-                sourceNodeID +
-                " MATCH (f) WHERE ID(f)=" +
-                targetNodeID +
-                " CREATE (e)-[:REDUCESTO]->(f)";
-            session.run(cypherStatement).then(
-                (result) => {
-                    resolve(null);
-                    // console.log("Set ReducesTo relation from node of ID "+sourceNodeID+" to node of ID "+targetNodeID);
-                },
-                (error) => {
-                    console.log(
-                        "ERROR: cypher statement error in function setReducesToRelationFromSourceNodeToTargetNode",
-                    );
-                    console.log("code: " + error.code + " | " + error.message);
-                    reject(error);
-                },
-            );
-        });
-        return promise;
-    };
-    window.getOrCreateNodeForTermObject = function(termObject) {
-        // Given a termObject, checks whether a node with the same term exists in the database.
-        // If there is one, calls the callback with its ID as argument.
-        // If there is none, it creates one, and calls the callback with its ID as argument.
-        console.log("getOrCreateNodeForTermObject. termObject=");
-        console.log(termObject);
-        var term = termObject.term;
-        var promise = new Promise((resolve, reject) => {
-            isTermAlreadyInTheDatabase(term).then((falseOrID) => {
-                if (falseOrID == false) {
-                    // No node exist already for this termObject. Creating one.
-                    addTermObjectToDatabase(termObject).then((id) => {
-                        resolve(id);
-                    }, logErrorFunctionReject(reject));
-                } else {
-                    // A node exists for this termObject.
-                    resolve(falseOrID);
-                }
-            }, logErrorFunctionReject(reject));
-        });
-        return promise;
-    };
-    window.isTermAlreadyInTheDatabase = function(term) {
-        // Returns false if a node with the same term as the argument is in the database
-        // Otherwise, returns the id of a node that has the same term as the argument.
-        var statement = 'MATCH (e) WHERE e.term = "' + term + '" RETURN ID(e)';
-        // console.log("isTermAlreadyInTheDatabase");
-        var promise = new Promise((resolve, reject) => {
-            session.run(statement).then(
-                (result) => {
-                    var records = result.records;
-                    var summary = result.summary;
-                    // console.log("records= ");
-                    // console.log(records);
-                    if (records.length >= 1) {
-                        var id = records[0]._fields[0].low;
-                        // console.log("Term already in the database. ID= " + id);
-                        // for (var k in records[0]) {
-                        //     console.log("k=");
-                        //     console.log(k);
-                        //     console.log("v=");
-                        //     console.log(records[0][k]);
-                        // }
-                        resolve(id);
-                    } else {
-                        // console.log("Term NOT already in the database");
-                        resolve(false);
-                    }
-                },
-                (error) => {
-                    console.log(
-                        "ERROR: cypher statement error in function isTermAlreadyInTheDatabase",
-                    );
-                    console.log("code: " + error.code + " | " + error.message);
-                    reject(error);
-                },
-            );
-        });
-        return promise;
-    };
-    window.addTermObjectToDatabase = function(termObject) {
-        console.log("addTermObjectToDatabase");
-        // Given a termObject, creates a node for it in the database, then call callback with no argument.
-        // console.log("termObject= ");
-        // console.log(termObject);
-        var promise = new Promise((resolve, reject) => {
-            var term = termObject[term];
-            var cypherStatement = "CREATE (e:Term {";
-            cypherStatementEnd = "}) RETURN ID(e)";
-            var addComma = false;
-            for (k in termObject) {
-                if (addComma) {
-                    cypherStatement = cypherStatement + ", ";
-                } else {
-                    addComma = true;
-                }
-                cypherStatement =
-                    cypherStatement +
-                    k +
-                    ": " +
-                    valueToStringForCypherStatement(termObject[k]);
-            }
-            cypherStatement = cypherStatement + cypherStatementEnd;
-            // console.log("Cypher statement: "+cypherStatement);
-            session.run(cypherStatement).then(
-                (result) => {
-                    var records = result.records;
-                    var nodeID = records[0]._fields[0].low;
-                    console.log(
-                        "Added term node of ID " + nodeID + " to database.",
-                    );
-                    resolve(nodeID);
-                },
-                (error) => {
-                    console.log(
-                        "ERROR: cypher statement error in function addTermObjectToDatabase",
-                    );
-                    console.log("code: " + error.code + " | " + error.message);
-                    reject(error);
-                },
-            );
-        });
-        return promise;
-    };
-};
+// ##### Neo4j interaction (End)
+// #############################

@@ -50,7 +50,7 @@
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/scheme");
   </script>
-  <button style="color: white" onclick="send()">Send Term</button>
+  <button style="color: white" onclick="reduceTermOneStepAndUpdateDatabase(editor.getValue())">Send Term</button>
   <button style="color: white" onclick="emptyDatabase()">Empty Database</button>
   <button style="color: white" onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button>
   <button style="color: white" onclick="refreshGraph()">Refresh Graph</button>
