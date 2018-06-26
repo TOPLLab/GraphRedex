@@ -17,3 +17,4 @@
 .show li{ list-style: none; }
 .show a { border: 0 !important; text-decoration: none; }
 .show a:hover { text-decoration: underline !important; }
+.show button{display: block; width: 100%; text-align: left;}
