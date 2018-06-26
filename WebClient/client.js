@@ -78,10 +78,11 @@ function closeContextualMenu() {
 
 window.contextualMenuAction_ReduceOnce = function(node) {
     console.log(node);
-    window.sendTerm(node.propertyMap.term);
+    return window.sendTerm(node.propertyMap.term);
 };
 
 window.refreshGraph = function() {
+    console.log("refresh graph");
     var graphId, tableId, sourceId, execId, urlSource, renderGraph, query;
     graphId = "graph";
     tableId = "datatable";
@@ -192,21 +193,15 @@ window.onload = function() {
         var messageId = parseInt(obj.messageId);
         redexMessagePromises[messageId](obj);
 
-        getOrCreateNodeForTermObject(obj.from, (fromNodeID) => {
-            var reductionTermObjects = obj.next;
-            for (var i in reductionTermObjects) {
-                var reductionTermObject = reductionTermObjects[i];
-                getOrCreateNodeForTermObject(
-                    reductionTermObject,
-                    (reductionNodeID) => {
-                        setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(
-                            fromNodeID,
-                            reductionNodeID,
-                        );
-                    },
-                );
-            }
-        });
+        // getOrCreateNodeForTermObject(obj.from, (fromNodeID => {
+        //     var reductionTermObjects = obj.next;
+        //     for (var i in reductionTermObjects) {
+        //         var reductionTermObject = reductionTermObjects[i];
+        //         getOrCreateNodeForTermObject(reductionTermObject, (reductionNodeID => {
+        //             setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(fromNodeID, reductionNodeID);
+        //         }))
+        //     }
+        // }));
     };
     refreshGraph();
     sock.onclose = function() {
@@ -217,17 +212,45 @@ window.onload = function() {
         // sock.send(term);
         sendTerm(term);
     };
+    var logErrorFunction = (error) => {
+        console.log(error);
+    };
+    var logErrorFunctionReject = (reject) => {
+        (error) => {
+            console.log(error);
+            reject(error);
+        };
+    };
     window.sendTerm = function(term) {
-        var promise = socketSendReturnPromise(sock, term);
-        promise.then(
-            (result) => {
-                console.log("Promise resolved. Result:");
-                console.log(result);
-            },
-            (error) => {
-                console.log("error");
-            },
-        );
+        console.log("sendTerm");
+        // promise.then(
+        //     (result) => {console.log('Promise resolved. Result:'); console.log(result)},
+        //     (error) => {console.log("error")}
+        // )
+        var promise = new Promise((resolve, reject) => {
+            socketSendReturnPromise(sock, term).then((racketAnswer) => {
+                console.log("racketAnswer");
+                getOrCreateNodeForTermObject(racketAnswer.from).then(
+                    (fromNodeID) => {
+                        var reductionTermObjects = racketAnswer.next;
+                        for (var i in reductionTermObjects) {
+                            var reductionTermObject = reductionTermObjects[i];
+                            getOrCreateNodeForTermObject(
+                                reductionTermObject,
+                            ).then((reductionNodeID) => {
+                                var promise = setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(
+                                    fromNodeID,
+                                    reductionNodeID,
+                                );
+                                resolve(promise);
+                            }, logErrorFunctionReject(reject));
+                        }
+                    },
+                    logErrorFunctionReject(reject),
+                );
+            }, logErrorFunctionReject(reject));
+        });
+        return promise;
     };
     window.emptyDatabase = function() {
         runCypherStatement("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
@@ -237,23 +260,39 @@ window.onload = function() {
         sourceNodeID,
         targetNodeID,
     ) {
-        doesSourceNodeReducesToTargetNode(
-            sourceNodeID,
-            targetNodeID,
-            (relationExists) => {
-                if (!relationExists) {
-                    setReducesToRelationFromSourceNodeToTargetNode(
-                        sourceNodeID,
-                        targetNodeID,
-                    );
-                }
-            },
+        console.log(
+            "setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere",
         );
+        var promise = new Promise((resolve, reject) => {
+            doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID).then(
+                (relationExists) => {
+                    console.log(
+                        "setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere label 1. relationExists=",
+                    );
+                    console.log(relationExists);
+                    if (!relationExists) {
+                        resolve(
+                            setReducesToRelationFromSourceNodeToTargetNode(
+                                sourceNodeID,
+                                targetNodeID,
+                            ),
+                        );
+                    }
+                },
+                logErrorFunctionReject(reject),
+            );
+
+            // doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID, relationExists => {
+            //                 if (!relationExists) {
+            //                     setReducesToRelationFromSourceNodeToTargetNode(sourceNodeID, targetNodeID);
+            //                 }
+            //             })
+        });
+        return promise;
     };
     window.doesSourceNodeReducesToTargetNode = function(
         sourceNodeID,
         targetNodeID,
-        callback,
     ) {
         // console.log("doesSourceNodeReducesToTargetNode");
         // console.log("sourceNodeID="+sourceNodeID+" targetNodeID="+targetNodeID);
@@ -264,127 +303,156 @@ window.onload = function() {
             targetNodeID +
             " RETURN ID(e)";
         // console.log("cypherStatement= "+cypherStatement);
-        session.run(cypherStatement).then(
-            (result) => {
-                // console.log("result=");
-                // console.log(result);
-                // console.log("answer= "+(result.records.length >= 1));
-                callback(result.records.length >= 1);
-            },
-            (error) => {
-                console.log(
-                    "ERROR: cypher statement error in function doesSourceNodeReducesToTargetNode",
-                );
-                console.log("code: " + error.code + " | " + error.message);
-            },
-        );
+        // return (session.run(cypherStatement));
+        var promise = new Promise((resolve, reject) => {
+            session.run(cypherStatement).then(
+                (result) => {
+                    // console.log("result=");
+                    // console.log(result);
+                    // console.log("answer= "+(result.records.length >= 1));
+                    resolve(result.records.length >= 1);
+                },
+                (error) => {
+                    console.log(
+                        "ERROR: cypher statement error in function doesSourceNodeReducesToTargetNode",
+                    );
+                    console.log("code: " + error.code + " | " + error.message);
+                    reject(error);
+                },
+            );
+        });
+        return promise;
     };
     window.setReducesToRelationFromSourceNodeToTargetNode = function(
         sourceNodeID,
         targetNodeID,
     ) {
-        var cypherStatement =
-            "MATCH (e) WHERE ID(e)=" +
-            sourceNodeID +
-            " MATCH (f) WHERE ID(f)=" +
-            targetNodeID +
-            " CREATE (e)-[:REDUCESTO]->(f)";
-        session.run(cypherStatement).then(
-            (result) => {
-                // console.log("Set ReducesTo relation from node of ID "+sourceNodeID+" to node of ID "+targetNodeID);
-            },
-            (error) => {
-                console.log(
-                    "ERROR: cypher statement error in function setReducesToRelationFromSourceNodeToTargetNode",
-                );
-                console.log("code: " + error.code + " | " + error.message);
-            },
-        );
+        console.log("setReducesToRelationFromSourceNodeToTargetNode");
+        var promise = new Promise((resolve, reject) => {
+            var cypherStatement =
+                "MATCH (e) WHERE ID(e)=" +
+                sourceNodeID +
+                " MATCH (f) WHERE ID(f)=" +
+                targetNodeID +
+                " CREATE (e)-[:REDUCESTO]->(f)";
+            session.run(cypherStatement).then(
+                (result) => {
+                    resolve(null);
+                    // console.log("Set ReducesTo relation from node of ID "+sourceNodeID+" to node of ID "+targetNodeID);
+                },
+                (error) => {
+                    console.log(
+                        "ERROR: cypher statement error in function setReducesToRelationFromSourceNodeToTargetNode",
+                    );
+                    console.log("code: " + error.code + " | " + error.message);
+                    reject(error);
+                },
+            );
+        });
+        return promise;
     };
-    window.getOrCreateNodeForTermObject = function(termObject, callback) {
+    window.getOrCreateNodeForTermObject = function(termObject) {
         // Given a termObject, checks whether a node with the same term exists in the database.
         // If there is one, calls the callback with its ID as argument.
         // If there is none, it creates one, and calls the callback with its ID as argument.
+        console.log("getOrCreateNodeForTermObject. termObject=");
+        console.log(termObject);
         var term = termObject.term;
-        isTermAlreadyInTheDatabase(term, (falseOrID) => {
-            if (falseOrID == false) {
-                // No node exist already for this termObject. Creating one.
-                addTermObjectToDatabase(termObject, callback);
-            } else {
-                // A node exists for this termObject.
-                callback(falseOrID);
-            }
+        var promise = new Promise((resolve, reject) => {
+            isTermAlreadyInTheDatabase(term).then((falseOrID) => {
+                if (falseOrID == false) {
+                    // No node exist already for this termObject. Creating one.
+                    addTermObjectToDatabase(termObject).then((id) => {
+                        resolve(id);
+                    }, logErrorFunctionReject(reject));
+                } else {
+                    // A node exists for this termObject.
+                    resolve(falseOrID);
+                }
+            }, logErrorFunctionReject(reject));
         });
+        return promise;
     };
-    window.isTermAlreadyInTheDatabase = function(term, callback) {
+    window.isTermAlreadyInTheDatabase = function(term) {
         // Returns false if a node with the same term as the argument is in the database
         // Otherwise, returns the id of a node that has the same term as the argument.
         var statement = 'MATCH (e) WHERE e.term = "' + term + '" RETURN ID(e)';
         // console.log("isTermAlreadyInTheDatabase");
-        session.run(statement).then(
-            (result) => {
-                var records = result.records;
-                var summary = result.summary;
-                // console.log("records= ");
-                // console.log(records);
-                if (records.length >= 1) {
-                    var id = records[0]._fields[0].low;
-                    // console.log("Term already in the database. ID= " + id);
-                    // for (var k in records[0]) {
-                    //     console.log("k=");
-                    //     console.log(k);
-                    //     console.log("v=");
-                    //     console.log(records[0][k]);
-                    // }
-                    callback(id);
-                } else {
-                    // console.log("Term NOT already in the database");
-                    callback(false);
-                }
-            },
-            (error) => {
-                console.log(
-                    "ERROR: cypher statement error in function isTermAlreadyInTheDatabase",
-                );
-                console.log("code: " + error.code + " | " + error.message);
-            },
-        );
+        var promise = new Promise((resolve, reject) => {
+            session.run(statement).then(
+                (result) => {
+                    var records = result.records;
+                    var summary = result.summary;
+                    // console.log("records= ");
+                    // console.log(records);
+                    if (records.length >= 1) {
+                        var id = records[0]._fields[0].low;
+                        // console.log("Term already in the database. ID= " + id);
+                        // for (var k in records[0]) {
+                        //     console.log("k=");
+                        //     console.log(k);
+                        //     console.log("v=");
+                        //     console.log(records[0][k]);
+                        // }
+                        resolve(id);
+                    } else {
+                        // console.log("Term NOT already in the database");
+                        resolve(false);
+                    }
+                },
+                (error) => {
+                    console.log(
+                        "ERROR: cypher statement error in function isTermAlreadyInTheDatabase",
+                    );
+                    console.log("code: " + error.code + " | " + error.message);
+                    reject(error);
+                },
+            );
+        });
+        return promise;
     };
-    window.addTermObjectToDatabase = function(termObject, callback) {
+    window.addTermObjectToDatabase = function(termObject) {
+        console.log("addTermObjectToDatabase");
         // Given a termObject, creates a node for it in the database, then call callback with no argument.
         // console.log("termObject= ");
         // console.log(termObject);
-        var term = termObject[term];
-        var cypherStatement = "CREATE (e:Term {";
-        cypherStatementEnd = "}) RETURN ID(e)";
-        var addComma = false;
-        for (k in termObject) {
-            if (addComma) {
-                cypherStatement = cypherStatement + ", ";
-            } else {
-                addComma = true;
+        var promise = new Promise((resolve, reject) => {
+            var term = termObject[term];
+            var cypherStatement = "CREATE (e:Term {";
+            cypherStatementEnd = "}) RETURN ID(e)";
+            var addComma = false;
+            for (k in termObject) {
+                if (addComma) {
+                    cypherStatement = cypherStatement + ", ";
+                } else {
+                    addComma = true;
+                }
+                cypherStatement =
+                    cypherStatement +
+                    k +
+                    ": " +
+                    valueToStringForCypherStatement(termObject[k]);
             }
-            cypherStatement =
-                cypherStatement +
-                k +
-                ": " +
-                valueToStringForCypherStatement(termObject[k]);
-        }
-        cypherStatement = cypherStatement + cypherStatementEnd;
-        // console.log("Cypher statement: "+cypherStatement);
-        session.run(cypherStatement).then(
-            (result) => {
-                var records = result.records;
-                var nodeID = records[0]._fields[0].low;
-                // console.log("Added term node of ID "+nodeID+" to database.");
-                callback(nodeID);
-            },
-            (error) => {
-                console.log(
-                    "ERROR: cypher statement error in function addTermObjectToDatabase",
-                );
-                console.log("code: " + error.code + " | " + error.message);
-            },
-        );
+            cypherStatement = cypherStatement + cypherStatementEnd;
+            // console.log("Cypher statement: "+cypherStatement);
+            session.run(cypherStatement).then(
+                (result) => {
+                    var records = result.records;
+                    var nodeID = records[0]._fields[0].low;
+                    console.log(
+                        "Added term node of ID " + nodeID + " to database.",
+                    );
+                    resolve(nodeID);
+                },
+                (error) => {
+                    console.log(
+                        "ERROR: cypher statement error in function addTermObjectToDatabase",
+                    );
+                    console.log("code: " + error.code + " | " + error.message);
+                    reject(error);
+                },
+            );
+        });
+        return promise;
     };
 };
