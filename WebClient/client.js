@@ -190,9 +190,12 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
                         var reductionTermObject = reductionTermObjects[i];
                         getOrCreateNodeForTermObject(reductionTermObject).then(
                             (reductionNodeID) => {
-                                var promise = setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere(
+                                var promise = setNodeRelationIfNotAlreadyThere(
                                     fromNodeID,
                                     reductionNodeID,
+                                    "REDUCESTO",
+                                    null,
+                                    null,
                                 );
                                 resolve(promise);
                             },
@@ -214,29 +217,124 @@ window.emptyDatabase = function() {
 };
 
 // Asynchronous: returns a promise
-// Input: the IDs of two nodes
-// Adds the "REDUCESTO" relation from the first node to the second in the database, provided this relation is not already in place
-window.setReducesToRelationFromSourceNodeToTargetNodeIfNotAlreadyThere = function(
+// Calls checkNodeRelation to check whether the relation already exists. If it does not, calls setNodeRelation to create it.
+// More information about the arguments and behaviour in the comments of the two aforementioned functions
+function setNodeRelationIfNotAlreadyThere(
     sourceNodeID,
     targetNodeID,
+    relationName,
+    relationAttributeNameOrNull,
+    relationAttributeValueOrNull,
 ) {
     var promise = new Promise((resolve, reject) => {
-        doesSourceNodeReducesToTargetNode(sourceNodeID, targetNodeID).then(
-            (relationExists) => {
-                if (!relationExists) {
-                    resolve(
-                        setReducesToRelationFromSourceNodeToTargetNode(
-                            sourceNodeID,
-                            targetNodeID,
-                        ),
-                    );
-                }
-            },
-            logErrorAndRejectPromiseFunctionFactory(reject),
-        );
+        checkNodeRelation(
+            sourceNodeID,
+            targetNodeID,
+            relationName,
+            relationAttributeNameOrNull,
+            relationAttributeValueOrNull,
+        ).then((relationExists) => {
+            if (!relationExists) {
+                resolve(
+                    setNodeRelation(
+                        sourceNodeID,
+                        targetNodeID,
+                        relationName,
+                        relationAttributeNameOrNull,
+                        relationAttributeValueOrNull,
+                    ),
+                );
+            }
+        }, logErrorAndRejectPromiseFunctionFactory(reject));
     });
     return promise;
-};
+}
+
+// Asynchronous: returns a promise
+// Returns whether there is a relation named relationName from the node of ID sourceNodeID to the node of ID targetNodeID in the graph database
+// Additionally, if relationAttributeNameOrNull is not null, require the relation to have an attribute named relationAttributeNameOrNull and worth relationAttributeValueOrNull
+// Note: relationName is converted to uppercase to match cypher's style
+// Note: relationAttributeNameOrNull is converted to lowercase to match cypher's style
+// Note: Only supports one relation attribute for the moment. Could be improved to deal with an arbitrary number of relation attributes
+// Example of cypher statement ran by this function: MATCH (e)-[:REDUCESTO {rule:"set"}]->(f) WHERE ID(e)=2 AND ID(f)=5 RETURN ID(e)
+function checkNodeRelation(
+    sourceNodeID,
+    targetNodeID,
+    relationName,
+    relationAttributeNameOrNull,
+    relationAttributeValueOrNull,
+) {
+    var promise = new Promise((resolve, reject) => {
+        var relationNameUppercase = relationName.toUpperCase();
+        var cypherStatement = "MATCH (e)-[:" + relationNameUppercase;
+        if (relationAttributeNameOrNull != null) {
+            var relationAttributeNameLowerCase = relationAttributeNameOrNull.toLowerCase();
+            cypherStatement =
+                cypherStatement +
+                " {" +
+                relationAttributeNameLowerCase +
+                ":" +
+                valueToStringForUseInCypherStatement(
+                    relationAttributeValueOrNull,
+                ) +
+                "}";
+        }
+        cypherStatement =
+            cypherStatement +
+            "]->(f) WHERE ID(e)=" +
+            sourceNodeID +
+            " AND ID(f)= " +
+            targetNodeID +
+            " RETURN ID(e)";
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve(result.records.length >= 1);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+}
+
+// Asynchronous: returns a promise
+// Adds a relation named relationName from node with ID sourceNodeID to node with ID targetNodeID in the graph database
+// Additionally, if relationAttributeNameOrNull is not null, add an attribute to the relation named relationAttributeNameOrNull and worth relationAttributeValueOrNull
+// Note: relationName is converted to uppercase to match cypher's style
+// Note: relationAttributeNameOrNull is converted to lowercase to match cypher's style
+// Note: Only supports one relation attribute for the moment. Could be improved to deal with an arbitrary number of relation attributes
+// Example of cypher statement ran by this function: MATCH (e) WHERE ID(e)=2 MATCH (f) WHERE ID(f)=5 CREATE (e)-[:REDUCESTO {rule:"set"}]->(f)
+function setNodeRelation(
+    sourceNodeID,
+    targetNodeID,
+    relationName,
+    relationAttributeNameOrNull,
+    relationAttributeValueOrNull,
+) {
+    var promise = new Promise((resolve, reject) => {
+        var relationNameUppercase = relationName.toUpperCase();
+        var cypherStatement =
+            "MATCH (e) WHERE ID(e)=" +
+            sourceNodeID +
+            " MATCH (f) WHERE ID(f)=" +
+            targetNodeID +
+            " CREATE (e)-[:" +
+            relationNameUppercase;
+        if (relationAttributeNameOrNull != null) {
+            var relationAttributeNameLowerCase = relationAttributeNameOrNull.toLowerCase();
+            cypherStatement =
+                cypherStatement +
+                " {" +
+                relationAttributeNameLowerCase +
+                ":" +
+                valueToStringForUseInCypherStatement(
+                    relationAttributeValueOrNull,
+                ) +
+                "}";
+        }
+        cypherStatement = cypherStatement + "]->(f)";
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve(null);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+}
 
 // Asynchronous: returns a promise
 // Input: the IDs of two nodes
