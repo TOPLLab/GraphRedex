@@ -78,8 +78,8 @@
 (define (term->kv exp)
   (match exp
     [`((store (x ,x)) (threads ,t1 ,t2))
-       (list (cons 'x x))]))
+       (list (cons 'x x) )]))
 
 (define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
-
+;(apply-reduction-relation/tag-with-names reductions my_term)
 (run-server reductions term->kv)

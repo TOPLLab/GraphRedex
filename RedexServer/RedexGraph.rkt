@@ -41,29 +41,65 @@
 (define (add-kv k v l)
   (cons (cons k v) l))
 
-(define (jsont t)
-  (lambda (e)
-   (let* ((term (expr->string e))
-          (kv_list (add-kv  'term term (t e)))
-          (id  (bytes->hex-string (md5 term))))
-     (make-hash (add-kv 'md5 id kv_list)))))
+;
+; Wrapper function over the translation function 
+; This is to make sure that we always have a term and md5 field
+;
+(define (make-kv-list exp trans)
+ (match exp
+  [`(,tag ,e) 
+  (add-kv 'rule  tag 
+   (list 
+    (cons 'term_object
+    (make-hash 
+     (add-kv  'term (expr->string e) 
+      (add-kv 'md5  (bytes->hex-string (md5 (expr->string e)))
+       (trans e)))))))]))
 
+(define (jsont t)
+ (lambda (e)
+  (make-hash (make-kv-list e t))))
+
+;
+; Convert a term into it's json representation 
+; by using the translation function 
+;
 (define (trans->json messageId t ts trans)
  (jsexpr->string 
   (make-hash
    (list 
     (cons 'messageId messageId)
-    (cons 'from (trans t))
+    (cons 'from (trans `("TEST" ,t)))
     (cons 'next (map trans ts))))))
 
+;
+; Constants for extracting data from the message 
+; A message is a string with a seperator in the middle
+; "MESSAGE_ID ##### TERM"
+; 
+(define SEPERATOR "#####")
+(define ID_IDX     0)
+(define TRM_IDX    1) 
+
+;
+; Extraction functions
+;
+(define (extract-message-id msg) 
+  (list-ref (string-split msg SEPERATOR) ID_IDX))
+
+(define (extract-term msg)
+  (read-from-string (list-ref (string-split msg SEPERATOR) TRM_IDX)))
+
+;
+; Handler for processing incoming data 
+;
 (define (new-handler relation trans)	
  (define (echo-handler c state) 
   (define (loop)
-   (let* ((received   (ws-recv c #:payload-type 'text))
-    ;(term       (read-from-string received))
-    (messageId  (list-ref (string-split received "#####") 0))
-    (term       (read-from-string (list-ref (string-split received "#####") 1)))
-    (next-terms (apply-reduction-relation relation term))
+   (let* ((received (ws-recv c #:payload-type 'text))
+    (messageId  (extract-message-id received))
+    (term       (extract-term received))
+    (next-terms (apply-reduction-relation/tag-with-names relation term))
     (json       (trans->json messageId term next-terms trans)))
     (printf "Receiving: ~a\n" received)
     (unless (eof-object? received)
@@ -75,6 +111,9 @@
   (ws-close! c))
  echo-handler)
 
+;
+; 
+;
 (define (run-server relation trans)
  (let ((stop-service (ws-serve #:port 8081 (new-handler relation (jsont trans)))))
   (printf "Graph-Redex-Server Running. Hit enter to stop service.\n")
