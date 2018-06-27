@@ -181,6 +181,7 @@ function valueToStringForUseInCypherStatement(value) {
 // Asynchronous: returns a promise
 // Takes a term, sends it to the racket server, gets back a term object for it (object containing the term and additional attributes) and a term object for each of its one-step reductions
 // Create nodes in the database for each of these term objects, with attributes the attributes present in the term objects, and adds the reduction relation between these nodes.
+// Returns a promise that will resolve to an array containing the ids of the nodes corresponding to 1) the original term and 2) all the terms that were sent by the racket server.
 window.reduceTermOneStepAndUpdateDatabase = function(term) {
     console.log("reduceTermOneStepAndUpdateDatabase:");
     console.log(term);
