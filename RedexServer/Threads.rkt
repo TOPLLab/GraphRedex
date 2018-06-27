@@ -1,85 +1,63 @@
 #lang racket
+;  ________                    .__      __________           .___             
+; /  _____/___________  ______ |  |__   \______   \ ____   __| _/____ ___  ___
+;/   \  __\_  __ \__  \ \____ \|  |  \   |       _// __ \ / __ |/ __ \\  \/  /
+;\    \_\  \  | \// __ \|  |_> >   Y  \  |    |   \  ___// /_/ \  ___/ >    < 
+; \______  /__|  (____  /   __/|___|  /  |____|_  /\___  >____ |\___  >__/\_ \
+;        \/           \/|__|        \/          \/     \/     \/    \/      \/
+;
+; Example to show how to use GraphRedex. 
+; This is an adapted version of the threads example from the plt-redex example repository
+;
 (require redex)
 (require graph)
 (require "RedexGraph.rkt")
 
-(reduction-steps-cutoff 100)
-
+;
+; The threads language 
+; Programs p consists of a store which are key-value pairs and zero or more threads
+; Each thread is an expression e
+; 
 (define-language threads
   (p ((store (x v) ...) (threads e ...)))
-  (e (set! x e)
-     (let ((x e)) e)
-     (new-thread e)
-     (e e)
-     x
-     v
-     (+ e e))
-  (v (lambda (x) e)
-     number)
+  (e (set! x e) (+ e e) x v)
+  (v number)
   (x variable)
   (pc ((store (x v) ...) tc))
   (tc (threads e ... ec e ...))
-  (ec (ec e) (v ec) (set! variable ec) (let ((x ec)) e) (+ ec e) (+ v ec) hole))
+  (ec (set! variable ec) (+ ec e) (+ v ec) hole))
 
 (define reductions
   (reduction-relation
    threads
-   (--> (in-hole pc_1 (+ number_1 number_2))
-        (in-hole pc_1 ,(+ (term number_1) (term number_2)))
-        sum)
+
+   (-->       (in-hole pc_1  (+ number_1 number_2))
+        ;------------------------------------------------------ [sum]
+          (in-hole pc_1 ,(+ (term number_1) (term number_2)))
+    sum)
+
+   (-->
+          ((store  (x_1 v_1)... (x_i v_i) (x_2 v_2) ...) (in-hole tc_1 x_i))
+        ;-------------------------------------------------------------------- [deref]
+          ((store  (x_1 v_1) ...  (x_i v_i) afters ...) (in-hole tc_1 v_i))
+        
+   deref)
    
-   (--> ((store
-          (name befores (x_0 v_0)) ...
-          (x_i v_i)
-          (name afters (x_i+1 v_i+1)) ...)
-         (in-hole tc_1 x_i))
-        ((store 
-          befores ... 
-          (x_i v_i)
-          afters ...)
-         (in-hole tc_1 v_i))
-        deref)
+   (-->
+        ((store (x_1 v_1) ... (x_i v) (x_2 v_2) ...) (in-hole tc_1 (set! x_i v_new)))
+       ;------------------------------------------------------------------------------- [set!]
+          ((store (x_1 v_1) ... (x_i v_new) (x_2 v_2) ...) (in-hole tc_1 v_new))
+        
+    set!)))
 
-   (--> ((store (x v) ...)
-         (in-hole tc_1 (new-thread e)))
-        ((store (x v) ...)
-         (in-hole tc_1 0)))
-   
-   (--> ((store (x_1 v_1) ... (x_i v) (x_2 v_2) ...)
-         (in-hole tc_1 (set! x_i v_new)))
-        ((store (x_1 v_1) ... (x_i v_new) (x_2 v_2) ...)
-         (in-hole tc_1 v_new))
-        set!)
-   
-   (--> (in-hole pc_1 ((lambda (x_1) e_1) v_1))
-        (in-hole pc_1 ,(substitute (term x_1) (term v_1) (term e_1)))
-        app)
-   
-   (--> ((store (name the-store any) ...)
-         (in-hole tc_1 (let ((x_1 v_1)) e_1)))
-        (term-let ((new-x (variable-not-in (term (the-store ...)) (term x_1))))
-          (term 
-           ((store the-store ... (new-x v_1))
-            (in-hole tc_1 ,(substitute (term x_1) (term new-x) (term e_1))))))
-        let)))
 
-(define (substitute . x) (error 'substitute "~s" x))
-
-(define (run es) (traces reductions `((store) (threads ,@es))))
-(provide run)
-
-(define (count x) 
-  (match x
-    [`(set! ,x ,e) (+ 1 (count e))]
-    [(? symbol?) 1]
-    [(? number?) 0]
-    [`(+ ,e1 ,e2) (+ 1 (count e1) (count e2))]))
-
+;
+; Translation function to expose certain information of the redex model as attributes for the nodes
+;
 (define (term->kv exp)
   (match exp
     [`((store (x ,x)) (threads ,t1 ,t2))
        (list (cons 'x x) )]))
+ 
 
-(define my_term '((store (x 1)) (threads (set! x (+ x -1)) (set! x (+ x 1)))))
-;(apply-reduction-relation/tag-with-names reductions my_term)
 (run-server reductions term->kv)
