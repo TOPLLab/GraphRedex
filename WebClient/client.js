@@ -92,8 +92,11 @@ function closeContextualMenu() {
 }
 
 window.contextualMenuAction_ReduceOnce = function(node) {
-    console.log(node);
     return window.reduceTermOneStepAndUpdateDatabase(node.propertyMap.term);
+};
+
+window.contextualMenuAction_ReduceFiftySteps = function(node) {
+    var iDsOfReducedNodes = [];
 };
 
 // ##### Contextual Menu (End)
@@ -134,7 +137,7 @@ function setUpConnectionWithRacketServer(port) {
 }
 
 // Input: a string (message) to send to the racket server
-// Prefixes the message with a message ID, creates a promise on which the caller can wait to get the answer of the racket server and returns it. Sends the message with its ID to the racket server.
+// Prefixes the message with a message ID (separated from the message with ##### as a separator), creates a promise on which the caller can wait to get the answer of the racket server and returns it. Sends the message with its ID to the racket server.
 function socketSendReturnPromise(message) {
     var messageId = getFreshRedexMessageId();
     var messageWithId = messageId + "#####" + message;
@@ -178,6 +181,7 @@ function valueToStringForUseInCypherStatement(value) {
 // Asynchronous: returns a promise
 // Takes a term, sends it to the racket server, gets back a term object for it (object containing the term and additional attributes) and a term object for each of its one-step reductions
 // Create nodes in the database for each of these term objects, with attributes the attributes present in the term objects, and adds the reduction relation between these nodes.
+// Returns a promise that will resolve to an array containing the ids of the nodes corresponding to 1) the original term and 2) all the terms that were sent by the racket server.
 window.reduceTermOneStepAndUpdateDatabase = function(term) {
     console.log("reduceTermOneStepAndUpdateDatabase:");
     console.log(term);
@@ -186,22 +190,38 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
             getOrCreateNodeForTermObject(racketAnswer.from).then(
                 (fromNodeID) => {
                     var reductionTermObjects = racketAnswer.next;
-                    for (var i in reductionTermObjects) {
-                        var reductionTermObject = reductionTermObjects[i];
-                        getOrCreateNodeForTermObject(reductionTermObject).then(
-                            (reductionNodeID) => {
-                                var promise = setNodeRelationIfNotAlreadyThere(
-                                    fromNodeID,
-                                    reductionNodeID,
-                                    "REDUCESTO",
-                                    null,
-                                    null,
+                    function processReductionTermObject(termObject) {
+                        var intermediatePromise = new Promise(
+                            (resolve, reject) => {
+                                getOrCreateNodeForTermObject(termObject).then(
+                                    (reductionNodeID) => {
+                                        setNodeRelationIfNotAlreadyThere(
+                                            fromNodeID,
+                                            reductionNodeID,
+                                            "REDUCESTO",
+                                            null,
+                                            null,
+                                        ).then((result) => {
+                                            resolve(reductionNodeID);
+                                        }, logErrorAndRejectPromiseFunctionFactory(reject));
+                                    },
+                                    logErrorAndRejectPromiseFunctionFactory(
+                                        reject,
+                                    ),
                                 );
-                                resolve(promise);
                             },
-                            logErrorAndRejectPromiseFunctionFactory(reject),
                         );
+                        return intermediatePromise;
                     }
+                    var iDsOfReductionNodes_promises = reductionTermObjects.map(
+                        processReductionTermObject,
+                    );
+                    Promise.all(iDsOfReductionNodes_promises).then(
+                        (iDsOfReductionNode) => {
+                            resolve([fromNodeID].concat(iDsOfReductionNode));
+                        },
+                        logErrorAndRejectPromiseFunctionFactory(reject),
+                    );
                 },
                 logErrorAndRejectPromiseFunctionFactory(reject),
             );
