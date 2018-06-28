@@ -39,7 +39,7 @@
    (-->
           ((store  (x_1 v_1)... (x_i v_i) (x_2 v_2) ...) (in-hole tc_1 x_i))
         ;-------------------------------------------------------------------- [deref]
-          ((store  (x_1 v_1) ...  (x_i v_i) afters ...) (in-hole tc_1 v_i))
+          ((store  (x_1 v_1) ...  (x_i v_i) (x_2 v_2) ...) (in-hole tc_1 v_i))
         
    deref)
    
@@ -59,5 +59,4 @@
     [`((store (x ,x)) (threads ,t1 ,t2))
        (list (cons 'x x) )]))
  
-
 (run-server reductions term->kv)
