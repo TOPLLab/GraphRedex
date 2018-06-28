@@ -45,6 +45,8 @@ function cypherErrorPrintAndRejectPromiseFunctionFactory(reject) {
         reject(error);
     };
 }
+// If set to true, will print the messages sent and received from the racket server in the console
+var verboseRacketServerInteraction = false;
 // ##### Generic (End)
 // #############################
 
@@ -96,7 +98,111 @@ window.contextualMenuAction_ReduceOnce = function(node) {
 };
 
 window.contextualMenuAction_ReduceFiftySteps = function(node) {
-    var iDsOfReducedNodes = [];
+    var promise = new Promise((resolve, reject) => {
+        var numberOfReductionSteps = 50;
+        function reductionFold(promise, id) {
+            var newPromise = new Promise((resolve, reject) => {
+                promise.then((reductionState) => {
+                    // console.log("reductionFold on id: "+id);
+                    // console.log("reductionState= ", reductionState);
+                    if (reductionState.iDsOfReducedNodes.includes(id)) {
+                        // Node has already been reduced, transmitting the state
+                        // console.log("Node already reduced");
+                        resolve(reductionState);
+                    } else {
+                        // Node has NOT already been reduced
+                        // Fetch the term of the node to be reduced
+                        // console.log("Node NOT already reduced");
+                        getAttributeOfNode(id, "term").then((term) => {
+                            // Reduce term
+                            window
+                                .reduceTermOneStepAndUpdateDatabase(term)
+                                .then((iDs) => {
+                                    // console.log("iDs= ", iDs);
+                                    // console.log("ReductionState before= ", Object.assign(reductionState));
+                                    // Add the first id returned to the list of reduced ids
+                                    reductionState.iDsOfReducedNodes.push([
+                                        iDs[0],
+                                    ]);
+                                    // Add the rest of the returned ids to the list of ids tht will have to be reduced in the next reduction step
+                                    // console.log("iDs before shift", iDs);
+                                    iDs.shift();
+                                    // console.log("iDs after shift", iDs);
+                                    // console.log("reductionState.iDsOfNodesToReduceNext before concat", reductionState.iDsOfNodesToReduceNext);
+                                    reductionState.iDsOfNodesToReduceNext = reductionState.iDsOfNodesToReduceNext.concat(
+                                        iDs,
+                                    );
+                                    // console.log("reductionState.iDsOfNodesToReduceNext after concat", reductionState.iDsOfNodesToReduceNext);
+                                    // console.log("reductionState after= ", reductionState);
+                                    resolve(reductionState);
+                                }, logErrorFunction);
+                        }, logErrorFunction);
+                    }
+                }, logErrorFunction);
+            });
+            return newPromise;
+        }
+        function reductionStep(
+            reductionState,
+            iDsToBeReduced,
+            nbOfReductionStepsRemaining,
+        ) {
+            // console.log("REDUCTIONSTEP");
+            // console.log("reductionState= ", reductionState);
+            // console.log("iDsToBeReduced= ", iDsToBeReduced);
+            // console.log("nbOfReductionStepsRemaining= "+nbOfReductionStepsRemaining);
+            var promise = new Promise((resolve, reject) => {
+                if (nbOfReductionStepsRemaining > 0) {
+                    var reductionStatePromise = new Promise(
+                        (resolve, reject) => {
+                            resolve(reductionState);
+                        },
+                    );
+                    iDsToBeReduced
+                        .reduce(reductionFold, reductionStatePromise)
+                        .then((finalReductionState) => {
+                            var newIDsToBeReduced =
+                                finalReductionState.iDsOfNodesToReduceNext;
+                            var newReductionState = {
+                                iDsOfReducedNodes:
+                                    finalReductionState.iDsOfReducedNodes,
+                                iDsOfNodesToReduceNext: [],
+                            };
+                            reductionStep(
+                                newReductionState,
+                                newIDsToBeReduced,
+                                nbOfReductionStepsRemaining - 1,
+                            ).then((result) => {
+                                resolve();
+                            }, logErrorFunction);
+                        }, logErrorFunction);
+                } else {
+                    resolve();
+                }
+            });
+            return promise;
+        }
+        window
+            .reduceTermOneStepAndUpdateDatabase(node.propertyMap.term)
+            .then((iDs) => {
+                // console.log("iDs= ", iDs);
+                var initialReductionState = {
+                    iDsOfReducedNodes: [iDs[0]],
+                    iDsOfNodesToReduceNext: [],
+                };
+                // console.log("initialReductionStateBefore= ", initialReductionState);
+                iDs.shift();
+                // console.log("initialReductionState= ", initialReductionState);
+                reductionStep(
+                    initialReductionState,
+                    iDs,
+                    numberOfReductionSteps - 1,
+                ).then((result) => {
+                    resolve();
+                }, logErrorFunction);
+            }, logErrorFunction);
+    });
+    return promise;
 };
 
 // ##### Contextual Menu (End)
@@ -126,10 +232,12 @@ function setUpConnectionWithRacketServer(port) {
         console.log("socket to racket server closed", arguments);
     };
     racketServerSocket.onmessage = function(e) {
-        console.log("Received from redex: " + e);
+        // console.log("Received from redex: "+e);
         var obj = JSON.parse(e.data);
-        console.log("Received from redex (parsed):");
-        console.log(obj);
+        if (verboseRacketServerInteraction) {
+            console.log("Received from redex (parsed):");
+            console.log(obj);
+        }
         var messageId = parseInt(obj.messageId);
         // Calls the resolver of the promise for the receiver message
         redexMessagePromisesResolvers[messageId](obj);
@@ -141,8 +249,10 @@ function setUpConnectionWithRacketServer(port) {
 function socketSendReturnPromise(message) {
     var messageId = getFreshRedexMessageId();
     var messageWithId = messageId + "#####" + message;
-    console.log("Sending to redex:");
-    console.log(messageWithId);
+    if (verboseRacketServerInteraction) {
+        console.log("Sending to redex:");
+        console.log(messageWithId);
+    }
     var promise = new Promise((resolve, reject) => {
         // Stores a resolver for this promise
         redexMessagePromisesResolvers[messageId] = (result) => resolve(result);
@@ -183,8 +293,8 @@ function valueToStringForUseInCypherStatement(value) {
 // Create nodes in the database for each of these term objects, with attributes the attributes present in the term objects, and adds the reduction relation between these nodes.
 // Returns a promise that will resolve to an array containing the ids of the nodes corresponding to 1) the original term and 2) all the terms that were sent by the racket server.
 window.reduceTermOneStepAndUpdateDatabase = function(term) {
-    console.log("reduceTermOneStepAndUpdateDatabase:");
-    console.log(term);
+    // console.log("reduceTermOneStepAndUpdateDatabase:");
+    // console.log(term);
     var promise = new Promise((resolve, reject) => {
         socketSendReturnPromise(term).then((racketAnswer) => {
             getOrCreateNodeForTermObject(racketAnswer.from).then(
@@ -264,6 +374,8 @@ function setNodeRelationIfNotAlreadyThere(
                         relationAttributeValueOrNull,
                     ),
                 );
+            } else {
+                resolve();
             }
         }, logErrorAndRejectPromiseFunctionFactory(reject));
     });
@@ -384,7 +496,6 @@ window.setReducesToRelationFromSourceNodeToTargetNode = function(
     sourceNodeID,
     targetNodeID,
 ) {
-    // Asynchronous: returns a promise
     var promise = new Promise((resolve, reject) => {
         var cypherStatement =
             "MATCH (e) WHERE ID(e)=" +
@@ -404,8 +515,8 @@ window.setReducesToRelationFromSourceNodeToTargetNode = function(
 // If there is one, this function returns its ID.
 // If there is none, it creates one, and returns the ID of the newly created node.
 window.getOrCreateNodeForTermObject = function(termObject) {
-    console.log("getOrCreateNodeForTermObject. termObject=");
-    console.log(termObject);
+    // console.log("getOrCreateNodeForTermObject. termObject=");
+    // console.log(termObject);
     var term = termObject.term;
     var promise = new Promise((resolve, reject) => {
         isTermAlreadyInTheDatabase(term).then((falseOrID) => {
@@ -537,6 +648,20 @@ window.refreshGraph = function() {
     }
     return false;
 };
+
+// Asynchronous: returns a promise.
+// Takes the ID of a node in the graph database and an attribute name, and returns a promise that will resolve to the value of the specified attribute for the node with the specified ID
+// Example of cypher statement ran by this function: MATCH (e) WHERE ID(e)=5 RETURN e.term
+function getAttributeOfNode(nodeID, attributeName) {
+    var cypherStatement =
+        "MATCH (e) WHERE ID(e)=" + nodeID + " RETURN e." + attributeName;
+    var promise = new Promise((resolve, reject) => {
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve(result.records[0]._fields[0]);
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+}
 
 // ##### Neo4j interaction (End)
 // #############################

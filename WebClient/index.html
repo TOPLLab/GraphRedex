@@ -107,7 +107,7 @@
 
   <div class="hide" id="rmenu">
     <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
-    <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu())">Reduce Once</button>
+    <button style="color: white" onclick="contextualMenuAction_ReduceFiftySteps(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce 50 steps And Refresh</button>
       <!-- <ul>
           <li>
               <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
