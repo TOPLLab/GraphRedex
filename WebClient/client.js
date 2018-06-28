@@ -187,44 +187,41 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
     console.log(term);
     var promise = new Promise((resolve, reject) => {
         socketSendReturnPromise(term).then((racketAnswer) => {
-            getOrCreateNodeForTermObject(racketAnswer.from).then(
-                (fromNodeID) => {
-                    var reductionTermObjects = racketAnswer.next;
-                    function processReductionTermObject(termObject) {
-                        var intermediatePromise = new Promise(
-                            (resolve, reject) => {
-                                getOrCreateNodeForTermObject(termObject).then(
-                                    (reductionNodeID) => {
-                                        setNodeRelationIfNotAlreadyThere(
-                                            fromNodeID,
-                                            reductionNodeID,
-                                            "REDUCESTO",
-                                            null,
-                                            null,
-                                        ).then((result) => {
-                                            resolve(reductionNodeID);
-                                        }, logErrorAndRejectPromiseFunctionFactory(reject));
-                                    },
-                                    logErrorAndRejectPromiseFunctionFactory(
-                                        reject,
-                                    ),
-                                );
+            console.log("racketAnswer= ", racketAnswer);
+            const fromTermObject = racketAnswer.from.term_object;
+            getOrCreateNodeForTermObject(fromTermObject).then((fromNodeID) => {
+                var reductionDetails = racketAnswer.next;
+                function processReductionDetail(reductionDetail) {
+                    var intermediatePromise = new Promise((resolve, reject) => {
+                        const termObject = reductionDetail.term_object;
+                        const reductionRuleName = reductionDetail.rule;
+                        getOrCreateNodeForTermObject(termObject).then(
+                            (reductionNodeID) => {
+                                setNodeRelationIfNotAlreadyThere(
+                                    fromNodeID,
+                                    reductionNodeID,
+                                    "REDUCESTO",
+                                    "rule",
+                                    reductionRuleName,
+                                ).then((result) => {
+                                    resolve(reductionNodeID);
+                                }, logErrorAndRejectPromiseFunctionFactory(reject));
                             },
+                            logErrorAndRejectPromiseFunctionFactory(reject),
                         );
-                        return intermediatePromise;
-                    }
-                    var iDsOfReductionNodes_promises = reductionTermObjects.map(
-                        processReductionTermObject,
-                    );
-                    Promise.all(iDsOfReductionNodes_promises).then(
-                        (iDsOfReductionNode) => {
-                            resolve([fromNodeID].concat(iDsOfReductionNode));
-                        },
-                        logErrorAndRejectPromiseFunctionFactory(reject),
-                    );
-                },
-                logErrorAndRejectPromiseFunctionFactory(reject),
-            );
+                    });
+                    return intermediatePromise;
+                }
+                var iDsOfReductionNodes_promises = reductionDetails.map(
+                    processReductionDetail,
+                );
+                Promise.all(iDsOfReductionNodes_promises).then(
+                    (iDsOfReductionNode) => {
+                        resolve([fromNodeID].concat(iDsOfReductionNode));
+                    },
+                    logErrorAndRejectPromiseFunctionFactory(reject),
+                );
+            }, logErrorAndRejectPromiseFunctionFactory(reject));
         }, logErrorAndRejectPromiseFunctionFactory(reject));
     });
     return promise;
