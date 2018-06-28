@@ -13,6 +13,9 @@ function Cy2NeoD3(config, graphId, tableId, sourceId, execId, urlSource, renderG
     var neod3 = new Neod3Renderer();
 	var neo = new Neo(urlSource);
     var editor = createEditor();
+    console.log("hey");
+    // Exporting the codeMirrorEditor in a variable of the window so that it canbe used elsewhere
+    window.codeMirrorEditor = editor;
 	$("#"+execId).click(function(evt) {
 		try {
 			evt.preventDefault();
