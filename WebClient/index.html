@@ -67,6 +67,10 @@
 
   <!-- Tab panes -->
   <div class="tab-content">
+    <div id="nodeInfoBox" style="float: right; background-color:#F5F0F0; /*border: 1px solid #d2d2d2*/; width:25%; position:absolute; z-index: 1000; right: 0px;">
+      <table id="nodeInfoBoxTable" style="width:100%; border:0; border-right: 1px solid #d2d2d2; border-left: 1px solid #d2d2d2; table-layout: fixed;">
+      </table>
+    </div>
     <div role="tabpanel" class="tab-pane active" id="graph">
     	<div class="tab-pane active" id="graph">&nbsp;</div>
     </div>
@@ -108,16 +112,8 @@
   <div class="hide" id="rmenu">
     <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
     <button style="color: white" onclick="contextualMenuAction_ReduceFiftySteps(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce 50 steps And Refresh</button>
-      <!-- <ul>
-          <li>
-              <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
-          </li>
-
-          <li>
-              <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu())">Reduce Once</button>
-          </li>
-      </ul> -->
   </div>
+
   </div>
 </body>
 </html>

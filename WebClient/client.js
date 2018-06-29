@@ -38,6 +38,32 @@ window.writePathQueryTemplateToQueryEditor = function() {
     // document.getElementById("cypher").value = "hey";
 };
 
+window.displayNodeInformationInInfoBox = function(node) {
+    var infoboxContent = "";
+    infoboxContent = infoboxContent + '<col width="35%"><col width="65%">';
+    function keyValueToHTMLTableLine(key, value) {
+        const res =
+            '<tr style="border-bottom: 1px solid #d2d2d2">' +
+            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
+            key +
+            "</td>" +
+            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
+            value +
+            "</td>" +
+            "</tr>";
+        return res;
+    }
+    infoboxContent = infoboxContent + keyValueToHTMLTableLine("id", node.id);
+    const propertyMap = node.propertyMap;
+    for (var key in propertyMap) {
+        if (propertyMap.hasOwnProperty(key)) {
+            infoboxContent =
+                infoboxContent + keyValueToHTMLTableLine(key, propertyMap[key]);
+        }
+    }
+    document.getElementById("nodeInfoBoxTable").innerHTML = infoboxContent;
+};
+
 // #############################
 // ##### Generic (Start)
 var logErrorFunction = (error) => {
@@ -71,6 +97,7 @@ window.onNodeClicked = function(node) {
     showContextualMenuForNode(node);
     // Stores which node was clicked on, so that the buttons of the contextual menu know on which node to act
     setNodeForContextualMenu(node);
+    displayNodeInformationInInfoBox(node);
 };
 
 // Have it so that any click closes the contextual menu
