@@ -49,6 +49,16 @@ window.buttonAction_NewProgramReduceTermOneStep = function(term) {
     }, logErrorFunction);
 };
 
+window.buttonAction_NewProgramReduceTermFiftySteps = function(term) {
+    emptyDatabase().then((result) => {
+        reduceTermMultipleTimes(term, 50).then((originNodeId) => {
+            setNodeType(originNodeId, "Origin").then((result) => {
+                refreshGraph();
+            }, logErrorFunction);
+        }, logErrorFunction);
+    }, logErrorFunction);
+};
+
 function setNodeType(nodeId, nodeType) {
     var cypherStatement =
         "MATCH (e) WHERE ID(e)=" + nodeId + " SET e:" + nodeType;
@@ -132,8 +142,14 @@ window.contextualMenuAction_ReduceOnce = function(node) {
 };
 
 window.contextualMenuAction_ReduceFiftySteps = function(node) {
+    return reduceTermMultipleTimes(node.propertyMap.term, 50);
+};
+
+// Returns a promise that will resolve to the id of the node representing the term sent as argument
+function reduceTermMultipleTimes(term, nbOfReductionSteps) {
     var promise = new Promise((resolve, reject) => {
-        var numberOfReductionSteps = 50;
+        var iDOfSourceNode = null;
+        var numberOfReductionSteps = nbOfReductionSteps;
         function reductionFold(promise, id) {
             var newPromise = new Promise((resolve, reject) => {
                 promise.then((reductionState) => {
@@ -216,28 +232,27 @@ window.contextualMenuAction_ReduceFiftySteps = function(node) {
             });
             return promise;
         }
-        window
-            .reduceTermOneStepAndUpdateDatabase(node.propertyMap.term)
-            .then((iDs) => {
-                // console.log("iDs= ", iDs);
-                var initialReductionState = {
-                    iDsOfReducedNodes: [iDs[0]],
-                    iDsOfNodesToReduceNext: [],
-                };
-                // console.log("initialReductionStateBefore= ", initialReductionState);
-                iDs.shift();
-                // console.log("initialReductionState= ", initialReductionState);
-                reductionStep(
-                    initialReductionState,
-                    iDs,
-                    numberOfReductionSteps - 1,
-                ).then((result) => {
-                    resolve();
-                }, logErrorFunction);
+        window.reduceTermOneStepAndUpdateDatabase(term).then((iDs) => {
+            iDOfSourceNode = iDs[0];
+            // console.log("iDs= ", iDs);
+            var initialReductionState = {
+                iDsOfReducedNodes: [iDs[0]],
+                iDsOfNodesToReduceNext: [],
+            };
+            // console.log("initialReductionStateBefore= ", initialReductionState);
+            iDs.shift();
+            // console.log("initialReductionState= ", initialReductionState);
+            reductionStep(
+                initialReductionState,
+                iDs,
+                numberOfReductionSteps - 1,
+            ).then((result) => {
+                resolve(iDOfSourceNode);
             }, logErrorFunction);
+        }, logErrorFunction);
     });
     return promise;
-};
+}
 
 window.displayNodeInformationInInfoBox = function(node) {
     var infoboxContent = "";
