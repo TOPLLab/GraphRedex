@@ -39,7 +39,7 @@ window.writePathQueryTemplateToQueryEditor = function() {
 };
 
 window.buttonAction_NewProgramReduceTermOneStep = function(term) {
-    emptyDatabase().then((result) => {
+    clearDatabase().then((result) => {
         reduceTermOneStepAndUpdateDatabase(term).then((iDs) => {
             const originNodeID = iDs[0];
             setNodeType(originNodeID, "Origin").then((result) => {
@@ -50,12 +50,18 @@ window.buttonAction_NewProgramReduceTermOneStep = function(term) {
 };
 
 window.buttonAction_NewProgramReduceTermFiftySteps = function(term) {
-    emptyDatabase().then((result) => {
+    clearDatabase().then((result) => {
         reduceTermMultipleTimes(term, 50).then((originNodeId) => {
             setNodeType(originNodeId, "Origin").then((result) => {
                 refreshGraph();
             }, logErrorFunction);
         }, logErrorFunction);
+    }, logErrorFunction);
+};
+
+window.buttonAction_ClearDatabaseThenRefreshGraph = function() {
+    clearDatabase().then((result) => {
+        refreshGraph();
     }, logErrorFunction);
 };
 
@@ -414,7 +420,7 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
 };
 
 // Clears the database of all of its nodes
-window.emptyDatabase = function() {
+window.clearDatabase = function() {
     console.log("Empty Neo4j Database");
     return neo4jSession.run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
 };
