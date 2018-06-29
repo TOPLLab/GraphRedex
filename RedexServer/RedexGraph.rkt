@@ -53,8 +53,9 @@
     (cons 'term_object
     (make-hash 
      (add-kv  'term (expr->string e) 
-      (add-kv 'md5  (bytes->hex-string (md5 (expr->string e)))
-       (trans e)))))))]))
+;      (add-kv 'md5  (bytes->hex-string (md5 (expr->string e)))
+;       (trans e)))))))]))
+       (trans e))))))]))
 
 (define (jsont t)
  (lambda (e)
