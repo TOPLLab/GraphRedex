@@ -38,31 +38,27 @@ window.writePathQueryTemplateToQueryEditor = function() {
     // document.getElementById("cypher").value = "hey";
 };
 
-window.displayNodeInformationInInfoBox = function(node) {
-    var infoboxContent = "";
-    infoboxContent = infoboxContent + '<col width="35%"><col width="65%">';
-    function keyValueToHTMLTableLine(key, value) {
-        const res =
-            '<tr style="border-bottom: 1px solid #d2d2d2">' +
-            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
-            key +
-            "</td>" +
-            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
-            value +
-            "</td>" +
-            "</tr>";
-        return res;
-    }
-    infoboxContent = infoboxContent + keyValueToHTMLTableLine("id", node.id);
-    const propertyMap = node.propertyMap;
-    for (var key in propertyMap) {
-        if (propertyMap.hasOwnProperty(key)) {
-            infoboxContent =
-                infoboxContent + keyValueToHTMLTableLine(key, propertyMap[key]);
-        }
-    }
-    document.getElementById("nodeInfoBoxTable").innerHTML = infoboxContent;
+window.buttonAction_NewProgramReduceTermOneStep = function(term) {
+    emptyDatabase().then((result) => {
+        reduceTermOneStepAndUpdateDatabase(term).then((iDs) => {
+            const originNodeID = iDs[0];
+            setNodeType(originNodeID, "Origin").then((result) => {
+                refreshGraph();
+            }, logErrorFunction);
+        }, logErrorFunction);
+    }, logErrorFunction);
 };
+
+function setNodeType(nodeId, nodeType) {
+    var cypherStatement =
+        "MATCH (e) WHERE ID(e)=" + nodeId + " SET e:" + nodeType;
+    var promise = new Promise((resolve, reject) => {
+        neo4jSession.run(cypherStatement).then((result) => {
+            resolve();
+        }, cypherErrorPrintAndRejectPromiseFunctionFactory(reject));
+    });
+    return promise;
+}
 
 // #############################
 // ##### Generic (Start)
@@ -243,6 +239,32 @@ window.contextualMenuAction_ReduceFiftySteps = function(node) {
     return promise;
 };
 
+window.displayNodeInformationInInfoBox = function(node) {
+    var infoboxContent = "";
+    infoboxContent = infoboxContent + '<col width="35%"><col width="65%">';
+    function keyValueToHTMLTableLine(key, value) {
+        const res =
+            '<tr style="border-bottom: 1px solid #d2d2d2">' +
+            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
+            key +
+            "</td>" +
+            '<td style="border-right: 1px solid #d2d2d2; word-wrap: break-word">' +
+            value +
+            "</td>" +
+            "</tr>";
+        return res;
+    }
+    infoboxContent = infoboxContent + keyValueToHTMLTableLine("id", node.id);
+    const propertyMap = node.propertyMap;
+    for (var key in propertyMap) {
+        if (propertyMap.hasOwnProperty(key)) {
+            infoboxContent =
+                infoboxContent + keyValueToHTMLTableLine(key, propertyMap[key]);
+        }
+    }
+    document.getElementById("nodeInfoBoxTable").innerHTML = infoboxContent;
+};
+
 // ##### Contextual Menu (End)
 // #############################
 
@@ -378,8 +400,8 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
 
 // Clears the database of all of its nodes
 window.emptyDatabase = function() {
-    neo4jSession.run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
-    console.log("Neo4j Database emptied");
+    console.log("Empty Neo4j Database");
+    return neo4jSession.run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r");
 };
 
 // Asynchronous: returns a promise
@@ -600,7 +622,8 @@ window.isTermAlreadyInTheDatabase = function(term) {
 window.addTermObjectToDatabase = function(termObject) {
     var promise = new Promise((resolve, reject) => {
         var term = termObject[term];
-        var cypherStatement = "CREATE (e:Term {";
+        // var cypherStatement = "CREATE (e:Term {";
+        var cypherStatement = "CREATE (e {";
         cypherStatementEnd = "}) RETURN ID(e)";
         // Adds to the cypher statement the attributes of the node. Add a comma before each attribute declaration but the first.
         var addComma = false;

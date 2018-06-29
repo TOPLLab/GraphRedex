@@ -40,17 +40,17 @@
   </textarea>
   <a href="#" title="Execute" id="execute"><i class="fa fa-play-circle-o"></i></a>
   </div>
-  <div id="Term" style="height:100px;">
-((store (x 1)) 
+  <div id="Term" style="height:100px;">((store (x 1)) 
 (threads 
 (set! x (+ x -1)) 
-(set! x (+ x 1))))
-  </div>
+(set! x (+ x 1))))</div>
   <script>
     var editor = ace.edit("Term");
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/scheme");
   </script>
+  <button style="color: white" onclick="buttonAction_NewProgramReduceTermOneStep(editor.getValue())">New program (1 reduction step)</button>
+
   <button style="color: white" onclick="reduceTermOneStepAndUpdateDatabase(editor.getValue())">Send Term</button>
   <button style="color: white" onclick="emptyDatabase()">Empty Database</button>
   <button style="color: white" onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button>
