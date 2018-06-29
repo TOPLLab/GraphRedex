@@ -33,7 +33,7 @@ window.writePathQueryTemplateToQueryEditor = function() {
     window.codeMirrorEditor
         .getDoc()
         .setValue(
-            "MATCH p=((e)-[:REDUCESTO*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n",
+            "MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n",
         );
     // document.getElementById("cypher").value = "hey";
 };
@@ -345,12 +345,13 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
                         const reductionRuleName = reductionDetail.rule;
                         getOrCreateNodeForTermObject(termObject).then(
                             (reductionNodeID) => {
+                                // setNodeRelationIfNotAlreadyThere(fromNodeID, reductionNodeID, "REDUCESTO", "rule", reductionRuleName).then(
                                 setNodeRelationIfNotAlreadyThere(
                                     fromNodeID,
                                     reductionNodeID,
-                                    "REDUCESTO",
-                                    "rule",
                                     reductionRuleName,
+                                    null,
+                                    null,
                                 ).then((result) => {
                                     resolve(reductionNodeID);
                                 }, logErrorAndRejectPromiseFunctionFactory(reject));
@@ -433,7 +434,8 @@ function checkNodeRelation(
 ) {
     var promise = new Promise((resolve, reject) => {
         var relationNameUppercase = relationName.toUpperCase();
-        var cypherStatement = "MATCH (e)-[:" + relationNameUppercase;
+        // The backticks are there in case the relationship name contains special cypher characters like "!"
+        var cypherStatement = "MATCH (e)-[:`" + relationNameUppercase + "`";
         if (relationAttributeNameOrNull != null) {
             var relationAttributeNameLowerCase = relationAttributeNameOrNull.toLowerCase();
             cypherStatement =
@@ -476,13 +478,15 @@ function setNodeRelation(
 ) {
     var promise = new Promise((resolve, reject) => {
         var relationNameUppercase = relationName.toUpperCase();
+        // The backticks are there in case the relationship name contains special cypher characters like "!"
         var cypherStatement =
             "MATCH (e) WHERE ID(e)=" +
             sourceNodeID +
             " MATCH (f) WHERE ID(f)=" +
             targetNodeID +
-            " CREATE (e)-[:" +
-            relationNameUppercase;
+            " CREATE (e)-[:`" +
+            relationNameUppercase +
+            "`";
         if (relationAttributeNameOrNull != null) {
             var relationAttributeNameLowerCase = relationAttributeNameOrNull.toLowerCase();
             cypherStatement =
