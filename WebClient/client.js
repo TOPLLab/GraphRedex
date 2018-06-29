@@ -33,7 +33,7 @@ window.writePathQueryTemplateToQueryEditor = function() {
     window.codeMirrorEditor
         .getDoc()
         .setValue(
-            "MATCH p ((e)-[:REDUCESTO*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)= <IDOfTheSourceNodeOfTheProgram> RETURN p \n",
+            "MATCH p=((e)-[:REDUCESTO*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n",
         );
     // document.getElementById("cypher").value = "hey";
 };
