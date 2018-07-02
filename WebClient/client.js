@@ -47,6 +47,13 @@ window.buttonAction_testProgram1 = function () {
 (set! x (+ x 1))))`);
 };
 
+window.buttonAction_testProgram2 = function () {
+    getAceEditor().setValue(`((store (x 0) (y 0)) 
+(threads 
+(start (getlock y 1 (getlock x 1 (releaselock x 1 (releaselock y 1 1)))))
+(start (getlock x 2 (getlock y 2 (releaselock y 2 (releaselock x 2 2)))))))`);
+};
+
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
     window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
 };
