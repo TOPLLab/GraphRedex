@@ -40,10 +40,7 @@ var verboseRacketServerInteraction = false;
 // #############################
 // ##### Button Actions (Start)
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
-    // Place holder in case the node whose type is "Origin" cannot be found
-    var originNodeID = "<IDOfTheSourceNodeOfTheProgram>";
-
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)='+originNodeID+' RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
 };
 
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
