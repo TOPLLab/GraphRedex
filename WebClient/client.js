@@ -34,11 +34,19 @@ function logErrorAndRejectPromiseFunctionFactory(reject) {return ((error) => {co
 function cypherErrorPrintAndRejectPromiseFunctionFactory(reject) {return ((error) => {console.log("Cypher error:"); console.log(error); reject(error);})}
 // If set to true, will print the messages sent and received from the racket server in the console
 var verboseRacketServerInteraction = false;
+function getAceEditor() {return editor /*the editor variable is defined in index.html*/};
 // ##### Generic (End)
 // #############################
 
 // #############################
 // ##### Button Actions (Start)
+window.buttonAction_testProgram1 = function () {
+    getAceEditor().setValue(`((store (x 1)) 
+(threads 
+(set! x (+ x -1)) 
+(set! x (+ x 1))))`);
+};
+
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
     window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
 };
@@ -97,7 +105,7 @@ window.buttonAction_ClearDatabaseThenRefreshGraph = function() {
 // This function is called in neod3.js when a node is clicked on the graph visualisation
 window.onNodeClicked = function (node) {
     // Sets the text displayed in the ace editor to the term of the node that was clicked
-    editor.setValue(node.propertyMap.term);
+    getAceEditor().setValue(node.propertyMap.term);
     showContextualMenuForNode(node);
     // Stores which node was clicked on, so that the buttons of the contextual menu know on which node to act
     setNodeForContextualMenu(node);
