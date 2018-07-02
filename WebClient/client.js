@@ -256,7 +256,6 @@ window.reduceTermOneStepAndUpdateDatabase = function(term) {
     var promise = new Promise((resolve, reject) => {
         socketSendReturnPromise(term).then(
             (racketAnswer) => {
-                console.log("racketAnswer= ", racketAnswer);
                 const fromTermObject = racketAnswer.from.term_object;
                 (getOrCreateNodeForTermObject(fromTermObject)).then(
                     (fromNodeID) => {
@@ -320,6 +319,7 @@ function reduceTermMultipleTimes(term, nbOfReductionSteps) {
         // Recursive function.
         // Reduces the nodes whose IDs are in iDsToBeReduced, updates the state, and calls itself again if nbOfReductionStepsRemaining is not 0, to reduce the nodes that the last call produced.
         function reductionStep(reductionState, iDsToBeReduced, nbOfReductionStepsRemaining) {
+            console.log("Reduction step starts. "+nbOfReductionStepsRemaining+" more to go.")
             var promise = new Promise((resolve, reject) => {
                 if(nbOfReductionStepsRemaining > 0) {
                     var reductionStatePromise = new Promise((resolve, reject) => {resolve(reductionState)});
