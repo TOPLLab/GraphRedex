@@ -61,7 +61,7 @@ LIMIT 50;`);
 };
 
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f <ResearchCriteriaForTargetNodeForExample{x: 25}>)) RETURN p \n');
 };
 
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
