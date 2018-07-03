@@ -115,6 +115,19 @@
 	    var connection = function() { return {url:$("#neo4jUrl").val(), user:$("#neo4jUser").val(),pass:$("#neo4jPass").val()}; }
 		new Cy2NeoD3(config,"graph","datatable","cypher","execute", connection , true);
 	});
+
+    function highlightNode(n) {
+       n.firstElementChild.classList.add("highlighted");
+    }
+   
+    function dehighlightNode(n) {
+      n.firstElementChild.classList.remove("highlighted");
+    }
+
+    function doWithAllNodes( f ) {
+         d3.selectAll("g.node")[0].forEach(f);
+    }
+
 </script>
 
 
