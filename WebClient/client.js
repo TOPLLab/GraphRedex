@@ -68,6 +68,71 @@ window.buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor = func
     window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE NOT (f)-->() AND f.x <> 0 AND f.y <> 0 RETURN p \n');
 };
 
+window.buttonAction_performQueryFromQueryEditor = function () {
+    const cypherStatement = window.codeMirrorEditor.getDoc().getValue();
+    var queryResultInfoBoxContent = '';
+    queryResultInfoBoxContent = queryResultInfoBoxContent + "<table style='border: 1px solid #d2d2d2'><tr><td style='border-right: 1px solid #d2d2d2'>Query:</td><td style='font-size: 10px'>"+cypherStatement+"</td></tr></table>";
+    queryResultInfoBoxContent = queryResultInfoBoxContent + "<button style='color: white' onclick='unhighlightAllNodes()'>Clear markings</button>";
+    neo4jSession.run(cypherStatement).then(
+        result => {
+            const records = result.records;
+            for (var i = 0; i < records.length; i++) {
+                queryResultInfoBoxContent = queryResultInfoBoxContent + "<h5 style='border-top: 1px solid #d2d2d2'>Result "+i+"<h5>";
+                const record = records[i];
+                queryResultInfoBoxContent = queryResultInfoBoxContent + "<table style='border: 0px'>";
+                record.forEach((v,k) => {
+                    var showButtonCode = "";
+                    const showButtonCodeStart = "<button style='color: white' onclick='";
+                    const showButtonCodeEnd = "'>mark</button>";
+                    if (objectIsNode(v)) {
+                        const id = v.identity.low;
+                        const onclick = "highlightNodesFromIDs(["+id+"])";
+                        showButtonCode = showButtonCodeStart + onclick + showButtonCodeEnd;
+                    }
+                    if (objectIsPath(v)) {
+                        const startNodeId = v.start.identity.low;
+                        var iDsOfNodesToHighlight_asString = "["+startNodeId;
+                        v.segments.forEach(s => {iDsOfNodesToHighlight_asString = iDsOfNodesToHighlight_asString + "," + (s.end.identity.low)});
+                        iDsOfNodesToHighlight_asString = iDsOfNodesToHighlight_asString + "]";
+                        const onclick = "highlightNodesFromIDs("+iDsOfNodesToHighlight_asString+")";
+                        showButtonCode = showButtonCodeStart + onclick + showButtonCodeEnd;
+                    }
+                    queryResultInfoBoxContent = queryResultInfoBoxContent + "<tr><td style='border: 0px'>"+k+"</td><td style='border: 0px'>"+showButtonCode+"</td></tr>";
+                });
+                queryResultInfoBoxContent = queryResultInfoBoxContent + "</table>"
+            }
+            document.getElementById("queryResultInfoBoxContent").innerHTML = queryResultInfoBoxContent;
+        },
+        error => {logErrorFunction(error)}
+    );
+    function objectIsNode(object) {
+        return ((object.identity != null) && (object.labels != null) && (object.properties != null));
+    };
+    function objectIsPath(object) {
+        return ((object.end != null) && (object.segments != null) && (object.start != null));  
+    }
+};
+
+window.highlightNode = function (n) {
+   n.firstElementChild.classList.add("highlighted");
+}
+
+window.unhighlightNode = function(n) {
+  n.firstElementChild.classList.remove("highlighted");
+}
+
+window.doForAllNodes = function( f ) {
+     d3.selectAll("g.node")[0].forEach(f);
+}
+
+window.unhighlightAllNodes = function() {
+    doForAllNodes(n => unhighlightNode(n))
+}
+
+window.highlightNodesFromIDs = function(iDs) {
+    doForAllNodes(n => {if (iDs.includes(Number(n.__data__.id))) {highlightNode(n)}})
+}
+
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
     clearDatabase().then(
         (result) => {

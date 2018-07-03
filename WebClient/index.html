@@ -42,9 +42,10 @@
   RETURN n,r,m
   LIMIT 50;
   </textarea>
-  <button style="color: white" onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query</button>
+  <button style="color: white" onclick="buttonAction_performQueryFromQueryEditor()">Perform query without graph re-render</button>
+  <button style="color: white" onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query template</button>
   <button style="color: white" onclick="buttonAction_writePathQueryTemplateToQueryEditor()">Path query template</button>
-  <button style="color: white" onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks (sample program 2)</button>
+  <button style="color: white" onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks query template (sample program 2)</button>
   <a href="#" title="Execute" id="execute"><i class="fa fa-play-circle-o"></i></a>
   </div>
   <div id="Term" style="height:100px;">((store (x 1)) 
@@ -76,9 +77,19 @@
 
   <!-- Tab panes -->
   <div class="tab-content">
-    <div id="nodeInfoBox" style="float: right; background-color:#F5F0F0; /*border: 1px solid #d2d2d2*/; width:25%; position:absolute; z-index: 1000; right: 0px;">
-      <table id="nodeInfoBoxTable" style="width:100%; border:0; border-right: 1px solid #d2d2d2; border-left: 1px solid #d2d2d2; table-layout: fixed;">
-      </table>
+    <div id="infoSection" style="float: right; width:25%; position:absolute; z-index: 1000; right: 0px;">
+      <div id="nodeInfoBox" style="background-color:#F5F0F0; margin-top: 25px; border-top: 1px solid #d2d2d2;">
+        <h5>Selected Node Information</h5>
+        <table id="nodeInfoBoxTable" style="width:100%; border:0; border-right: 1px solid #d2d2d2; border-left: 1px solid #d2d2d2; table-layout: fixed;">
+        </table>
+      </div>
+
+      <div id="queryResultInfoBox" style="background-color:#F5F0F0; margin-top: 25px; border: 1px solid #d2d2d2;">
+        <h5>Query Result</h5>
+        <div id="queryResultInfoBoxContent"></div>
+        <table id="queryResultInfoBoxTable" style="width:100%; border:0; border-right: 1px solid #d2d2d2; border-left: 1px solid #d2d2d2; table-layout: fixed;">
+        </table>
+      </div>
     </div>
     <div role="tabpanel" class="tab-pane active" id="graph">
     	<div class="tab-pane active" id="graph">&nbsp;</div>
@@ -115,19 +126,6 @@
 	    var connection = function() { return {url:$("#neo4jUrl").val(), user:$("#neo4jUser").val(),pass:$("#neo4jPass").val()}; }
 		new Cy2NeoD3(config,"graph","datatable","cypher","execute", connection , true);
 	});
-
-    function highlightNode(n) {
-       n.firstElementChild.classList.add("highlighted");
-    }
-   
-    function dehighlightNode(n) {
-      n.firstElementChild.classList.remove("highlighted");
-    }
-
-    function doWithAllNodes( f ) {
-         d3.selectAll("g.node")[0].forEach(f);
-    }
-
 </script>
 
 
