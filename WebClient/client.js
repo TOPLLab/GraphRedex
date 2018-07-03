@@ -54,8 +54,14 @@ window.buttonAction_testProgram2 = function () {
 (start (getlock x 2 (getlock y 2 (releaselock y 2 (releaselock x 2 2)))))))`);
 };
 
+window.buttonAction_writeShowFullGraphQueryToQueryEditor = function () {
+    window.codeMirrorEditor.getDoc().setValue(`MATCH (n)-[r]->(m)
+RETURN n,r,m
+LIMIT 50;`);
+};
+
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f:Term <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e)-[r*]->(f <ResearchCriteriaForTargetNodeForExample{x: 25}>)) WHERE ID(e)=<IDOfTheSourceNodeOfTheProgram> RETURN p \n');
 };
 
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
