@@ -61,7 +61,11 @@ LIMIT 50;`);
 };
 
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f <ResearchCriteriaForTargetNodeForExample{x: 25}>)) RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE <researchCriteriaForExamplef.x=25> RETURN p \n');
+};
+
+window.buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor = function () {
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE NOT (f)-->() AND f.x <> 0 AND f.y <> 0 RETURN p \n');
 };
 
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
