@@ -11,7 +11,7 @@
 ;
 (require redex)
 (require graph)
-(require "RedexGraph.rkt")
+(require "./GenericServerCode/RedexGraph.rkt")
 
 ;
 ; The threads language 
