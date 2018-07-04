@@ -227,7 +227,7 @@ window.displayNodeInformationInInfoBox = function(node) {
     var infoboxContent = "<col width=\"35%\"><col width=\"65%\">"
     function keyValueToHTMLTableLine(key, value) {
         const res =
-            "<tr style=\"border-bottom: 1px solid #d2d2d2\">" +
+            "<tr style=\"border-top: 1px solid #d2d2d2\">" +
                 "<td style=\"border-right: 1px solid #d2d2d2; word-wrap: break-word\">"+ 
                     key +
                 "</td>" +
