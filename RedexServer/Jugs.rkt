@@ -18,12 +18,14 @@
 ; Programs p consists of a store which are key-value pairs and zero or more threads
 ; Each thread is an expression e
 ; 
+; A jug (x v v) x: name of the jug, first v: capacity of the jug, second v: content of the jug
+
 (define-language jugs
-  (p (jugs (x v v) ...))
+  (p (jugs (x v v) (x v v)))
   ; (e (set! x e) (+ e e) x v)
   (v number)
-  (x variable)
-  (pc (jugs (x v v) ...)))
+  (x variable))
+  ; (pc (jugs (x v v) ...)))
   ; (tc (threads e ... ec e ...))
   ; (ec (set! variable ec) (+ ec e) (+ v ec) hole))
 
@@ -43,11 +45,42 @@
         
    ; deref)
 
+    ; (-->
+    ;     (jugs (x_1 v_1 v_11) ... (x_i v_i number_ii) (x_2 v_2 v_22) ... (x_j number_j number_jj) (x_3 v_3 v_33) ...)
+    ;    ;------------------------------------------------------------------------------- [transfer]
+    ;     (jugs (x_1 v_1 v_11) ... (x_i v_i 0) (x_2 v_2 v_22) ... (x_j v_j (+ (term number_ii) (term number_jj))) (x_3 v_3 v_33) ...)
+    ; ; (side-condition (not (>= (+ (term number_ii) (term number_jj)) (term number_j))))
+    ; transfer)
+
+    ; (-->
+    ;     (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
+    ;    ;------------------------------------------------------------------------------- [transferLTR]
+    ;     (jugs (x_1 v_1 0) (x_2 v_2 ,(+ (term v_11) (term v_22))))
+    ; (side-condition (not (eq? (term v_11) 0)))
+    ; ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
+    ; transferLTR) 
+
+    (-->
+        (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
+       ;------------------------------------------------------------------------------- [transferRTL]
+        (jugs (x_1 v_1 ,(min (term v_1) (+ (term v_11) (term v_22)))) (x_2 v_2 ,(- (term v_22) (min (term v_22) (- (term v_1) (term v_11))))))
+    (side-condition (not (eq? (term v_22) 0)))
+    ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
+    transferRTL) 
+
+    ; (-->
+    ;     (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
+    ;    ;------------------------------------------------------------------------------- [transferRTL]
+    ;     (jugs (x_1 v_1 ,(min (term v_1) (+ (term v_11) (term v_22)))) (x_2 v_2 ,(max (`0) (- (term v_22) (- (term v_1) (term v_11))))))
+    ; (side-condition (not (eq? (term v_22) 0)))
+    ; ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
+    ; transferRTL) 
+
     (-->
         (jugs (x_1 v_1 v_11) ... (x_i v_i v_ii) (x_2 v_2 v_22) ...)
        ;------------------------------------------------------------------------------- [empty]
         (jugs (x_1 v_1 v_11) ... (x_i v_i 0) (x_2 v_2 v_22) ...)
-        
+    (side-condition (not (eq? (term v_ii) 0)))
     empty) 
 
     (-->

@@ -17,6 +17,9 @@
     circle.highlighted {
         fill: green;
     }
+    path.highlighted {
+      fill: green;
+    }
   </style>
   <script src="neo4j-web.js"></script>
   <script type="text/javascript" src="client.js"></script>
@@ -44,6 +47,7 @@
   <button style="color: white" onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query template</button>
   <button style="color: white" onclick="buttonAction_writePathQueryTemplateToQueryEditor()">Path query template</button>
   <button style="color: white" onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks query template (sample program 2)</button>
+  <button style="color: white" onclick="buttonAction_writePathToSolutionJugInSampleProgram3QueryToQueryEditor()">Path to solution jug query template (sample program 3)</button>
   <a href="#" title="Execute" id="execute"><i class="fa fa-play-circle-o"></i></a>
   </div>
   <div id="Term" style="height:100px;"> -- Write your term here -- </div>

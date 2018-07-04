@@ -64,21 +64,26 @@ RETURN n,r,m`);
 };
 
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE <researchCriteriaForExamplef.x=25> RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE <researchCriteriaForExamplef.x=25> RETURN p\n');
 };
 
 window.buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor = function () {
-    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE NOT (f)-->() AND f.x <> 0 AND f.y <> 0 RETURN p \n');
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=((e:Origin)-[r*]->(f)) WHERE NOT (f)-->() AND f.x <> 0 AND f.y <> 0 RETURN p\n');
+};
+
+window.buttonAction_writePathToSolutionJugInSampleProgram3QueryToQueryEditor = function () {
+    window.codeMirrorEditor.getDoc().setValue('MATCH p=allShortestPaths(((e:Origin)-[r*]->(f))) WHERE f.x=4 AND f.y=0 RETURN p\n');
 };
 
 window.buttonAction_performQueryFromQueryEditor = function () {
     const cypherStatement = window.codeMirrorEditor.getDoc().getValue();
     var queryResultInfoBoxContent = '';
     queryResultInfoBoxContent = queryResultInfoBoxContent + "<table style='border: 1px solid #d2d2d2'><tr><td style='border-right: 1px solid #d2d2d2'>Query:</td><td style='font-size: 10px'>"+cypherStatement+"</td></tr></table>";
-    queryResultInfoBoxContent = queryResultInfoBoxContent + "<button style='color: white' onclick='unhighlightAllNodes()'>Clear markings</button>";
+    queryResultInfoBoxContent = queryResultInfoBoxContent + "<button style='color: white' onclick='unhighlightAllNodes(); unhighlightAllRelationships()'>Clear markings</button>";
     neo4jSession.run(cypherStatement).then(
         result => {
             const records = result.records;
+            console.log("result: ", records);
             for (var i = 0; i < records.length; i++) {
                 queryResultInfoBoxContent = queryResultInfoBoxContent + "<h5 style='border-top: 1px solid #d2d2d2'>Result "+i+"<h5>";
                 const record = records[i];
@@ -95,9 +100,17 @@ window.buttonAction_performQueryFromQueryEditor = function () {
                     if (objectIsPath(v)) {
                         const startNodeId = v.start.identity.low;
                         var iDsOfNodesToHighlight_asString = "["+startNodeId;
-                        v.segments.forEach(s => {iDsOfNodesToHighlight_asString = iDsOfNodesToHighlight_asString + "," + (s.end.identity.low)});
+                        var iDsOfRelationshipsToHighlight_asString = "[";
+                        var addComma = false;
+                        v.segments.forEach(s => {
+                            iDsOfNodesToHighlight_asString = iDsOfNodesToHighlight_asString + "," + (s.end.identity.low);
+                            if(addComma) {iDsOfRelationshipsToHighlight_asString = iDsOfRelationshipsToHighlight_asString + ","}
+                            else {addComma = true};
+                            iDsOfRelationshipsToHighlight_asString = iDsOfRelationshipsToHighlight_asString + (s.relationship.identity.low);
+                        });
                         iDsOfNodesToHighlight_asString = iDsOfNodesToHighlight_asString + "]";
-                        const onclick = "highlightNodesFromIDs("+iDsOfNodesToHighlight_asString+")";
+                        iDsOfRelationshipsToHighlight_asString = iDsOfRelationshipsToHighlight_asString + "]";
+                        const onclick = "highlightNodesFromIDs("+iDsOfNodesToHighlight_asString+")" + "; highlightRelationshipsFromIDs("+iDsOfRelationshipsToHighlight_asString+")";
                         showButtonCode = showButtonCodeStart + onclick + showButtonCodeEnd;
                     }
                     queryResultInfoBoxContent = queryResultInfoBoxContent + "<tr><td style='border: 0px'>"+k+"</td><td style='border: 0px'>"+showButtonCode+"</td></tr>";
@@ -115,26 +128,6 @@ window.buttonAction_performQueryFromQueryEditor = function () {
         return ((object.end != null) && (object.segments != null) && (object.start != null));  
     }
 };
-
-window.highlightNode = function (n) {
-   n.firstElementChild.classList.add("highlighted");
-}
-
-window.unhighlightNode = function(n) {
-  n.firstElementChild.classList.remove("highlighted");
-}
-
-window.doForAllNodes = function( f ) {
-     d3.selectAll("g.node")[0].forEach(f);
-}
-
-window.unhighlightAllNodes = function() {
-    doForAllNodes(n => unhighlightNode(n))
-}
-
-window.highlightNodesFromIDs = function(iDs) {
-    doForAllNodes(n => {if (iDs.includes(Number(n.__data__.id))) {highlightNode(n)}})
-}
 
 window.buttonAction_NewProgramReduceTermOneStep = function (term) {
     clearDatabase().then(
@@ -182,6 +175,53 @@ window.buttonAction_ClearDatabaseThenRefreshGraph = function() {
     )
 }
 // ##### Button Actions (End)
+// #############################
+
+// #############################
+// ##### Highlight/Unhighlight graph elements (Start)
+
+window.highlightNode = function (n) {
+   n.firstElementChild.classList.add("highlighted");
+}
+
+window.unhighlightNode = function(n) {
+  n.firstElementChild.classList.remove("highlighted");
+}
+
+window.doForAllNodes = function( f ) {
+     d3.selectAll("g.node")[0].forEach(f);
+}
+
+window.unhighlightAllNodes = function() {
+    doForAllNodes(n => unhighlightNode(n))
+}
+
+window.highlightNodesFromIDs = function(iDs) {
+    doForAllNodes(n => {if (iDs.includes(Number(n.__data__.id))) {highlightNode(n)}})
+}
+
+
+window.highlightRelationship = function (r) {
+   r.firstElementChild.classList.add("highlighted");
+}
+
+window.unhighlightRelationship = function (r) {
+   r.firstElementChild.classList.remove("highlighted");
+}
+
+window.unhighlightAllRelationships = function () {
+   doForAllRelationships(r => unhighlightRelationship(r))
+}
+
+window.highlightRelationshipsFromIDs = function(iDs) {
+    doForAllRelationships(r => {if (iDs.includes(Number(r.__data__.id))) {highlightRelationship(r)}})
+}
+
+window.doForAllRelationships = function( f ) {
+     d3.selectAll("g.relationship")[0].forEach(f);
+}
+
+// ##### Highlight/Unhighlight graph elements (End)
 // #############################
 
 // #############################
@@ -438,12 +478,10 @@ function reduceTermMultipleTimes(term, nbOfReductionSteps) {
                     (reductionState) => {
                         if (reductionState.iDsOfReducedNodes.includes(id)) {
                             // Node has already been reduced, transmitting the state
-                            console.log("Node "+id+"has already been reduced");
                             resolve(reductionState);
                         } else {
                             // Node has NOT already been reduced
                             // Fetch the term of the node to be reduced
-                            console.log("Node "+id+"has NOT already been reduced");
                             getAttributeOfNode(id, "term").then(
                                 (term) => {
                                     // Reduce term
