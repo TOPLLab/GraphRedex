@@ -38,8 +38,7 @@
   <input class="form-control" type="text" size="8" value="neo4j" id="neo4jUser"/>
   <input class="form-control" type="password" size="8" placeholder="password" value="neo4j-js-password" id="neo4jPass"/><br/>
   <textarea name="cypher" id="cypher" rows="4" cols="120" data-lang="cypher" class="code form-control">
-  MATCH (n)-[r]->(m)
-  RETURN n,r,m
+ -- Write your query here -- 
   </textarea>
   <button style="color: white" onclick="buttonAction_performQueryFromQueryEditor()">Perform query without graph re-render</button>
   <button style="color: white" onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query template</button>
@@ -47,10 +46,7 @@
   <button style="color: white" onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks query template (sample program 2)</button>
   <a href="#" title="Execute" id="execute"><i class="fa fa-play-circle-o"></i></a>
   </div>
-  <div id="Term" style="height:100px;">((store (x 1)) 
-(threads 
-(set! x (+ x -1)) 
-(set! x (+ x 1))))</div>
+  <div id="Term" style="height:100px;"> -- Write your term here -- </div>
   <script>
     var editor = ace.edit("Term");
     editor.setTheme("ace/theme/monokai");
