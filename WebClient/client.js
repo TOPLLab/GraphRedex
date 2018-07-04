@@ -56,8 +56,7 @@ window.buttonAction_testProgram2 = function () {
 
 window.buttonAction_writeShowFullGraphQueryToQueryEditor = function () {
     window.codeMirrorEditor.getDoc().setValue(`MATCH (n)-[r]->(m)
-RETURN n,r,m
-LIMIT 50;`);
+RETURN n,r,m`);
 };
 
 window.buttonAction_writePathQueryTemplateToQueryEditor = function () {
@@ -672,7 +671,7 @@ window.refreshGraph = function() {
     urlSource = function() { return {url:$("#neo4jUrl").val(), user:$("#neo4jUser").val(),pass:$("#neo4jPass").val()}; };
     renderGraph = true;
     var cbResult = null;
-    query = " MATCH (n)-[r]->(m) RETURN n,r,m LIMIT 50;";
+    query = " MATCH (n)-[r]->(m) RETURN n,r,m";
     var neod3 = new Neod3Renderer();
     var neo = new Neo(urlSource);
     try {
