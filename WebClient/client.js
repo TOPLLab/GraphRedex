@@ -50,8 +50,8 @@ window.buttonAction_testProgram1 = function () {
 window.buttonAction_testProgram2 = function () {
     getAceEditor().setValue(`((store (x 0) (y 0)) 
 (threads 
-(start (getlock y 1 (getlock x 1 (releaselock x 1 (releaselock y 1 1)))))
-(start (getlock x 2 (getlock y 2 (releaselock y 2 (releaselock x 2 2)))))))`);
+(start (getlock x 1 (getlock y 1 (releaselock y 1 (releaselock x 1 1)))))
+(start (getlock y 2 (getlock x 2 (releaselock x 2 (releaselock y 2 2)))))))`);
 };
 
 window.buttonAction_writeShowFullGraphQueryToQueryEditor = function () {
