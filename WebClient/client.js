@@ -33,7 +33,7 @@ var logErrorFunction = (error) => {console.log(error)};
 function logErrorAndRejectPromiseFunctionFactory(reject) {return ((error) => {console.log(error); reject(error)})}
 function cypherErrorPrintAndRejectPromiseFunctionFactory(reject) {return ((error) => {console.log("Cypher error:"); console.log(error); reject(error);})}
 // If set to true, will print the messages sent and received from the racket server in the console
-var verboseRacketServerInteraction = false;
+var verboseRacketServerInteraction = true;
 function getAceEditor() {return editor /*the editor variable is defined in index.html*/};
 // ##### Generic (End)
 // #############################
@@ -52,6 +52,10 @@ window.buttonAction_testProgram2 = function () {
 (threads 
 (start (getlock x 1 (getlock y 1 (releaselock y 1 (releaselock x 1 1)))))
 (start (getlock y 2 (getlock x 2 (releaselock x 2 (releaselock y 2 2)))))))`);
+};
+
+window.buttonAction_testProgram3 = function () {
+    getAceEditor().setValue(`(jugs (x 5 0) (y 3 0))`);
 };
 
 window.buttonAction_writeShowFullGraphQueryToQueryEditor = function () {
@@ -400,7 +404,7 @@ function reduceTermMultipleTimes(term, nbOfReductionSteps) {
         // Recursive function.
         // Reduces the nodes whose IDs are in iDsToBeReduced, updates the state, and calls itself again if nbOfReductionStepsRemaining is not 0, to reduce the nodes that the last call produced.
         function reductionStep(reductionState, iDsToBeReduced, nbOfReductionStepsRemaining) {
-            console.log("Reduction step starts. "+nbOfReductionStepsRemaining+" more to go.")
+            console.log("Reduction step starts. "+nbOfReductionStepsRemaining+" more to go.");
             var promise = new Promise((resolve, reject) => {
                 if(nbOfReductionStepsRemaining > 0) {
                     var reductionStatePromise = new Promise((resolve, reject) => {resolve(reductionState)});
@@ -434,17 +438,19 @@ function reduceTermMultipleTimes(term, nbOfReductionSteps) {
                     (reductionState) => {
                         if (reductionState.iDsOfReducedNodes.includes(id)) {
                             // Node has already been reduced, transmitting the state
+                            console.log("Node "+id+"has already been reduced");
                             resolve(reductionState);
                         } else {
                             // Node has NOT already been reduced
                             // Fetch the term of the node to be reduced
+                            console.log("Node "+id+"has NOT already been reduced");
                             getAttributeOfNode(id, "term").then(
                                 (term) => {
                                     // Reduce term
                                     (window.reduceTermOneStepAndUpdateDatabase(term)).then(
                                         (iDs) => {
                                             // Add the first id returned to the list of reduced ids
-                                            reductionState.iDsOfReducedNodes.push([iDs[0]]);
+                                            reductionState.iDsOfReducedNodes.push(iDs[0]);
                                             // Add the rest of the returned ids to the list of ids tht will have to be reduced in the next reduction step
                                             iDs.shift();
                                             reductionState.iDsOfNodesToReduceNext = reductionState.iDsOfNodesToReduceNext.concat(iDs);
