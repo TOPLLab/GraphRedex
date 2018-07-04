@@ -7,87 +7,56 @@
 ;        \/           \/|__|        \/          \/     \/     \/    \/      \/
 ;
 ; Example to show how to use GraphRedex. 
-; This is an adapted version of the threads example from the plt-redex example repository
 ;
 (require redex)
 (require graph)
 (require "./GenericServerCode/RedexGraph.rkt")
 
 ;
-; The threads language 
-; Programs p consists of a store which are key-value pairs and zero or more threads
-; Each thread is an expression e
+; The jugs language 
+; Programs p consists of two jugs
 ; 
-; A jug (x v v) x: name of the jug, first v: capacity of the jug, second v: content of the jug
+; Jug: (x v v) where 
+;   x: name of the jug
+;   first v: capacity of the jug
+;   second v: content of the jug
+;
+; Operations:
+;   - Emptying a jug (but not if it's already empty)
+;   - Filling a jug to its maximal capacity (but not if it's already full)
+;   - Transfering the content of a jug into another (but not if the source jug is empty) (the source jug retains the leftover if not all of its content can be transferred)
+;       For the moment, there is only a transfer rule from jugs on the right (in the program term) to jugs on the left
+;
+; Standard example: Starting from (jugs (x 5 0) (y 3 0)), how to get to (jugs (x 5 4) (y 3 0))?
 
 (define-language jugs
   (p (jugs (x v v) (x v v)))
-  ; (e (set! x e) (+ e e) x v)
   (v number)
   (x variable))
-  ; (pc (jugs (x v v) ...)))
-  ; (tc (threads e ... ec e ...))
-  ; (ec (set! variable ec) (+ ec e) (+ v ec) hole))
 
 (define reductions
   (reduction-relation
    jugs
 
-   ; (-->       (in-hole pc_1  (+ number_1 number_2))
-   ;      ;------------------------------------------------------ [sum]
-   ;        (in-hole pc_1 ,(+ (term number_1) (term number_2)))
-   ;  sum)
-
-   ; (-->
-   ;        ((store  (x_1 v_1)... (x_i v_i) (x_2 v_2) ...) (in-hole tc_1 x_i))
-   ;      ;-------------------------------------------------------------------- [deref]
-   ;        ((store  (x_1 v_1) ...  (x_i v_i) (x_2 v_2) ...) (in-hole tc_1 v_i))
-        
-   ; deref)
-
-    ; (-->
-    ;     (jugs (x_1 v_1 v_11) ... (x_i v_i number_ii) (x_2 v_2 v_22) ... (x_j number_j number_jj) (x_3 v_3 v_33) ...)
-    ;    ;------------------------------------------------------------------------------- [transfer]
-    ;     (jugs (x_1 v_1 v_11) ... (x_i v_i 0) (x_2 v_2 v_22) ... (x_j v_j (+ (term number_ii) (term number_jj))) (x_3 v_3 v_33) ...)
-    ; ; (side-condition (not (>= (+ (term number_ii) (term number_jj)) (term number_j))))
-    ; transfer)
-
-    ; (-->
-    ;     (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
-    ;    ;------------------------------------------------------------------------------- [transferLTR]
-    ;     (jugs (x_1 v_1 0) (x_2 v_2 ,(+ (term v_11) (term v_22))))
-    ; (side-condition (not (eq? (term v_11) 0)))
-    ; ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
-    ; transferLTR) 
-
     (-->
         (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
        ;------------------------------------------------------------------------------- [transferRTL]
         (jugs (x_1 v_1 ,(min (term v_1) (+ (term v_11) (term v_22)))) (x_2 v_2 ,(- (term v_22) (min (term v_22) (- (term v_1) (term v_11))))))
-    (side-condition (not (eq? (term v_22) 0)))
-    ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
-    transferRTL) 
-
-    ; (-->
-    ;     (jugs (x_1 v_1 v_11) (x_2 v_2 v_22))
-    ;    ;------------------------------------------------------------------------------- [transferRTL]
-    ;     (jugs (x_1 v_1 ,(min (term v_1) (+ (term v_11) (term v_22)))) (x_2 v_2 ,(max (`0) (- (term v_22) (- (term v_1) (term v_11))))))
-    ; (side-condition (not (eq? (term v_22) 0)))
-    ; ; (side-condition (not (>= (+ (term v_ii) (term v_jj)) (term v_j))))
-    ; transferRTL) 
+        (side-condition (and (not (eq? (term v_22) 0)) (not (eq? (term v_1) (term v_11)))))
+    transferRTL)
 
     (-->
         (jugs (x_1 v_1 v_11) ... (x_i v_i v_ii) (x_2 v_2 v_22) ...)
        ;------------------------------------------------------------------------------- [empty]
         (jugs (x_1 v_1 v_11) ... (x_i v_i 0) (x_2 v_2 v_22) ...)
-    (side-condition (not (eq? (term v_ii) 0)))
+        (side-condition (not (eq? (term v_ii) 0)))
     empty) 
 
     (-->
         (jugs (x_1 v_1 v_11) ... (x_i v_i v_ii) (x_2 v_2 v_22) ...)
        ;------------------------------------------------------------------------------- [fill]
         (jugs (x_1 v_1 v_11) ... (x_i v_i v_i) (x_2 v_2 v_22) ...)
-        
+        (side-condition (not (eq? (term v_i) (term v_ii))))
     fill)))
 
 
