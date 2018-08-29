@@ -43,11 +43,11 @@
   <textarea name="cypher" id="cypher" rows="4" cols="120" data-lang="cypher" class="code form-control">
  -- Write your query here -- 
   </textarea>
-  <button style="color: white" onclick="buttonAction_performQueryFromQueryEditor()">Perform query without graph re-render</button>
-  <button style="color: white" onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query template</button>
-  <button style="color: white" onclick="buttonAction_writePathQueryTemplateToQueryEditor()">Path query template</button>
-  <button style="color: white" onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks query template (sample program 2)</button>
-  <button style="color: white" onclick="buttonAction_writePathToSolutionJugInSampleProgram3QueryToQueryEditor()">Path to solution jug query template (sample program 3)</button>
+  <button onclick="buttonAction_performQueryFromQueryEditor()">Perform query without graph re-render</button>
+  <button onclick="buttonAction_writeShowFullGraphQueryToQueryEditor()">Show full graph query template</button>
+  <button onclick="buttonAction_writePathQueryTemplateToQueryEditor()">Path query template</button>
+  <button onclick="buttonAction_writePathToDeadlockInSampleProgram2QueryToQueryEditor()">Path to deadlocks query template (sample program 2)</button>
+  <button onclick="buttonAction_writePathToSolutionJugInSampleProgram3QueryToQueryEditor()">Path to solution jug query template (sample program 3)</button>
   <a href="#" title="Execute" id="execute"><i class="fa fa-play-circle-o"></i></a>
   </div>
   <div id="Term" style="height:100px;"> -- Write your term here -- </div>
@@ -56,16 +56,16 @@
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/scheme");
   </script>
-  <button style="color: white" onclick="buttonAction_NewProgramReduceTermOneStep(editor.getValue())">Use as origin for new program (1 reduction step)</button>
-  <button style="color: white" onclick="buttonAction_NewProgramReduceTermFiftySteps(editor.getValue())">Use as origin for new program (50 reduction steps)</button>
+  <button onclick="buttonAction_NewProgramReduceTermOneStep(editor.getValue())">Use as origin for new program (1 reduction step)</button>
+  <button onclick="buttonAction_NewProgramReduceTermFiftySteps(editor.getValue())">Use as origin for new program (50 reduction steps)</button>
 
-  <!-- <button style="color: white" onclick="reduceTermOneStepAndUpdateDatabase(editor.getValue())">Send Term</button> -->
-  <button style="color: white" onclick="buttonAction_ClearDatabaseThenRefreshGraph()">Clear Database</button>
-  <button style="color: white" onclick="buttonAction_testProgram1()">Sample Program 1 (Threads)</button>
-  <button style="color: white" onclick="buttonAction_testProgram2()">Sample Program 2 (Threadslock)</button>
-  <button style="color: white" onclick="buttonAction_testProgram3()">Sample Program 3 (Jugs)</button>
-  <!-- <button style="color: white" onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button> -->
-  <!-- <button style="color: white" onclick="refreshGraph()">Refresh Graph</button> -->
+  <!-- <button onclick="reduceTermOneStepAndUpdateDatabase(editor.getValue())">Send Term</button> -->
+  <button onclick="buttonAction_ClearDatabaseThenRefreshGraph()">Clear Database</button>
+  <button onclick="buttonAction_testProgram1()">Sample Program 1 (Threads)</button>
+  <button onclick="buttonAction_testProgram2()">Sample Program 2 (Threadslock)</button>
+  <button onclick="buttonAction_testProgram3()">Sample Program 3 (Jugs)</button>
+  <!-- <button onclick="isTermAlreadyInTheDatabase()">Duplicate Search</button> -->
+  <!-- <button onclick="refreshGraph()">Refresh Graph</button> -->
 
 <div role="tabpanel">
 
@@ -130,8 +130,8 @@
 
 
   <div class="hide" id="rmenu">
-    <button style="color: white" onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
-    <button style="color: white" onclick="contextualMenuAction_ReduceFiftySteps(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce 50 steps And Refresh</button>
+    <button onclick="contextualMenuAction_ReduceOnce(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce Once And Refresh</button>
+    <button onclick="contextualMenuAction_ReduceFiftySteps(getNodeForContextualMenu()).then((result) => refreshGraph(), (error) => console.log(error))">Reduce 50 steps And Refresh</button>
   </div>
 
   </div>
