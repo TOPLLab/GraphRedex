@@ -51,7 +51,7 @@
 
 
 ;
-; Translation function to expose certain information of the redex model as attributes for the nodes
+; Extraction function to expose certain information of the redex model as attributes for the nodes
 ;
 (define (term->kv exp)
   (match exp
