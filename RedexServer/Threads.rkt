@@ -11,7 +11,6 @@
 ;
 (require redex)
 (require graph)
-(require "./GenericServerCode/RedexGraph.rkt")
 
 ;
 ; The threads language 
@@ -59,4 +58,6 @@
     [`((store (x ,x)) (threads ,t1 ,t2))
        (list (cons 'x x) )]))
  
-(run-server reductions term->kv)
+
+(require "./GenericServerCode/EchoServer.rkt")
+(run-echo reductions term->kv)

@@ -10,7 +10,6 @@
 ;
 (require redex)
 (require graph)
-(require "./GenericServerCode/RedexGraph.rkt")
 
 ;
 ; The jugs language 
@@ -68,4 +67,6 @@
     [`(jugs (x ,x ,a) (y ,z ,t))
        (list (cons 'x a) (cons 'y t) )]))
  
-(run-server reductions term->kv)
+
+(require "./GenericServerCode/EchoServer.rkt")
+(run-echo reductions term->kv)

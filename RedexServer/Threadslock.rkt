@@ -11,7 +11,6 @@
 ;
 (require redex)
 (require graph)
-(require "./GenericServerCode/RedexGraph.rkt")
 
 ;
 ; The threadslock language.
@@ -58,4 +57,6 @@
     [`((store (x ,x) (y ,y)) (threads ,t1 ,t2))
        (list (cons 'x x) (cons 'y y))]))
  
-(run-server reductions term->kv)
+(require "./GenericServerCode/EchoServer.rkt")
+(run-echo reductions term->kv)
+
