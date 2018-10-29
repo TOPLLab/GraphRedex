@@ -13,16 +13,19 @@
                  #:version "1.1"
                  #:method "POST"
                  #:port 7474
-                 #:headers  '("Authorization: Basic bmVvNGo6bmVvNGotanMtcGFzc3dvcmQ=" ; base64 of "neo4j:neo4j-js-password"
+                 #:headers  '("Authorization: Basic bmVvNGo6bmVvNGotanMtcGFzc3dvcmQ="
                               "Content-Type: application/json"
                               "Accept: application/json; charset=UTF-8"
                               )
                  #:data qry))
 (displayln qry)
-(displayln status)
-(displayln headers)
-(displayln (port->string in))
+;(displayln status)
+;(displayln headers)
+(let ((result (string->jsexpr (port->string in)))) 
+(displayln result)
 (close-input-port in)
+result
+)
 )
 
 
