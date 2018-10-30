@@ -38,7 +38,7 @@
 
 (define (neo4j-node-done term)
 (let ((res (doNeo4jP 
-    "MATCH (e) WHERE e.term = {term} AND e.expanded = 1 RETURN ID(e)" 
+    "MATCH (e) WHERE e.term = {term} AND e._expanded = TRUE RETURN ID(e)" 
     `#hash((term . (unquote (expr->string term))))
   )))
   (> (length (hash-ref (car (hash-ref res 'results)) 'data)) 0)
@@ -55,6 +55,8 @@
       (term (read-from-string (read-line (current-input-port) 'any)))
     )
     (run-echo2 (list term) 1000 relation trans)
+    (doNeo4jP "MATCH (base:Term {term:{term}}) SET base._base=TRUE"
+      `#hash((term . (unquote (expr->string term)))))
   )
 
 )
@@ -77,10 +79,10 @@
       (next-terms (apply-reduction-relation/tag-with-names relation term))
       (json       (trans->json2 term next-terms (lambda (x) (match x [(list a b) (make-hash (list (cons 'rule a) (cons 'term (expr->string b)) (cons 'data (make-hash (trans b)))))]))))
     )
-    (doNeo4jP "MERGE (base:Term {term:{term}})  RETURN base"
+    (doNeo4jP "MERGE (base:Term {term:{term}})"
           `#hash( (term . (unquote (expr->string term))           )))
 
-    (doNeo4jP "MATCH (base:Term {term:{term}.term}) SET base={term},base.expanded=1"
+    (doNeo4jP "MATCH (base:Term {term:{term}.term}) SET base={term},base._expanded=TRUE"
           `#hash(
             (term . (unquote (betterTrans term))     )
             ))
@@ -88,7 +90,7 @@
 
     (for ([x next-terms]) (match x [(list rel term2) 
           (printf "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
-          (doNeo4jP "MERGE (base:Term {term:{term}.term}) RETURN base"
+          (doNeo4jP "MERGE (base:Term {term:{term}.term})"
                       `#hash((term . (unquote (betterTrans term2)))))
           (doNeo4jP (~a "MATCH  (base:Term {term:{src}}) MATCH (two:Term {term:{dst}}) MERGE (base)-[reduces:`" rel "`]->(two)")
                       `#hash(
