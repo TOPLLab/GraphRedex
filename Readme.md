@@ -63,3 +63,13 @@
 
 ## Credits
 - Cy2Neo: https://github.com/jexp/cy2neo
+
+
+## Usefull Queries
+
+```
+MATCH (src:Term {_expanded: TRUE}) WHERE NOT (src) -->()
+MATCH (base:Term {_base: TRUE})
+MATCH path = shortestPath( (base) -[*..400]-> (src) )
+RETURN base, src, path
+```
