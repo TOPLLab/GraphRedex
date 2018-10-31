@@ -49,6 +49,7 @@
 (define (run-echo relation trans)
   ; clear DB
   (doNeo4j "MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
+  (doNeo4j "MATCH (n:Term) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
   (doNeo4j "CREATE CONSTRAINT ON (n:Term) ASSERT n.term IS UNIQUE")
   (let* 
     (
@@ -64,8 +65,9 @@
 
 (define (run-echo2 terms cnt relation trans)
  ;
-  (printf "\n\n\n------------------------------\n~a\n=======\n" terms)
+  ;(printf "\n\n\n------------------------------\n~a\n=======\n" terms)
  (cond
+  [(= 0 cnt) (printf "\nOUT OF REDUCTIONS\n" cnt)] 
   [(= 0 (length terms)) (printf "\nDONE (~a reductions left)\n" cnt)] 
   [(neo4j-node-done (car terms)) 
     (printf "\nSKIPPED\n")
@@ -89,7 +91,7 @@
 
 
     (for ([x next-terms]) (match x [(list rel term2) 
-          (printf "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
+          ;(printf "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
           (doNeo4jP "MERGE (base:Term {term:{term}.term})"
                       `#hash((term . (unquote (betterTrans term2)))))
           (doNeo4jP (~a "MATCH  (base:Term {term:{src}}) MATCH (two:Term {term:{dst}}) MERGE (base)-[reduces:`" rel "`]->(two)")
