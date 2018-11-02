@@ -1,0 +1,99 @@
+#lang racket
+
+(require net/http-client)
+(require json)
+
+; http://localhost:8529/_db/graphredex-test/
+(define (createArango dbname graphname)
+  (define (sendArango method qryHead path qry)
+    (define-values (status headers in)
+      (http-sendrecv "localhost"
+                     (~a "/_db/" dbname "/" path)
+                     #:ssl? #f
+                     #:version "1.1"
+                     #:method method
+                     #:port 8529
+                     #:headers qryHead
+                     #:data qry))
+    (displayln qry)
+    (displayln qryHead)
+    (displayln status)
+    (displayln headers)
+    (let ((result (string->jsexpr (port->string in))))
+      (displayln result)
+      (close-input-port in)
+      result
+      )
+    )
+  ; Perform login
+  (let* (
+         (token (hash-ref
+                  (sendArango "POST"
+                              '( "Content-Type: application/json"
+                                 "Accept: application/json; charset=UTF-8")
+                              "/_open/auth"
+                              "{\"username\":\"graphredex\",\"password\":\"graphredex\"}")
+                  'jwt
+                  ))
+         (newHeaders `(
+                       "Content-Type: application/json"
+                       "Accept: application/json; charset=UTF-8"
+                       (unquote (~a "Authorization: bearer " token))
+                       )))
+
+    (values
+      ; get
+      (lambda (x) (sendArango "GET" newHeaders x ""))
+      ; post
+      (lambda (x y) (sendArango "POST" newHeaders x y))
+      ; Get id of term (if exists)
+      (lambda (term)
+        (sendArango
+          "POST"
+          newHeaders
+          "_api/cursor"
+          (jsexpr->string
+            `#hash(
+                   (query . "FOR doc IN @@tcol FILTER doc.term == @term LIMIT 1 RETURN doc._id")
+                   (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname))  ))))))
+      ; Create term if not exists and always return id
+      ; Marks as expanded if expanded is #t else leaves it
+      (lambda (term expanded)
+        (sendArango
+          "POST"
+          newHeaders
+          "_api/cursor"
+          (jsexpr->string
+            `#hash(
+                   (query .
+                          (unquote (if expanded
+                              "LET asExpanded = MERGE(@term,{\"_expanded\": true}) UPSERT {term:@term.term} INSERT asExpanded UPDATE asExpanded IN @@tcol RETURN NEW._id"
+                              "LET asExpanded = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT asExpanded UPDATE OLD IN @@tcol RETURN NEW._id")))
+                   (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname)) ))))))
+
+      (lambda (from to reduction)
+        (sendArango
+          "POST"
+          newHeaders
+          "_api/cursor"
+          (jsexpr->string
+            `#hash(
+                   (query . "FOR f IN @@tcol  FILTER f.term == @from FOR t IN @@tcol  FILTER t.term == @to UPSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction} INSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction} UPDATE  OLD IN @@rcol")
+                   (bindVars . #hash(
+                                     (from . (unquote from ))
+                                     (to . (unquote to ))
+                                     (reduction . (unquote reduction ))
+                                     (@tcol . (unquote graphname ))
+                                     (@rcol . (unquote (~a graphname "-reductions") ))
+                                     ))))))
+      )
+    )
+  )
+
+
+
+(define-values (get post lookup fr ed) (createArango "graphredex-test" "terms-test-1"))
+(hash-ref (lookup "Jugs 0 3") 'result)
+(fr #hash((term . "Jugs 0 3")) #t)
+(fr #hash((term . "Jugs 5 3")) #f)
+(ed "Jugs 0 3" "Jugs 5 3" "fill")
