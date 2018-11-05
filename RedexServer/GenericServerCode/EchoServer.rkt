@@ -21,7 +21,7 @@
 
 
 
-(define-values (arangoGET arangoPOST clearall lookup makenode makeedge) (createArango "graphredex-test" "terms-test-1"))
+(define-values (arangoGET arangoPOST clearall qry  lookup makenode makeedge) (createArango "graphredex-test" "terms-test-1"))
 
 (define (trans->json2 t ts trans)
   (jsexpr->string
@@ -42,10 +42,12 @@
 
 
 (define (node-done? term)
-  (let ([res (hash-ref (arangoPOST "_api/cursor"   (jsexpr->string
-                      `#hash(
-                             (query . "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id")
-                             (bindVars . #hash((term . (unquote (expr->string term) )) (@tcol . (unquote "terms-test-1"))  )))) ) 'result)])
+  (let ([res (hash-ref (qry
+                         "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id"
+                         `#hash((term . (unquote (expr->string term) ))   )
+                         #t
+                         )
+                       'result)])
     (> (length res) 0)
     )
   )

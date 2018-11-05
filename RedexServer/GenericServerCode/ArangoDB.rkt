@@ -53,6 +53,18 @@
         (sendArango "PUT" newHeaders  (~a "_api/collection/" graphname "-reductions" "/truncate") "")
         (sendArango "PUT" newHeaders  (~a "_api/collection/" graphname "/truncate") "")
         )
+      (lambda (query binds [addTcol #f] [addRcol #f])
+        (let* (
+               (tmpbinds (if addTcol (hash-set binds '@tcol graphname) binds))
+               (newbinds (if addRcol (hash-set tmpbinds '@rcol (~a graphname "-reductions")) tmpbinds))
+            )
+        (sendArango "POST" newHeaders  "_api/cursor"   (jsexpr->string
+                      `#hash(
+                             (query . (unquote query))
+                             (bindVars . (unquote newbinds)))))
+
+        )
+      )
       ; Get id of term (if exists)
       (lambda (term)
         (hash-ref (sendArango
