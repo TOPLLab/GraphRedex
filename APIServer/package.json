@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "arangojs": "^6.7.0",
+    "express": "^4.16.4"
+  },
+  "name": "GraphRedexAPI",
+  "version": "0.0.1",
+  "description": "Graph redex API server that calls the real graph redex",
+  "main": "index.js",
+  "repository": "https://github.com/chscholl/GraphRedex/",
+  "author": "Robbert Gurdeep Singh",
+  "license": "MIT",
+  "private": true
+}
