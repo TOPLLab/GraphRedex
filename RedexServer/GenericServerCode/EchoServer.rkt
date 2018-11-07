@@ -1,10 +1,9 @@
 #lang racket
-(require mzlib/string)
 (provide run-echo)
-(require redex)
+(require redex/reduction-semantics )
 (require json)
-(require file/md5)
-(require racket/stream)
+;(require file/md5)
+;(require racket/stream)
 (require "./ArangoDB.rkt")
 
 
@@ -29,6 +28,8 @@
       (list
         (cons 'from (expr->string t))
         (cons 'next (map trans ts))))))
+
+(define (expr->string e) (format "~s" e))
 
 (define (trans->hash t ts trans)
   (make-hash

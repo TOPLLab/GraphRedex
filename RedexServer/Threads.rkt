@@ -9,9 +9,7 @@
 ; Example to show how to use GraphRedex. 
 ; This is an adapted version of the threads example from the plt-redex example repository
 ;
-(require redex)
-(require graph)
-
+(require redex/reduction-semantics)
 ;
 ; The threads language 
 ; Programs p consists of a store which are key-value pairs and zero or more threads

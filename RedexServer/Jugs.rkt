@@ -8,8 +8,8 @@
 ;
 ; Example to show how to use GraphRedex. 
 ;
-(require redex)
-(require graph)
+(require redex/reduction-semantics)
+;(require graph)
 
 ;
 ; The jugs language 

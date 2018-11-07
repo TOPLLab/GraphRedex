@@ -9,8 +9,8 @@
 ; Example to show how to use GraphRedex. 
 ; This is an adapted version of the threads example from the plt-redex example repository
 ;
-(require redex)
-(require graph)
+(require redex/reduction-semantics)
+
 
 ;
 ; The threadslock language.
