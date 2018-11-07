@@ -1,134 +1,237 @@
-<script src="https://d3js.org/d3.v5.min.js"></script>
+<html>
 
-<svg></svg>
+<head>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Noto Sans;
+        }
 
-<script>
-    d3.json("/demo").then(data => {
+        nav,
+        side nav {
+            background: #FEFEFE;
+            width: 400px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2), 0 0 3px 3px rgba(0, 0, 0, .25), 0 0 3px rgba(0, 0, 0, 0.14);
+            display: block;
+        }
 
-        var width = 1000;
-        var height = 1000;
+        nav>header {
+            text-align: center;
+            line-height: 4rem;
+            background: #DEAD62;
+            color: white;
+            font-size: 2rem;
+        }
 
-        //Create SVG element
-        let svg;
-        var svgRoot = d3.select("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("viewBox", [-width / 2, -height / 2, width, height])
-            .call(zoomHandler = d3.zoom().on("zoom", () => {
-                svg.attr("transform", d3.event.transform)
-            }))
-        svg = svgRoot.append("g");
+        main {
+            display: block;
+            width: calc(100% - 400px);
+            margin-left: 400px;
+            height: 100%;
+            padding: 0;
+        }
+
+        main>svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        section {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+            height: 10rem;
+            width: 16rem;
+            background: #FEFEFEF0;
+            border-radius: .2rem;
+            overflow: hidden;
+            box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2), 0 0 3px 3px rgba(0, 0, 0, .25), 0 0 3px rgba(0, 0, 0, 0.14);
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <header>GraphRedex</header>
+    </nav>
+    <main><svg></svg></main>
+
+    <section>
+    </section>
+    <script>
+        d3.json("/demo").then(data => {
+
+            var width = 1000;
+            var height = 1000;
+
+            //Create SVG element
+            let svg;
+            var svgRoot = d3.select("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height])
+                .call(zoomHandler = d3.zoom().on("zoom", () => {
+                    svg.attr("transform", d3.event.transform)
+                }))
+            svg = svgRoot.append("g");
 
 
-        const links = data.edges.map(d => ({ source: d._from, target: d._to, reduction: d.reduction }));
-        const nodes = data.nodes.map(d => ({ id: d._id, term: d.term, data: d }));
-        console.log(data, links, nodes)
-        const simulation = forceSimulation(nodes, links);
+            const links = data.edges.map(d => ({ source: d._from, target: d._to, reduction: d.reduction }));
+            const nodes = data.nodes.map(d => ({ id: d._id, term: d.term, data: d }));
+            console.log(data, links, nodes)
+            const simulation = forceSimulation(nodes, links);
 
 
-        simulation.on("tick", ticked)
+            simulation.on("tick", ticked)
 
 
-        const defs = svgRoot.append("svg:defs")
+            const defs = svgRoot.append("svg:defs")
 
 
-        let existing = new Map();
-        function getRandCol(t, arrow = false) {
-            if (!existing.has(t)) {
-                var letters = '0123456789ABCDEF';
-                let resCol="";
-                for (var i = 0; i < 6; i++) {
-                    resCol += letters[Math.floor(Math.random() * 16)];
+            let existing = new Map();
+            function getRandCol(t, arrow = false) {
+                if (!existing.has(t)) {
+                    var letters = '0123456789ABCDEF';
+                    let resCol = "";
+                    for (var i = 0; i < 6; i++) {
+                        resCol += letters[Math.floor(Math.random() * 16)];
+                    }
+                    existing.set(t, resCol);
+
+                    defs.append("svg:marker")
+                        .attr("id", "marker-" + resCol)
+                        .attr("refX", 20)
+                        .attr("refY", 6)
+                        .attr("markerWidth", 30)
+                        .attr("markerHeight", 30)
+                        .attr("orient", "auto")
+                        .append("path")
+                        .attr("d", "M 0 0 12 6 0 12 3 6")
+                        .style("fill", "#" + resCol);
+
                 }
-                existing.set(t, resCol);
-
-                defs.append("svg:marker")
-                    .attr("id", "marker-" + resCol)
-                    .attr("refX", 20)
-                    .attr("refY", 6)
-                    .attr("markerWidth", 30)
-                    .attr("markerHeight", 30)
-                    .attr("orient", "auto")
-                    .append("path")
-                    .attr("d", "M 0 0 12 6 0 12 3 6")
-                    .style("fill", "#"+resCol);
-
+                const color = existing.get(t);
+                return arrow ? "marker-" + color : "#" + color;
             }
-            const color = existing.get(t);
-            return arrow ? "marker-"+color : "#" + color;
+
+
+            const link = svg.append("g")
+                .selectAll("line")
+                .data(links)
+                .enter().append("line")
+                .attr("stroke", d => getRandCol(d.reduction))
+                .attr("fill", d => getRandCol(d.reduction))
+                .attr("stroke-width", 2)
+                .attr("marker-end", d => "url(#" + getRandCol(d.reduction, true) + ")");
+
+
+            const linkText = svg.append("g")
+                .selectAll("text")
+                .data(links)
+                .enter().append("text")
+                .attr('text-anchor', 'middle')
+                .attr("fill", d => getRandCol(d.reduction))
+                .text(d => d.reduction)
+
+            const node = svg.append("g")
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5)
+                .selectAll("circle")
+                .data(nodes)
+                .enter().append("circle")
+                .attr("r", 15)
+                .on("mouseover", (d) => { document.getElementsByTagName("section")[0].innerHTML = `<pre style="word-wrap: break-word;white-space: pre-wrap; ">${d.term}</pre>` })
+                .call(drag(simulation));
+
+
+            /* hide text when too far */
+            (() => {
+                let nodeRadius = 0;
+                let prevCond = null;
+                window.setInterval(() => {
+                    const cond = x => x > 40;
+                    nodeRadius = node.node().getBoundingClientRect().height;
+                    const cur = cond(nodeRadius)
+                    if (prevCond != cur) {
+                        linkText.attr("opacity", cur ? "1" : "0")
+                    }
+                    prevCond = cur;
+                }, 1000)
+            })()
+
+            node.append("title")
+                .text(d => d.id);
+
+
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                linkText
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2)
+                    .attr("transform", d => `rotate(${
+                        180 * Math.atan((d.source.y - d.target.y) / (d.source.x - d.target.x)) / Math.PI},
+                        ${(d.source.x + d.target.x) / 2},
+                        ${(d.source.y + d.target.y) / 2}
+                        )`);
+
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+            }
+
+            return svg.node();
+        })
+
+
+        function forceSimulation(nodes, links) {
+            return d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).distance(100).strength(2).id(d => d.id))
+            .force("charge", d3.forceManyBody().strength(-50))
+            .force("collide", d3.forceCollide(15))
+            .force("center", d3.forceCenter())
         }
 
 
-        const link = svg.append("g")
-            .selectAll("line")
-            .data(links)
-            .enter().append("line")
-            .attr("stroke", d => getRandCol(d.reduction))
-            .attr("fill", d => getRandCol(d.reduction))
-            .attr("stroke-width", 2)
-            .attr("marker-end", d=>"url(#"+getRandCol(d.reduction,true)+")");
 
-        const node = svg.append("g")
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 1.5)
-            .selectAll("circle")
-            .data(nodes)
-            .enter().append("circle")
-            .attr("r", 15)
-            .on("mouseover", (d) => { console.log(d.data) })
-            .call(drag(simulation));
+        drag = simulation => {
 
-        node.append("title")
-            .text(d => d.id);
+            function dragstarted(d) {
+                if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
 
+            function dragged(d) {
+                d.fx = d3.event.x;
+                d.fy = d3.event.y;
+            }
 
-        function ticked() {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+            function dragended(d) {
+                if (!d3.event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
 
-            node
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y);
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
         }
+    </script>
+</body>
 
-        return svg.node();
-    })
-
-
-    function forceSimulation(nodes, links) {
-        return d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).distance(70).strength(.90).id(d => d.id))
-            .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter());
-    }
-
-
-
-    drag = simulation => {
-
-        function dragstarted(d) {
-            if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-
-        function dragged(d) {
-            d.fx = d3.event.x;
-            d.fy = d3.event.y;
-        }
-
-        function dragended(d) {
-            if (!d3.event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
-        return d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended);
-    }
-</script>
+</html>
