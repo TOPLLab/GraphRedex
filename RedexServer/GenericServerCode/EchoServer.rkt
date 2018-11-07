@@ -62,10 +62,10 @@
   ; TODO create index
   (let*
     (
-     (term (read-from-string (read-line (current-input-port) 'any)))
+     (term (read))
      )
     (run-echo2 (stream term) 1000 relation trans)
-    (display (lookup (expr->string term)))
+    (display (car (lookup (expr->string term))))
     ;TODO set at base
     )
 
@@ -74,12 +74,12 @@
 
 (define (run-echo2 terms cnt relation trans)
   ;
-  ;(printf "\n\n\n------------------------------\n~a\n=======\n" terms)
+  ;(fprintf (current-error-port) "\n\n\n------------------------------\n~a\n=======\n" terms)
   (cond
-    [(= 0 cnt) (printf "\nOUT OF REDUCTIONS\n" cnt)]
-    [(stream-empty? terms) (printf "\nDONE (~a reductions left)\n" cnt)]
+    [(= 0 cnt) (fprintf (current-error-port) "\nOUT OF REDUCTIONS\n" cnt)]
+    [(stream-empty? terms) (fprintf (current-error-port) "\nDONE (~a reductions left)\n" cnt)]
     [(node-done? (stream-first terms))
-     (printf "\nSKIPPED\n")
+     (fprintf (current-error-port) "\nSKIPPED\n")
      (run-echo2 (stream-rest terms) cnt relation trans)
      ]
     [(positive? cnt)
@@ -95,13 +95,13 @@
        (for ([x next-terms]) (
                               match x [
                                        (list rel term2)
-                                       ;(printf "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
+                                       ;(fprintf (current-error-port) "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
                                        (makenode (betterTrans term2) #f)
                                        (makeedge (expr->string term) (expr->string term2) rel)
 
                                        ])
             )
-       (printf "Added: ~a\n" json)
+       (fprintf (current-error-port) "Added: ~a\n" json)
        (run-echo2 (stream-append (stream-rest terms) (map (lambda (x) (car (cdr x))) next-terms)) (- cnt 1) relation trans)
        )]
     )

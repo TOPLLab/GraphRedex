@@ -17,12 +17,12 @@
                      #:headers qryHead
                      #:data qry))
     (parameterize ([current-output-port (current-error-port)])
-      (displayln qry)
-      (displayln qryHead)
-      (displayln status)
-      (displayln headers)
+      ;(displayln qry)
+      ;(displayln qryHead)
+      ;(displayln status)
+      ;(displayln headers)
       (let ((result (string->jsexpr (port->string in))))
-        (displayln result)
+        ;(displayln result)
         (close-input-port in)
         result
         )
