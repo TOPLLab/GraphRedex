@@ -1,0 +1,14 @@
+{
+    "eslint.packageManager": "yarn",
+    "eslint.provideLintTask": true,
+    "eslint.run": "onSave",
+    "eslint.workingDirectories": [
+        "APIServer"
+    ],
+    "eslint.enable": true,
+    "eslint.autoFixOnSave": true,
+    "tslint.jsEnable": true,
+    "tslint.autoFixOnSave": true,
+    "tslint.packageManager": "yarn",
+    "tslint.run": "onSave"
+}

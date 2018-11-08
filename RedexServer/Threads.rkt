@@ -10,6 +10,8 @@
 ; This is an adapted version of the threads example from the plt-redex example repository
 ;
 (require redex/reduction-semantics)
+(provide reductions term->kv)
+
 ;
 ; The threads language 
 ; Programs p consists of a store which are key-value pairs and zero or more threads
@@ -50,12 +52,9 @@
 
 ;
 ; Extraction function to expose certain information of the redex model as attributes for the nodes
-;
+; 
 (define (term->kv exp)
   (match exp
     [`((store (x ,x)) (threads ,t1 ,t2))
        (list (cons 'x x) )]))
  
-
-(require "./GenericServerCode/EchoServer.rkt")
-(run-echo reductions term->kv)

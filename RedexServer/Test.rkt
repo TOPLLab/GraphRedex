@@ -1,5 +1,6 @@
 #lang racket
 (require redex/reduction-semantics)
+(provide reductions term->kv)
 
 
 (provide (all-defined-out))
@@ -187,7 +188,7 @@
   ((count-threads ((id_1 any_1) ... (id_i any_i))) ,(+ (term id_i) 1)))
 
 
-(define machine-step
+(define reductions
   (reduction-relation
    fjm-machine
 
@@ -373,7 +374,3 @@
 ;
 (define (term->kv exp)
   (list (cons 'x 5) ))
- 
-
-(require "./GenericServerCode/EchoServer.rkt")
-(run-echo machine-step term->kv)

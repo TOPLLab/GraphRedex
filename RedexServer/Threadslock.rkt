@@ -10,6 +10,7 @@
 ; This is an adapted version of the threads example from the plt-redex example repository
 ;
 (require redex/reduction-semantics)
+(provide reductions term->kv)
 
 
 ;
@@ -56,7 +57,5 @@
   (match exp
     [`((store (x ,x) (y ,y)) (threads ,t1 ,t2))
        (list (cons 'x x) (cons 'y y))]))
- 
-(require "./GenericServerCode/EchoServer.rkt")
-(run-echo reductions term->kv)
+
 

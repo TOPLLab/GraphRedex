@@ -9,6 +9,7 @@
 ; Example to show how to use GraphRedex. 
 ;
 (require redex/reduction-semantics)
+(provide reductions term->kv)
 ;(require graph)
 
 ;
@@ -67,6 +68,3 @@
     [`(jugs (x ,x ,a) (y ,z ,t))
        (list (cons 'x a) (cons 'y t) )]))
  
-
-(require "./GenericServerCode/EchoServer.rkt")
-(run-echo reductions term->kv)
