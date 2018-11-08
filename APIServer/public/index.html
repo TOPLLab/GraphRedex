@@ -45,16 +45,39 @@
             height: 100%;
         }
 
-        section {
-            position: absolute;
-            right: 1rem;
-            bottom: 1rem;
-            height: 10rem;
-            width: 16rem;
-            background: #FEFEFEF0;
-            border-radius: .2rem;
+        #doReduction {
+            display: block;
+            box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2), 0 0 3px 3px rgba(0, 0, 0, .25), 0 0 3px rgba(0, 0, 0, 0.14);
+            max-height: 100vh;
+            box-sizing: border-box;
+            transition: max-height 0.3s;
+        }
+
+        #doReduction.closed {
+            max-height: 0vh;
+        }
+
+        #doReduction>* {
+            display: block;
+            margin: .5rem auto;
+            width: calc( 100% - 2rem);
+        }
+
+        .graph-arrows {
+            stroke-width: 2;
+            fill: transparent;
+        }
+
+        .graph-nodes {
+            cursor: move;
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+
+        .graph-texts {
+            font-size: .5rem;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -62,94 +85,179 @@
 <body>
     <nav>
         <header>GraphRedex</header>
-    </nav>
-    <main><svg></svg></main>
 
-    <section>
-    </section>
+        <div>
+            <select id="exampleSelector" name="example">
+                <option value="volvo">Example 1</option>
+                <option value="saab">Example 2</option>
+                <option value="fiat">more</option>
+            </select>
+            <button onclick='document.getElementById("doReduction").classList.toggle("closed")'>+</button>
+            <button>New Query</button>
+            <button>New language</button>
+        </div>
+        <section> </section>
+    </nav>
+    <main>
+        <form id="doReduction" action="#" class="closed">
+            <textarea id="term" cols="30" rows="10"></textarea>
+            <input id="langselector" type="text" value="1">
+            <input id="nameselector" type="text" value="">
+            <input type="submit" value="Perform">
+            <pre id="doReductionOutput"></pre>
+        </form>
+        <svg>
+        </svg>
+    </main>
+
+
     <script>
-        d3.json("/demo").then(data => {
+        d3.json("/my/examples").then(data => {
+            const select = d3.select("#exampleSelector").on("change", () => {
+                console.log("look at", select.property("value"))
+                d3.json("/my/example/" + select.property("value")).then(visualise);
+
+            })
+             console.log(data.map(d => d.name + " - " +d._key))
+            const options = select.selectAll("option").data(data);
+            options.enter().append("option");
+            options.exit().remove();
+            select.selectAll("option")
+                .text(d => d.name + " - " +d._key)
+                .attr("value", d => d._key);
+
+            select.insert("option", ":first-child")
+                .text("Example")
+                .attr("selected", "selected")
+                .attr("disabled", "disabled");
+        })
+
+        let svgRoot, defs, graph;
+        document.addEventListener("DOMContentLoaded", function (event) {
 
             var width = 1000;
             var height = 1000;
-
-            //Create SVG element
             let svg;
-            var svgRoot = d3.select("svg")
+            //Create SVG element
+            svgRoot = d3.select("svg")
                 .attr("width", width)
                 .attr("height", height)
                 .attr("viewBox", [-width / 2, -height / 2, width, height])
                 .call(zoomHandler = d3.zoom().on("zoom", () => {
                     svg.attr("transform", d3.event.transform)
                 }))
-            svg = svgRoot.append("g");
+            defs = svgRoot.append("svg:defs")
+            svg = svgRoot.append("g")
 
+            const arrowSVG = svg.append("g").attr("class", "graph-arrows")
+            const textSVG = svg.append("g").attr("class", "graph-texts")
+            const nodeSVG = svg.append("g").attr("class", "graph-nodes")
+
+            graph = {
+                node: () => nodeSVG.selectAll("circle"),
+                arrow: () => arrowSVG.selectAll("path"),
+                text: () => textSVG.selectAll("text")
+            }
+
+
+            const form = d3.select("#doReduction").on("submit", () => {
+                d3.event.preventDefault();
+                const data = form.select("textarea").node().value
+                const lang = form.select("#langselector").node().value
+                const name = form.select("#nameselector").node().value
+
+
+                window.fetch(`/doTerm/${lang}/${name}`, { method: "POST", body: data }).then(x=>x.json()).then(data => {
+                    if (data.exitcode === 0) {
+                        d3.json("/example/" + data.example._key).then(visualise);
+                        document.getElementById("doReduction").classList.toggle("closed")
+                    }
+                    else {
+                        console.log("good error")
+                        console.log(data)
+                        document.getElementById("doReductionOutput").textContent = data.output;
+                    }
+                }).catch(e => { console.log("dddddddddddddddddddddddddddddddddddd",e); document.getElementById("doReductionOutput").innerText = e })
+            })
+        })
+
+
+        let existing = new Map();
+        function getRandCol(t, arrow = false) {
+            if (!existing.has(t)) {
+                var letters = '0123456789ABCDEF';
+                let resCol = "";
+                for (var i = 0; i < 6; i++) {
+                    resCol += letters[Math.floor(Math.random() * 16)];
+                }
+                existing.set(t, resCol);
+
+                defs.append("svg:marker")
+                    .attr("id", "marker-" + resCol)
+                    .attr("refX", 20)
+                    .attr("refY", 6)
+                    .attr("markerWidth", 30)
+                    .attr("markerHeight", 30)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M 0 0 12 6 0 12 3 6")
+                    .style("fill", "#" + resCol);
+
+            }
+            const color = existing.get(t);
+            return arrow ? "marker-" + color : "#" + color;
+        }
+
+        function visualise(data) {
+            const startNode = ("meta" in data) ? data.meta.baseTerm : null;
+            console.log(startNode)
 
             const links = data.edges.map(d => ({ source: d._from, target: d._to, reduction: d.reduction }));
             const nodes = data.nodes.map(d => ({ id: d._id, term: d.term, data: d }));
             console.log(data, links, nodes)
             const simulation = forceSimulation(nodes, links);
-
-
             simulation.on("tick", ticked)
+            simulation.velocityDecay(0.3)
 
 
-            const defs = svgRoot.append("svg:defs")
 
+            let link = graph.arrow().data(links);
+            link.exit().remove();
+            link.enter().append("path");
 
-            let existing = new Map();
-            function getRandCol(t, arrow = false) {
-                if (!existing.has(t)) {
-                    var letters = '0123456789ABCDEF';
-                    let resCol = "";
-                    for (var i = 0; i < 6; i++) {
-                        resCol += letters[Math.floor(Math.random() * 16)];
-                    }
-                    existing.set(t, resCol);
-
-                    defs.append("svg:marker")
-                        .attr("id", "marker-" + resCol)
-                        .attr("refX", 20)
-                        .attr("refY", 6)
-                        .attr("markerWidth", 30)
-                        .attr("markerHeight", 30)
-                        .attr("orient", "auto")
-                        .append("path")
-                        .attr("d", "M 0 0 12 6 0 12 3 6")
-                        .style("fill", "#" + resCol);
-
-                }
-                const color = existing.get(t);
-                return arrow ? "marker-" + color : "#" + color;
-            }
-
-
-            const link = svg.append("g")
-                .selectAll("line")
-                .data(links)
-                .enter().append("line")
-                .attr("stroke", d => getRandCol(d.reduction))
-                .attr("fill", d => getRandCol(d.reduction))
-                .attr("stroke-width", 2)
+            link = graph.arrow();
+            link.attr("stroke", d => getRandCol(d.reduction))
                 .attr("marker-end", d => "url(#" + getRandCol(d.reduction, true) + ")");
 
 
-            const linkText = svg.append("g")
-                .selectAll("text")
-                .data(links)
-                .enter().append("text")
-                .attr('text-anchor', 'middle')
-                .attr("fill", d => getRandCol(d.reduction))
-                .text(d => d.reduction)
 
-            const node = svg.append("g")
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 1.5)
-                .selectAll("circle")
-                .data(nodes)
-                .enter().append("circle")
+            let linkText = graph.text().data(links);
+            linkText.exit().remove()
+            linkText.enter().append("text")
+
+            linkText = graph.text()
+            linkText.attr('text-anchor', 'middle')
+                .attr("fill", d => getRandCol(d.reduction))
+                .text(d => d.reduction);
+
+            let node = graph.node().data(nodes);
+            node.exit().remove();
+            node.enter().append("circle");
+
+            node = graph.node();
+            node.attr("class", "term-node")
+                .attr("fill", d => ((d.data._id === startNode) ? "#0f0" : "#00f"))
                 .attr("r", 15)
-                .on("mouseover", (d) => { document.getElementsByTagName("section")[0].innerHTML = `<pre style="word-wrap: break-word;white-space: pre-wrap; ">${d.term}</pre>` })
+                .on("click", d => { d.fx = null; d.fy = null })
+                .on("mouseover", (d) => {
+                    document.getElementsByTagName("section")[0].innerHTML = `
+                <pre style="word-wrap: break-word;white-space: pre-wrap; ">${d.term}</pre>
+                <hr>
+                <table>
+                    <tr><th>Key</th><th>Value</th></tr>
+                    ${Object.entries(d.data).filter(x => !x[0].startsWith("_") && x[0] != "term").map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")}
+                    </table>
+                    ` })
                 .call(drag(simulation));
 
 
@@ -159,50 +267,51 @@
                 let prevCond = null;
                 window.setInterval(() => {
                     const cond = x => x > 40;
-                    nodeRadius = node.node().getBoundingClientRect().height;
+                    nodeRadius = graph.node().node().getBoundingClientRect().height;
                     const cur = cond(nodeRadius)
                     if (prevCond != cur) {
-                        linkText.attr("opacity", cur ? "1" : "0")
+                        console.log("update to ", cur)
+                        graph.text().attr("opacity", cur ? "1" : "0")
                     }
                     prevCond = cur;
                 }, 1000)
             })()
 
-            node.append("title")
-                .text(d => d.id);
+            node.append("title").text(d => d.id);
 
 
             function ticked() {
-                link
-                    .attr("x1", d => d.source.x)
-                    .attr("y1", d => d.source.y)
-                    .attr("x2", d => d.target.x)
-                    .attr("y2", d => d.target.y);
+                link.attr("d", d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    return `M ${d.source.x} ${d.source.y} q ${dx/2} ${dy/2} ${dx} ${dy}`
+                });
 
                 linkText
                     .attr("x", d => (d.source.x + d.target.x) / 2)
                     .attr("y", d => (d.source.y + d.target.y) / 2)
                     .attr("transform", d => `rotate(${
                         180 * Math.atan((d.source.y - d.target.y) / (d.source.x - d.target.x)) / Math.PI},
-                        ${(d.source.x + d.target.x) / 2},
-                        ${(d.source.y + d.target.y) / 2}
-                        )`);
+            ${(d.source.x + d.target.x) / 2},
+            ${(d.source.y + d.target.y) / 2}
+            )`);
 
                 node
                     .attr("cx", d => d.x)
                     .attr("cy", d => d.y);
             }
 
-            return svg.node();
-        })
+            return null;
+        }
 
+        d3.json("/demo").then(visualise);
 
         function forceSimulation(nodes, links) {
             return d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).distance(100).strength(2).id(d => d.id))
-            .force("charge", d3.forceManyBody().strength(-50))
-            .force("collide", d3.forceCollide(15))
-            .force("center", d3.forceCenter())
+                .force("link", d3.forceLink(links).distance(15).strength(1.5).id(d => d.id))
+                .force("charge", d3.forceManyBody().strength(-15))
+                .force("collide", d3.forceCollide(20).strength(0.2))
+                .force("center", d3.forceCenter())
         }
 
 
@@ -222,8 +331,8 @@
 
             function dragended(d) {
                 if (!d3.event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
+                //d.fx = null;
+                //d.fy = null;
             }
 
             return d3.drag()
