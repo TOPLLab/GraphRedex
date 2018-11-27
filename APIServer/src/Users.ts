@@ -22,7 +22,7 @@ export default class Users {
     }
 
     public async byKey(key: string): Promise<User> {
-        return await this.usercollecion.lookupByKeys([key]);
+        return await this.usercollecion.lookupByKeys([key])[0];
     }
 
     public async byAuth(auth: { name: string; pass: string }): Promise<User> {
