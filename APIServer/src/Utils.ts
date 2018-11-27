@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import express = require("express");
 
 export function isReadableFile(absPath: string): Promise<boolean> {
     return new Promise((resolve) => {
@@ -18,4 +19,10 @@ export function deleteDir(absPath: string): Promise<boolean> {
             }
         });
     });
+}
+
+export function asyncMiddleware(fn: express.RequestHandler) {
+    return (req: express.Request, res: express.Response, next) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
 }
