@@ -189,7 +189,7 @@
             console.log(data, links, nodes)
             const simulation = forceSimulation(nodes, links);
             simulation.on("tick", ticked)
-            simulation.velocityDecay(0.3)
+            simulation.velocityDecay(0.1)
 
 
 
@@ -219,7 +219,7 @@
             node = graph.node();
             node.attr("class", "term-node")
                 .attr("fill", d => ((d.data._id === startNode) ? "#0f0" : "#00f"))
-                .attr("r", 15)
+                .attr("r", 10)
                 .on("click", d => { d.fx = null; d.fy = null })
                 .on("mouseover", (d) => {
                     document.getElementsByTagName("section")[0].innerHTML = `
@@ -280,8 +280,8 @@
             return d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(links).distance(30).strength(1.5).id(d => d.id))
                 .force("charge", d3.forceManyBody().strength(-15))
-                .force("collide", d3.forceCollide(30).strength(0.5))
-                //.force("center", d3.forceCenter().strength(-0.1))
+                .force("collide", d3.forceCollide(16).strength(0.5))
+                .force("center", d3.forceCenter())
         }
 
 
