@@ -163,15 +163,16 @@
                 }
                 existing.set(t, resCol);
 
+                const markersize = 3
                 defs.append("svg:marker")
                     .attr("id", "marker-" + resCol)
-                    .attr("refX", 20)
-                    .attr("refY", 6)
+                    .attr("refX", 10)
+                    .attr("refY", markersize/2)
                     .attr("markerWidth", 30)
                     .attr("markerHeight", 30)
                     .attr("orient", "auto")
                     .append("path")
-                    .attr("d", "M 0 0 12 6 0 12 3 6")
+                    .attr("d", `M 0 0 ${markersize} ${markersize/2} 0 ${markersize} ${markersize/4} ${markersize/2}`)
                     .style("fill", "#" + resCol);
 
             }
