@@ -1,24 +1,15 @@
 "use strict";
 
+import * as auth from "basic-auth";
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as auth from "basic-auth";
 import * as multer from "multer";
-
 import MyDatabase from "./Database";
-import Users from "./Users";
-import { User } from "./Users";
-import { RequestHandler } from "express/lib/router/index";
-import ReductionRunner from "./racketRun";
 import { Languages } from "./Languages";
-
-const asyncMiddleware = (fn: RequestHandler) => (
-    req: express.Request,
-    res: express.Response,
-    next,
-) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
+import ReductionRunner from "./racketRun";
+import Users, { User } from "./Users";
+import { asyncMiddleware } from "./Utils";
+import Example from "./Example";
 
 /**
  * The server.
@@ -52,6 +43,7 @@ export default class Server {
         this.runner = new ReductionRunner(this.database, datadir);
         this.languages = new Languages(database, datadir);
         this.uploader = multer({ dest: datadir + "/tmp/" });
+
         //create expressjs application
         this.app = express();
 
