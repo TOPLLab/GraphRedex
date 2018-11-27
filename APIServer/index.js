@@ -29,12 +29,12 @@ require("./dist/Server.js")
         });
     })
     .catch((e) => {
+        console.log(e.code);
         switch (e.code) {
-            case "NO_ARANGO_CONNECT":
-                console.log(
-                    `Could not connect to the ArangoDB, is it up at ${e.e.address}:${e.e.port}?`,
-                );
-                console.info("systemctl start arangodb3.service");
+            case "ECONNREFUSED":
+                console.log("Possible reasons:");
+                console.log("Is ArangoDB up?");
+                console.info("  systemctl start arangodb3.service");
                 break;
             default:
                 console.log(e.code);
