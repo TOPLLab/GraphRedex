@@ -13,23 +13,28 @@
 
         <div>
             <select id="exampleSelector" name="example">
-                <option value="volvo">Example 1</option>
-                <option value="saab">Example 2</option>
-                <option value="fiat">more</option>
+                <option disabled value="fiat">Examples</option>
             </select>
             <button onclick='document.getElementById("doReduction").classList.toggle("closed")'>+</button>
             <button>New Query</button>
-            <button>New language</button>
+            <button onclick='document.getElementById("createLanguage").classList.toggle("closed")'>New language</button>
         </div>
         <section> </section>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
             <textarea id="term" cols="30" rows="10"></textarea>
-            <input id="langselector" type="text" value="1">
-            <input id="nameselector" type="text" value="">
+            <select id="langselector" name="language">
+                <option disabled>No languages</option>
+            </select>
+            <input id="nameselector" placeholder="name" type="text" value="">
             <input type="submit" value="Perform">
             <pre id="doReductionOutput"></pre>
+        </form>
+        <form id="createLanguage" action="#" class="closed">
+            <input type="file" accept=".zip,.krt" name="specification" multiple="false">
+            <input placeholder="name" name="name" type="text" value="">
+            <input type="submit" value="Create">
         </form>
         <svg>
         </svg>
@@ -37,18 +42,59 @@
 
 
     <script>
+
+        d3.json("/my/languages").then(data => {
+            const select = d3.select("#langselector");
+            const options = select.selectAll("option").data(data);
+            options.enter().append("option");
+            options.exit().remove();
+            select.selectAll("option")
+                .text(d => d.name + " - " + d._key)
+                .attr("value", d => d._key)
+                .attr("disabled", null);
+
+            select.insert("option", ":first-child")
+                .text("Language")
+                .attr("selected", "selected")
+                .attr("disabled", "disabled");
+        });
+
+
+        const createForm = d3.select("#createLanguage").on("submit", () => {
+            d3.event.preventDefault();
+
+            var formData = new FormData();
+            formData.append("specification", createForm.select('input[type="file"]').node().files[0])
+            formData.append("name", createForm.select('input[type="text"]').node().value);
+
+
+            window.fetch(`/my/languages`, {
+                method: "POST",
+                body: formData
+            })
+                .then(x => x.json())
+                .then(data => { if (data.ok) { alert("Language created") } else { alert("something went wron") } })
+                .catch(e => { console.log("ERROR", e); alert("something went wron") })
+
+
+
+            return false;
+
+        })
+
+
         d3.json("/my/examples").then(data => {
             const select = d3.select("#exampleSelector").on("change", () => {
                 console.log("look at", select.property("value"))
                 d3.json("/my/example/" + select.property("value")).then(visualise);
 
             })
-             console.log(data.map(d => d.name + " - " +d._key))
+            console.log(data.map(d => d.name + " - " + d._key))
             const options = select.selectAll("option").data(data);
             options.enter().append("option");
             options.exit().remove();
             select.selectAll("option")
-                .text(d => d.name + " - " +d._key)
+                .text(d => d.name + " - " + d._key)
                 .attr("value", d => d._key);
 
             select.insert("option", ":first-child")
@@ -92,7 +138,7 @@
                 const name = form.select("#nameselector").node().value
 
 
-                window.fetch(`/doTerm/${lang}/${name}`, { method: "POST", body: data }).then(x=>x.json()).then(data => {
+                window.fetch(`/doTerm/${lang}/${name}`, { method: "POST", body: data }).then(x => x.json()).then(data => {
                     if (data.exitcode === 0) {
                         d3.json("/example/" + data.example._key).then(visualise);
                         document.getElementById("doReduction").classList.toggle("closed")
@@ -102,7 +148,7 @@
                         console.log(data)
                         document.getElementById("doReductionOutput").textContent = data.output;
                     }
-                }).catch(e => { console.log("dddddddddddddddddddddddddddddddddddd",e); document.getElementById("doReductionOutput").innerText = e })
+                }).catch(e => { console.log("dddddddddddddddddddddddddddddddddddd", e); document.getElementById("doReductionOutput").innerText = e })
             })
         })
 
@@ -209,7 +255,7 @@
                 link.attr("d", d => {
                     const dx = d.target.x - d.source.x;
                     const dy = d.target.y - d.source.y;
-                    return `M ${d.source.x} ${d.source.y} q ${dx/2} ${dy/2} ${dx} ${dy}`
+                    return `M ${d.source.x} ${d.source.y} q ${dx / 2} ${dy / 2} ${dx} ${dy}`
                 });
 
                 linkText
@@ -229,14 +275,12 @@
             return null;
         }
 
-        d3.json("/demo").then(visualise);
-
         function forceSimulation(nodes, links) {
             return d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).distance(15).strength(1.5).id(d => d.id))
+                .force("link", d3.forceLink(links).distance(30).strength(1.5).id(d => d.id))
                 .force("charge", d3.forceManyBody().strength(-15))
-                .force("collide", d3.forceCollide(20).strength(0.2))
-                .force("center", d3.forceCenter())
+                .force("collide", d3.forceCollide(30).strength(0.5))
+                //.force("center", d3.forceCenter().strength(-0.1))
         }
 
 
