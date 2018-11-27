@@ -95,10 +95,13 @@ export default class Users {
             .byExample({ _from: userKey, _to: languageKey })
             .then((c) => c.count);
         if (results === 1) {
-            const language: Language = await this.datagraph
-                .vertexCollection("examples")
-                .lookupByKeys([languageKey])[0];
-            return language;
+            const langs = await this.database
+                .languages(false)
+                .lookupByKeys([languageKey]);
+            if (langs.length !== 1) {
+                throw "Internal error";
+            }
+            return langs[0];
         }
         throw "Language not found or you do not have access to it";
     }
