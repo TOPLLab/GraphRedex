@@ -66,10 +66,52 @@ export default class Server {
                     const example: Example = await this.users.exampleOf(user, {
                         _key: req.params.id,
                     });
-                    res.jsonp(example.showAll());
+                    res.jsonp(await example.showAll());
                 },
             ),
         );
+
+        // TODO: merge with next one
+        routeMy.get(
+            "/example/extend/:id([0-9,]+)/:terms([0-9,]+)/:steps(\\d+)",
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const startTerms = req.params.terms
+                        .split(",")
+                        .filter((x) => x.length > 0);
+                    const steps = Number.parseInt(req.params.steps);
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.id,
+                    });
+                    res.jsonp(await example.extend(startTerms, steps));
+                },
+            ),
+        );
+
+        routeMy.get(
+            "/example/extend/:id([0-9,]+)/:terms([0-9,]+)",
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const startTerms = req.params.terms
+                        .replace(/[^0-9,]/, "")
+                        .split(",")
+                        .filter((x) => x.length > 0);
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.id,
+                    });
+                    res.jsonp(await example.extend(startTerms));
+                },
+            ),
+        );
+
         routeMy.get(
             "/examples",
             this.requireLogin(
