@@ -181,7 +181,7 @@
         }
 
         function visualise(data) {
-            const startNode = ("meta" in data) ? data.meta.baseTerm : null;
+            const startNode = ("meta" in data) ? data.meta.baseTerms[0] : null;
             console.log(startNode)
 
             const links = data.edges.map(d => ({ source: d._from, target: d._to, reduction: d.reduction }));
