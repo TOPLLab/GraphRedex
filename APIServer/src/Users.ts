@@ -67,7 +67,7 @@ export default class Users {
                         .lookupByKeys([exampleKey])
                 )[0],
             );
-            return await example.showAll();
+            return await example;
         }
         throw "Example not found or you do not have access to it";
     }

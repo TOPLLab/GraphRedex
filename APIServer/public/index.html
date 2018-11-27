@@ -86,7 +86,7 @@
         d3.json("/my/examples").then(data => {
             const select = d3.select("#exampleSelector").on("change", () => {
                 console.log("look at", select.property("value"))
-                d3.json("/my/example/" + select.property("value")).then(visualise);
+                d3.json("/my/example/show/" + select.property("value")).then(visualise);
 
             })
             console.log(data.map(d => d.name + " - " + d._key))
