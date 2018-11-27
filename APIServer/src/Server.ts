@@ -64,18 +64,17 @@ export default class Server {
         this.app.use("/my", routeMy);
 
         routeMy.get(
-            "/example/:id",
+            "/example/show/:id",
             this.requireLogin(
                 async (
                     user: User,
                     req: express.Request,
                     res: express.Response,
                 ) => {
-                    res.jsonp(
-                        await this.users.exampleOf(user, {
-                            _key: req.params.id,
-                        }),
-                    );
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.id,
+                    });
+                    res.jsonp(example.showAll());
                 },
             ),
         );
