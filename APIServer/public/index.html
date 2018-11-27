@@ -137,19 +137,35 @@
                 const lang = form.select("#langselector").node().value
                 const name = form.select("#nameselector").node().value
 
+                if (name.length <= 0) {
+                    document.getElementById("doReductionOutput").textContent = "! Provvide a name"
+                } else {
+                    window.fetch(`/doTerm/${lang}/${name}`, { method: "POST", body: data })
+                        .then(result => {
+                            if (result.ok) {
+                                result.text()
+                                    .catch(e => { document.getElementById("doReductionOutput").textContent = "Something went wrong" + e })
+                                    .then(txt => {
+                                        const data = JSON.parse(txt)
+                                        console.log("Done with succes")
+                                        d3.json("/example/" + data.example._key).then(visualise);
+                                        document.getElementById("doReduction").classList.toggle("closed")
 
-                window.fetch(`/doTerm/${lang}/${name}`, { method: "POST", body: data }).then(x => x.json()).then(data => {
-                    if (data.exitcode === 0) {
-                        d3.json("/example/" + data.example._key).then(visualise);
-                        document.getElementById("doReduction").classList.toggle("closed")
-                    }
-                    else {
-                        console.log("good error")
-                        console.log(data)
-                        document.getElementById("doReductionOutput").textContent = data.output;
-                    }
-                }).catch(e => { console.log("dddddddddddddddddddddddddddddddddddd", e); document.getElementById("doReductionOutput").innerText = e })
-            })
+                                    })
+                                    .catch(e => { console.log("Error", e); document.getElementById("doReductionOutput").innerText = e })
+                            } else {
+                                document.getElementById("doReductionOutput").textContent = "Something went wrong"
+                                result.text().then(d => { document.getElementById("doReductionOutput").textContent = d });
+                            }
+                        })
+                        .catch(e => { console.log("Error", e); document.getElementById("doReductionOutput").innerText = e })
+                }
+            });
+
+
+
+
+
         })
 
 
@@ -167,12 +183,12 @@
                 defs.append("svg:marker")
                     .attr("id", "marker-" + resCol)
                     .attr("refX", 10)
-                    .attr("refY", markersize/2)
+                    .attr("refY", markersize / 2)
                     .attr("markerWidth", 30)
                     .attr("markerHeight", 30)
                     .attr("orient", "auto")
                     .append("path")
-                    .attr("d", `M 0 0 ${markersize} ${markersize/2} 0 ${markersize} ${markersize/4} ${markersize/2}`)
+                    .attr("d", `M 0 0 ${markersize} ${markersize / 2} 0 ${markersize} ${markersize / 4} ${markersize / 2}`)
                     .style("fill", "#" + resCol);
 
             }
