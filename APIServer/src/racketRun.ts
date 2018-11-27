@@ -4,6 +4,8 @@ import * as path from "path";
 import MyDatabase from "./Database";
 import { User } from "./Users";
 import { ExampleMeta } from "./Example";
+import { Graph } from "arangojs";
+import { isReadableFile } from "./Utils";
 
 interface RacketResult {
     term: string | null;
@@ -29,10 +31,10 @@ export default class ReductionRunner {
         lang: Language,
         term: string,
     ): Promise<ExampleMeta> {
-        await this.db.reductionGraph(user, lang, true);
+        const graph = await this.db.reductionGraph(user, lang, true);
         const { term: termId } = await this.performReductions(
             term,
-            user,
+            graph,
             lang,
         ).catch((e) => {
             throw e;
@@ -45,7 +47,7 @@ export default class ReductionRunner {
         const example = await examplesCollection.save({
             name: saveName,
             baseTerm: termId,
-            lang: +lang,
+            lang: lang._key,
         });
         await usersExamplesCollection.save(
             { creator: user._id },
@@ -55,17 +57,19 @@ export default class ReductionRunner {
         return example;
     }
 
-    private performReductions(
+    private async performReductions(
         term: string,
-        user: User,
+        graph: Graph,
         lang: Language,
     ): Promise<RacketResult> {
-        const gname = `test-${user}-${lang}`;
+        if (!(await isReadableFile(path.join(this.datadir, lang.path)))) {
+            throw lang.path + " is not found";
+        }
 
-        return new Promise<RacketResult>((resolve, reject) => {
+        return await new Promise<RacketResult>((resolve, reject) => {
             const child = spawn(
                 "RedexServer/run.sh",
-                [path.join(this.datadir, lang.path), /* Graph name */ gname],
+                [path.join(this.datadir, lang.path), graph.name],
                 {
                     cwd:
                         "/home/beardhatcode/Documents/doctoraat/RelatedWork/GraphRedex/code/",
