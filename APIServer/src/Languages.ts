@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { User } from "./Users";
 import { spawn } from "child_process";
+import { isReadableFile, deleteDir } from "./Utils";
 const { promisify } = require("util");
 
 export class Languages {
@@ -45,19 +46,10 @@ export class Languages {
     }
 
     private async confirmDisk(lang: Language): Promise<Language> {
-        // Check if main file is readable
-        await new Promise((resolve, reject) => {
-            const absPath = path.join(this.datadir, lang.path);
-            fs.access(absPath, fs.constants.R_OK, (err) => {
-                if (err) {
-                    fs.rmdir(absPath, () => {
-                        reject("File not readable, no " + lang.path + " found");
-                    });
-                } else {
-                    resolve();
-                }
-            });
-        });
+        if (!(await isReadableFile(path.join(this.datadir, lang.path)))) {
+            await deleteDir(path.join(this.datadir, lang.dir));
+            throw lang.path + " Not found";
+        }
 
         lang.onDisk = true;
         await this.db.languages(true).replace({ _key: "" + lang._key }, lang);
