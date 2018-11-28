@@ -116,22 +116,32 @@ function setCheckInterval(getStatus, onChange, interval) {
     function setupDoReductions() {
         const output = document.getElementById("doReductionOutput");
         const form = d3.select("#doReduction").on("submit", () => {
+            const submitBtn = form.select("input[type=\"submit\"]")
+                .attr("disabled", "disabled");
+
             d3.event.preventDefault();
+            output.innerHTML = "Working...";
             const data = form.select("textarea").node().value;
             const lang = form.select("#langselector").node().value;
             const name = form.select("#nameselector").node().value;
 
+
             if (name.length <= 0) {
-                document.getElementById("doReductionOutput").textContent = "! Provvide a name";
+                output.textContent = "! Provide a name";
+                submitBtn.attr("disabled", null);
+                return;
             }
 
             if (lang.length <= 0) {
-                document.getElementById("doReductionOutput").textContent = "! Provvide a language";
+                output.textContent = "! Provide a language";
+                submitBtn.attr("disabled", null);
+                return;
             }
 
 
             window.fetch(`/doTerm/${lang}/${name}`, {method: "POST", body: data})
                 .then(result => {
+                    submitBtn.attr("disabled", null);
                     if (result.ok) {
                         result.text()
                             .catch(e => {
@@ -151,8 +161,15 @@ function setCheckInterval(getStatus, onChange, interval) {
                         result.text().then(d => {
                             try {
                                 const data = JSON.parse(d);
-                                if ("error" in d) {
-                                    output.textContent = data.error;
+                                console.log("BO", data);
+                                if ("e" in data) {
+                                    output.textContent = data.e;
+
+                                    if ("errors" in data) {
+                                        const errEl = document.createElement("pre");
+                                        errEl.textContent = data.errors;
+                                        output.appendChild(errEl);
+                                    }
                                 } else {
                                     const errEl = document.createElement("pre");
                                     errEl.textContent = JSON.stringify(data, null, 2);
@@ -166,6 +183,7 @@ function setCheckInterval(getStatus, onChange, interval) {
                     }
                 })
                 .catch(e => {
+                    submitBtn.attr("disabled", null);
                     console.log("Error", e); document.getElementById("doReductionOutput").innerText = e;
                 });
         });
@@ -342,6 +360,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         setupCreateLang();
         setupDoReductions();
         setupExampleSelector();
+        updateLangs();
         const width = 1000;
         const height = 1000;
         // Create SVG element
