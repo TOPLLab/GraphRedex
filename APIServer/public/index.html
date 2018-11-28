@@ -148,7 +148,7 @@
                                     .then(txt => {
                                         const data = JSON.parse(txt)
                                         console.log("Done with succes")
-                                        d3.json("/example/" + data.example._key).then(visualise);
+                                        d3.json("/my/example/show/" + data.example._key).then(visualise);
                                         document.getElementById("doReduction").classList.toggle("closed")
 
                                     })
