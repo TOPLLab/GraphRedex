@@ -41,7 +41,7 @@ export class Languages {
             });
         // TODO: use id instead of key
 
-        await promisify(fs.mkdir)(absPathDir);
+        await promisify(fs.mkdir)(absPathDir, { recursive: true });
         return { lang: langData, absPath: absPath, absDir: absPathDir };
     }
 
