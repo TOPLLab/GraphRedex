@@ -66,8 +66,20 @@ main>form>* {
 
 .graph-nodes {
     cursor: move;
+    fill: rgb(86, 198, 212);
     stroke: #ffffff;
     stroke-width: 2;
+}
+
+.graph-nodes .stuck {
+    fill: red;
+}
+.graph-nodes .start {
+    fill: greenyellow;
+}
+.graph-nodes .start.stuck {
+    fill: greenyellow;
+    stroke: red;
 }
 
 .graph-texts {

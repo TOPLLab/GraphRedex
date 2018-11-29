@@ -260,9 +260,9 @@ function setCheckInterval(getStatus, onChange, interval) {
         node.enter().append("circle");
 
         node = graph.node();
-        node.attr("class", "term-node")
-            .attr("fill", d => ((d.data._id === startNode) ? "#0f0" : "#00f"))
-            .attr("stroke", d => (d.data._stuck ? "#f00" : null))
+        node.classed("term-node", true)
+            .classed("stuck", d => d.data._stuck)
+            .classed("start", d => d.data._id === startNode)
             .attr("r", 10)
             .on("click", d => {
                 d.fx = null; d.fy = null;
@@ -273,7 +273,9 @@ function setCheckInterval(getStatus, onChange, interval) {
         <hr>
         <table>
             <tr><th>Key</th><th>Value</th></tr>
-            ${Object.entries(d.data).filter(x => !x[0].startsWith("_") && x[0] != "term").map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")}
+            ${Object.entries(d.data)
+        .filter(x => ["_stuck", "_expanded"].includes(x[0]) || !( x[0].startsWith("_") || x[0] == "term"))
+        .map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")}
             </table>
             `;
             })
