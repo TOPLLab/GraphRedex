@@ -10,7 +10,7 @@ function logLn(text: string) {
     console.log("┗" + "━".repeat(text.length + 2) + "┛");
 }
 
-async function prepare() {
+export async function prepare() {
     const db = await MyDatabase.bootstrap();
 
     logLn(`Removing all documents form DB...`);
@@ -104,21 +104,5 @@ async function prepare() {
     });
 
     console.log("Examples per user graph created");
-
     return;
 }
-
-prepare()
-    .then(() => console.log("done"))
-    .catch((e) => {
-        if (e.response) {
-            console.log(
-                "error",
-                e.response.body,
-                e.response.request.path,
-                e.response.request.method,
-            );
-        } else {
-            console.log(e);
-        }
-    });

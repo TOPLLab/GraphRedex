@@ -27,6 +27,7 @@ require("./dist/Server.js")
             default:
                 console.log(e.code);
         }
+        process.exit(1);
     })
     .then((server) => {
         server.app.set("port", process.env.PORT || 3000);

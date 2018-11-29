@@ -15,9 +15,11 @@ while getopts "h?bcnd:" opt; do
             echo "-n to not run"
             exit 0
             ;;
-        b)  yarn run grunt
+        b)  yarn install && yarn run grunt
             ;;
-        c)  node dist/Bootstrapper.js
+        c)  (yarn install && \
+            yarn run grunt && \
+            node setup.js) || ( echo "could not clear DB" ; exit 1)
             echo "ensure that the datadir is emptied"
             ;;
         n)  run=0
@@ -40,7 +42,7 @@ then
     MYTMPDIR=${MYTMPDIR%/}
     if [[ -d "$MYTMPDIR" ]]
     then
-        ./index.js "$MYTMPDIR"
+        node index.js "$MYTMPDIR"
     else
         echo "$MYTMPDIR is not a directory"
     fi
