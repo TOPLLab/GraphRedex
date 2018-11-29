@@ -112,6 +112,24 @@ export default class Server {
             ),
         );
 
+        routeMy.post(
+            "/example/qry/:id([0-9,]+)",
+            bodyParser.text({ type: "*/*" }),
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const qry = req.body.toString();
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.id,
+                    });
+                    res.jsonp(await example.qry(qry));
+                },
+            ),
+        );
+
         routeMy.get(
             "/examples",
             this.requireLogin(
