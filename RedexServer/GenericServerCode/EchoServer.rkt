@@ -79,13 +79,13 @@
           (next-terms (apply-reduction-relation/tag-with-names relation term))
           (json       (trans->json2 term next-terms (lambda (x) (match x [(list a b) (make-hash (list (cons 'rule a) (cons 'term (expr->string b)) (cons 'data (make-hash (trans b)))))]))))
           )
-         (makenode (betterTrans term) #t)
+         (makenode (betterTrans term) #t (zero? (length next-terms)))
 
          (for ([x next-terms]) (
                                 match x [
                                          (list rel term2)
                                          ;(fprintf (current-error-port) "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
-                                         (makenode (betterTrans term2) #f)
+                                         (makenode (betterTrans term2) #f #f)
                                          (makeedge (expr->string term) (expr->string term2) rel)
 
                                          ])
@@ -108,7 +108,10 @@
      )
     (makenode (hash-set* (make-immutable-hash (trans term))
                          'term (expr->string term)
-                         'base #t) #f)
+                         'base #t) 
+                         #f
+                         #f
+                         )
     (display (car (lookup (expr->string term))))
     (run-echo2 (stream term) 1000 relation trans)
     ;TODO set at base
