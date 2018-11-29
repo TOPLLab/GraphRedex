@@ -69,7 +69,7 @@ function setCheckInterval(getStatus, onChange, interval) {
                     }
                 })
                 .catch(e => {
-                    console.log("ERROR", e); alert("something went wron");
+                    console.log("ERROR", e); alert("something went wrong");
                 });
 
 
