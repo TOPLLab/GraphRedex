@@ -262,6 +262,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         node = graph.node();
         node.classed("term-node", true)
             .classed("stuck", d => d.data._stuck)
+            .classed("expandable", d => !d.data._expanded)
             .classed("start", d => d.data._id === startNode)
             .attr("r", 10)
             .on("click", d => {

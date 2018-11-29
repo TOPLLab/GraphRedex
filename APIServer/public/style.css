@@ -71,6 +71,10 @@ main>form>* {
     stroke-width: 2;
 }
 
+.graph-nodes .expandable {
+    stroke: grey;
+}
+
 .graph-nodes .stuck {
     fill: red;
 }
