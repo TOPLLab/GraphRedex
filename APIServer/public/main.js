@@ -99,6 +99,7 @@ function setCheckInterval(getStatus, onChange, interval) {
             options.enter().append("option");
             options.exit().remove();
             select.selectAll("option")
+                .attr("disabled", null)
                 .text(d => d.name + " - " + d._key)
                 .attr("value", d => d._key);
 
