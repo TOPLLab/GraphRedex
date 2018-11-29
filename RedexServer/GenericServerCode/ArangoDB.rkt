@@ -77,7 +77,8 @@
                              (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname))  ))))) 'result))
       ; Create term if not exists and always return id
       ; Marks as expanded if expanded is #t else leaves it
-      (lambda (term expanded)
+      ; Marks as stuck if stuck is #t else leaves it
+      (lambda (term expanded stuck)
         (sendArango
           "POST"
           newHeaders
@@ -86,8 +87,8 @@
             `#hash(
                    (query .
                           (unquote (if expanded
-                                       "LET asExpanded = MERGE(@term,{\"_expanded\": true}) UPSERT {term:@term.term} INSERT asExpanded UPDATE asExpanded IN @@tcol RETURN NEW._id"
-                                       "LET asExpanded = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT asExpanded UPDATE OLD IN @@tcol RETURN NEW._id")))
+                                       (~a "LET updatedTerm = MERGE(@term,{\"_expanded\": true, \"_stuck\": " (if stuck "true" "false") "})  UPSERT {term:@term.term} INSERT updatedTerm UPDATE updatedTerm IN @@tcol RETURN NEW._id")
+                                       "LET updatedTerm = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT updatedTerm UPDATE OLD IN @@tcol RETURN NEW._id")))
                    (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname)) ))))))
 
       (lambda (from to reduction)
