@@ -350,7 +350,7 @@ function setCheckInterval(getStatus, onChange, interval) {
 
 
         /* hide text when too far */
-        setCheckInterval(() => (graph.node().node().getBoundingClientRect().height > 40),
+        setCheckInterval(() => (graph.node().node().getBoundingClientRect().height > 30),
             status => {
                 graph.text().attr("opacity", status ? "1" : "0");
             },
