@@ -71,7 +71,7 @@ export default class ReductionRunner {
                 "./RedexServer/run.sh",
                 [path.join(this.datadir, lang.path), graph.name],
                 {
-                    cwd: "/Users/xtofs/Documents/GraphRedex/",
+                    cwd: process.cwd() + "/",
                     env: { LC_ALL: "C" },
                     stdio: ["pipe", "pipe", "pipe"],
                 },
