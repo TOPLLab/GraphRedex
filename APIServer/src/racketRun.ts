@@ -78,10 +78,14 @@ export default class ReductionRunner {
             );
 
             console.log("supplying", term);
-            const stdinStream = new Readable();
-            stdinStream.push(term); // Add data to the internal queue for users of the stream to consume
-            stdinStream.push(null); // Signals the end of the stream (EOF)
-            stdinStream.pipe(child.stdin);
+            try {
+                const stdinStream = new Readable();
+                stdinStream.push(term); // Add data to the internal queue for users of the stream to consume
+                stdinStream.push(null); // Signals the end of the stream (EOF)
+                stdinStream.pipe(child.stdin);
+            } catch (e) {
+                reject(e);
+            }
             console.log("Term supplied");
 
             let output: string = "";
