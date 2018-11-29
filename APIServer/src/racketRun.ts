@@ -78,14 +78,16 @@ export default class ReductionRunner {
             );
 
             console.log("supplying", term);
-            try {
-                const stdinStream = new Readable();
-                stdinStream.push(term); // Add data to the internal queue for users of the stream to consume
-                stdinStream.push(null); // Signals the end of the stream (EOF)
-                stdinStream.pipe(child.stdin);
-            } catch (e) {
+            const stdinStream = new Readable();
+            stdinStream.on("error", (e) => {
                 reject(e);
+            });
+            if (stdinStream.push(term)) {
+                // Add data to the internal queue for users of the stream to consume
+                stdinStream.push(null); // Signals the end of the stream (EOF)
             }
+            stdinStream.pipe(child.stdin);
+
             console.log("Term supplied");
 
             let output: string = "";
@@ -103,7 +105,9 @@ export default class ReductionRunner {
             });
 
             child.on("error", (err) => {
-                reject(err);
+                console.log("Now ", err);
+                errors.push(err.message);
+                reject(errors);
             });
 
             child.on("close", (code) => {
