@@ -15,14 +15,16 @@
             <select id="exampleSelector" name="example">
                 <option disabled value="fiat">Examples</option>
             </select>
-            <button onclick='document.getElementById("doReduction").classList.toggle("closed")'>+</button>
-            <button>New Query</button>
-            <button onclick='document.getElementById("createLanguage").classList.toggle("closed")'>New language</button>
+            <button onclick='toggle("doReduction")'>+</button>
+            <button onclick='toggle("createQry")'>New Query</button>createQry
+            <button onclick='toggle("createLanguage")'>New language</button>
         </div>
         <section> </section>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
+
+            <h1>Do reduction</h1>
             <textarea id="term" cols="30" rows="10"></textarea>
             <select id="langselector" name="language">
                 <option disabled>No languages</option>
@@ -32,9 +34,22 @@
             <pre id="doReductionOutput"></pre>
         </form>
         <form id="createLanguage" action="#" class="closed">
+
+            <h1>Create language (filename = name)</h1>
             <input type="file" accept=".zip,.krt" name="specification" multiple="false">
-            <input placeholder="name" name="name" type="text" value="">
             <input type="submit" value="Create">
+        </form>
+        <form id="createQry" action="#" class="closed">
+            <h1>Execute an arangoDB query on the example (result will be in developper console)</h1>
+            <textarea id="qry" cols="30" rows="10"></textarea>
+            <input type="submit" value="Find">
+            <pre>
+- @@nodes to the collection of nodes
+- @@edges to the collection of edges
+- @start  to the id of the start node
+- @graph  to the graph of the start node
+            </pre>
+            <pre id="doQryOutput"> </pre>
         </form>
         <svg>
         </svg>

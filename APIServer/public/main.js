@@ -1,4 +1,44 @@
+/**
+ * Toggel visibility toto remove
+ * @param {string} elID
+ */
+function toggle(elID) {
+    document.querySelectorAll("main>form").forEach(e => {
+        if (e.id != elID) {
+            e.classList.add("closed")
+            ;
+        }
+    });
+    document.getElementById(elID).classList.toggle("closed");
+}
 
+
+/**
+ *
+ * @param {RequestInfo} input
+ * @param {RequestInit} init
+ * @return {Promise<any>}
+ */
+function getit(input, init) {
+    return new Promise((resolve, reject) => {
+        window.fetch(input, init)
+            .then(x => {
+                if (x.ok) {
+                    x.text().then(txt => {
+                        console.log(txt);
+                        try {
+                            const data = JSON.parse(txt);
+                            resolve(data);
+                        } catch (e) {
+                            reject(txt);
+                        }
+                    });
+                } else {
+                    x.text().then(reject).catch(reject);
+                }
+            }).catch(e => reject(e));
+    });
+}
 
 /**
  * Do a check
@@ -21,6 +61,7 @@ function setCheckInterval(getStatus, onChange, interval) {
 
 
 (() => {
+    let curExample = null;
     /**
  * Update the language selectors
  */
@@ -52,8 +93,6 @@ function setCheckInterval(getStatus, onChange, interval) {
 
             const formData = new FormData();
             formData.append("specification", form.select("input[type=\"file\"]").node().files[0]);
-            formData.append("name", form.select("input[type=\"text\"]").node().value);
-
 
             window.fetch("/my/languages", {
                 method: "POST",
@@ -82,6 +121,7 @@ function setCheckInterval(getStatus, onChange, interval) {
  * @param {Number} id
  */
     function renderExample(id) {
+        curExample = id;
         d3.json("/my/example/show/" + id).then(visualise);
     }
 
@@ -108,6 +148,32 @@ function setCheckInterval(getStatus, onChange, interval) {
                 .attr("value", "")
                 .attr("selected", "selected")
                 .attr("disabled", "disabled");
+        });
+    }
+
+
+    /**
+     * Run a qry
+     */
+    function setupDoQry() {
+        const output = document.getElementById("doQryOutput");
+        const form = d3.select("#createQry").on("submit", () => {
+            const qry = form.select("textarea").node().value;
+            console.log(qry, curExample);
+
+            output.textContent = "Wait for it...";
+            getit("my/example/qry/" + curExample, {
+                method: "POST",
+                body: qry,
+            }).then(data => {
+                console.log("\n\nQry:\n" + qry);
+                console.log("\n\nResult:");
+                console.log(data);
+                output.textContent = "See developper console\n";
+                output.textContent += JSON.stringify(data, null, 2).substr(0, 400);
+            }).catch(error => {
+                output.textContent = "ERROR:" + error;
+            });
         });
     }
 
@@ -366,6 +432,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         setupDoReductions();
         setupExampleSelector();
         updateLangs();
+        setupDoQry();
         const width = 1000;
         const height = 1000;
         // Create SVG element
