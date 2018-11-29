@@ -261,6 +261,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         node = graph.node();
         node.attr("class", "term-node")
             .attr("fill", d => ((d.data._id === startNode) ? "#0f0" : "#00f"))
+            .attr("stroke", d => (d.data._stuck ? "#f00" : null))
             .attr("r", 10)
             .on("click", d => {
                 d.fx = null; d.fy = null;
