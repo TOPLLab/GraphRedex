@@ -65,7 +65,7 @@ function setCheckInterval(getStatus, onChange, interval) {
                         alert("Language created!");
                         updateLangs();
                     } else {
-                        alert("something went wrong");
+                        alert(`Something went wrong\n${JSON.stringify(data)}`);
                     }
                 })
                 .catch(e => {
