@@ -34,25 +34,30 @@ export class Languages {
         const absPathDir = path.join(this.datadir, langData.dir);
         const absPath = path.join(this.datadir, langData.path);
 
-        await this.db.rw
-            .edgeCollection("users-languages")
-            .save({ creator: true }, user, {
-                _id: "languages/" + langData._key,
-            });
         // TODO: use id instead of key
 
         await promisify(fs.mkdir)(absPathDir, { recursive: true });
         return { lang: langData, absPath: absPath, absDir: absPathDir };
     }
 
-    private async confirmDisk(lang: Language): Promise<Language> {
+    private async confirmDisk(lang: Language, user: User): Promise<Language> {
         if (!(await isReadableFile(path.join(this.datadir, lang.path)))) {
-            await deleteDir(path.join(this.datadir, lang.dir));
+            await deleteDir(path.join(this.datadir, lang.dir), true).catch(
+                console.error,
+            );
+            await this.db
+                .languages(true)
+                .remove({ _key: "" + lang._key })
+                .catch(console.error);
             throw lang.path + " Not found";
         }
 
         lang.onDisk = true;
         await this.db.languages(true).replace({ _key: "" + lang._key }, lang);
+
+        await this.db.rw
+            .edgeCollection("users-languages")
+            .save({ creator: true }, user, { _id: "languages/" + lang._key });
 
         return lang;
     }
@@ -75,7 +80,7 @@ export class Languages {
 
         await this.db.languages(true).replace({ _key: "" + lang._key }, lang);
 
-        return this.confirmDisk(lang);
+        return this.confirmDisk(lang, user);
     }
 
     /**
@@ -94,8 +99,6 @@ export class Languages {
         if (!absDir.startsWith(this.datadir)) {
             throw "Invalid filename";
         }
-
-        await promisify(fs.mkdir)(absDir);
 
         // TODO: insecure !!! move to utils
         // unzip  -p example.zip | od | head -n 1001 | wc -l may help
@@ -135,8 +138,9 @@ export class Languages {
                 }
             });
         });
+        console.log("Unzipped " + location);
         await promisify(fs.unlink)(location); //delete zip
 
-        return await this.confirmDisk(lang);
+        return await this.confirmDisk(lang, user);
     }
 }
