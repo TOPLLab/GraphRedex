@@ -4,10 +4,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "grunt",
+            "label": "grunt + clr",
             "type": "shell",
             "command": "mkdir /tmp/graphredex || rm -r /tmp/graphredex/*;yarn run grunt;node setup.js",
-            "options": { 
+            "options": {
                 "cwd": "APIServer"
             },
             "group": {
@@ -17,7 +17,25 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated"
-            }
+            },
+            "problemMatcher":"$tsc"
+        },
+        {
+            "label": "grunt",
+            "type": "shell",
+            "command": "yarn run grunt",
+            "options": {
+                "cwd": "APIServer"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher":"$tsc"
         }
     ]
 }

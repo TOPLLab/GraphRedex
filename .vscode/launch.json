@@ -15,5 +15,16 @@
                 "${workspaceFolder}/**/*.js"
             ]
         }
+        {
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "grunt + clr",
+            "name": "Start server + clr",
+            "program": "${workspaceFolder}/APIServer/index.js",
+            "args": ["/tmp/graphredex"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        }
     ]
 }
