@@ -47,6 +47,7 @@ main>form {
     max-height: 100vh;
     box-sizing: border-box;
     transition: max-height 0.3s;
+    margin: 0;
 }
 
 main>form.closed {
