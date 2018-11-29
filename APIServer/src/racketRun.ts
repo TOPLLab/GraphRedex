@@ -68,11 +68,10 @@ export default class ReductionRunner {
 
         return await new Promise<RacketResult>((resolve, reject) => {
             const child = spawn(
-                "RedexServer/run.sh",
+                "./RedexServer/run.sh",
                 [path.join(this.datadir, lang.path), graph.name],
                 {
-                    cwd:
-                        "/home/beardhatcode/Documents/doctoraat/RelatedWork/GraphRedex/code/",
+                    cwd: "/Users/xtofs/Documents/GraphRedex/",
                     env: { LC_ALL: "C" },
                     stdio: ["pipe", "pipe", "pipe"],
                 },
