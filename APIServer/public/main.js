@@ -293,7 +293,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         linkText = graph.text();
         linkText.attr("text-anchor", "middle")
             .attr("fill", d => getRandCol(d.reduction))
-            .text(d => d.reduction);
+            .html(d => "<tspan dy='-5'>" + d.reduction + "</tspan>");
 
         let node = graph.node().data(nodes);
         node.exit().remove();
