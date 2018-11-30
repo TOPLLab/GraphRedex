@@ -101,22 +101,17 @@ function setCheckInterval(getStatus, onChange, interval) {
             const formData = new FormData();
             formData.append("specification", form.select("input[type=\"file\"]").node().files[0]);
 
-            window.fetch("/my/languages", {
+            getit("/my/languages", {
                 method: "POST",
                 body: formData,
-            })
-                .then(x => x.json())
-                .then(data => {
-                    if (data.ok) {
-                        alert("Language created!");
-                        updateLangs();
-                    } else {
-                        alert(`Something went wrong\n${JSON.stringify(data)}`);
-                    }
-                })
-                .catch(e => {
-                    console.log("ERROR", e); alert("something went wrong");
-                });
+            }).then(data => {
+                alert("Language created!");
+                updateLangs();
+                form.classed("closed", true);
+            }).catch(e => {
+                console.log("ERROR", e);
+                alert("something went wrong\n\n" + e);
+            });
 
 
             return false;
@@ -213,52 +208,24 @@ function setCheckInterval(getStatus, onChange, interval) {
             }
 
 
-            window.fetch(`/doTerm/${lang}/${name}`, {method: "POST", body: data})
-                .then(result => {
+            getit(`/doTerm/${lang}/${name}`, {method: "POST", body: data})
+                .then(data => {
                     submitBtn.attr("disabled", null);
-                    if (result.ok) {
-                        result.text()
-                            .catch(e => {
-                                document.getElementById("doReductionOutput").textContent = "Something went wrong" + e;
-                            })
-                            .then(txt => {
-                                const data = JSON.parse(txt);
-                                output.textContent = "succes";
-                                d3.json("/my/example/show/" + data.example._key).then(visualise);
-                                document.getElementById("doReduction").classList.toggle("closed");
-                            })
-                            .catch(e => {
-                                console.log("Error", e); output.textContent = e;
-                            });
-                    } else {
-                        output.textContent = "Something went wrong";
-                        result.text().then(d => {
-                            try {
-                                const data = JSON.parse(d);
-                                console.log("BO", data);
-                                if ("e" in data) {
-                                    output.textContent = data.e;
+                    d3.json("/my/example/show/" + data.example._key).then(visualise);
+                    output.textContent = "succes";
+                    document.getElementById("doReduction").classList.toggle("closed");
+                }).catch(e => {
+                    submitBtn.attr("disabled", null);
+                    output.textContent = JSON.stringify(e, null, 2);
+                    if ("e" in data) {
+                        output.textContent = data.e;
 
-                                    if ("errors" in data) {
-                                        const errEl = document.createElement("pre");
-                                        errEl.textContent = data.errors;
-                                        output.appendChild(errEl);
-                                    }
-                                } else {
-                                    const errEl = document.createElement("pre");
-                                    errEl.textContent = JSON.stringify(data, null, 2);
-                                    output.innerHTML = "";
-                                    output.appendChild(errEl);
-                                }
-                            } catch (e) {
-                                output.textContent = d;
-                            }
-                        });
+                        if ("errors" in data) {
+                            const errEl = document.createElement("pre");
+                            errEl.textContent = data.errors;
+                            output.appendChild(errEl);
+                        }
                     }
-                })
-                .catch(e => {
-                    submitBtn.attr("disabled", null);
-                    console.log("Error", e); document.getElementById("doReductionOutput").innerText = e;
                 });
         });
     }
