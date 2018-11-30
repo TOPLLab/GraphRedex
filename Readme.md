@@ -1,69 +1,84 @@
-# Installation on OSX 
+# GraphRedex
 
-### Installing Arangodb 
+GraphRedex is a tool for ...
 
-Graphredex uses a graph database called arangodb. 
-The easiest way to install this database is by using brew.
+## Running the server
+Clone the repository  and run
 
+```bash
+./APIServer/start.sh -c -b
+```
+
+## Known issues when uploading a new language 
+
+```racket
+(require redex)
+```
+
+Should be replaced by 
+
+```racket
+(require redex/reduction-semantics)
+```
+
+All other GUI `require`s should be removed or replaced with a variant that does 
+not require a display.
+
+## Installation
+### Build dependencies
+
+```bash  
+brew install yarn
+```
+
+### AragnoDB (database)
+
+GraphRedex uses a graph database called [ArangoDB](https://www.arangodb.com/). 
+We use version `3.3.19` but I higher version should also be fine.
+
+
+**OSX** users can install it with brew:
 ```
 brew install arangodb
 /usr/local/opt/arangodb/sbin/arangod &
 ```
 
-### Configuration of Arangodb 
-Once the databse is installed it needs tobe initialised with an initial database and two users. 
-Configuration of the datbase is broswer based, the default address is http://127.0.0.1:8529. 
+**Arch Linux** users can install the `arangodb3` package form the AUR and
+start or enable the service using `systemctl start arangodb3.service`.
+
+#### Configuration of ArangoDB 
+Once the database is installed it needs to be initialised with an initial database and two users. 
+Configuration of the database is browser based, the default address is http://127.0.0.1:8529.
+The default password for the `root` user is blank `""`.
 
 
-### Creating users 
+#### Creating users 
 
-In order for GraphRedex to work it needs to have two users in the system called 'graphredex-qry' and 'graphredex'.
-The user graphredex has read and write access while the user graphredex-qry only has read acces. 
+In order for GraphRedex to work it needs to have two users in the system called `graphredex-qry` and `graphredex`.
+The user `graphredex` has read and write access while the user `graphredex-qry` only has read access. 
 
-- In the browser, go to the tab "Users", and create a user called 'graphredex-qry' with password 'graphredex-qry'. 
-- In the browser, go to the tab "Users", and create a user called 'graphredex' with password 'graphredex'.
+- In the browser, go to the tab "Users", and create a user called `graphredex-qry` with password `graphredex-qry`. 
+- In the browser, go to the tab "Users", and create a user called `graphredex` with password `graphredex`.
 
-#### Creating the database  
+##### Creating the database  
 
-Go to the tab "Databases" and make a database called 'graphredex-test' make sure to select graphredex as the owner. 
+Go to the tab "Databases" and make a database called `graphredex-test` make sure to select `graphredex` as the owner. 
 
-#### Setting the permissions 
+##### Setting the permissions 
 
 Now that the database is created we still need to make sure that the permissions of the users are correct:
 
-Go to the Users tab and select permissions tab: In Users/graphredex in de permissions tab:
-- geeft graphredex administrative acces op de databank graphredex-test 
-- geeft graphredex read/write acces op alle collections (de rij met *) 
+Go to the Users tab and select permissions tab: 
+- In Users/graphredex in de permissions tab (these should normally already be set):
+  * give `graphredex` administrative access to the database `graphredex-test`
+  * give `graphredex` read/write access to all collections
+    + Click on `graphredex-test`
+    + Select Read access on the line with `*`
 
 - In Users/graphredex-qry in de permissions tab:
-* geeft graphredex-qry acces acces op de databank graphredex-test 
-* geeft graphredex-qrt read acces op alle collections (de rij met *) 
+  * give `graphredex-qry` access access on the `graphredex-test` database
+  * give `graphredex-qry` read access to all collections in that databse
+    + Click on `graphredex-test`
+    + Select Read access on the line with `*`
 
-# Installation of GraphRedex
 
-- Clone the repository 
-- Go to the folder APIServer  
-
-## Install the packaging tools 
-
-```
-brew install yarn
-```
-## 
-
-Execute 
-```
-yarn install
-``` 
-
-Execute 
-```
-./start.sh -c -b
-```
-
-## Known issues when uploading a new language 
-
-```
-(require redex)
-(require redex/reduction-semantics)
-```
