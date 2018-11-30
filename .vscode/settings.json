@@ -10,5 +10,13 @@
     "tslint.jsEnable": true,
     "tslint.autoFixOnSave": true,
     "tslint.packageManager": "yarn",
-    "tslint.run": "onSave"
+    "tslint.run": "onSave",
+    "spellright.language": [
+        "en_GB"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext"
+    ]
 }
