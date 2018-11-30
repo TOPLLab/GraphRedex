@@ -34,7 +34,14 @@ function getit(input, init) {
                         }
                     });
                 } else {
-                    x.text().then(reject).catch(reject);
+                    x.text().then(txt => {
+                        try {
+                            const data = JSON.parse(txt);
+                            reject(data);
+                        } catch (e) {
+                            reject(txt);
+                        }
+                    }).catch(reject);
                 }
             }).catch(e => reject(e));
     });
