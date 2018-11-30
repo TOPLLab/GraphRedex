@@ -5,48 +5,85 @@
 
 run=1
 dirSet=0
+CURPOS=$(dirname $0)
+CURLOC=$(realpath $CURPOS)
+cd $CURLOC
+
+function showHelp {
+echo "$0 [options]"
+cat <<HELP
+  -b         to build
+  -c         to clean db (implies -b)
+             if -n 
+  -d PATH    set directory
+             if -c is set, the directory will be emptied
+  -h         show this help
+HELP
+}
+
+needsBuild=0
+needsClean=0
 
 while getopts "h?bcnd:" opt; do
     case "$opt" in
         h|\?)
-            echo "-b to build"
-            echo "-d to set directory"
-            echo "-c to clean db"
-            echo "-n to not run"
+            showHelp
             exit 0
             ;;
-        b)  yarn install && yarn run grunt
+        b)  needsBuild=1
             ;;
-        c)  (yarn install && \
-            yarn run grunt && \
-            node setup.js) || ( echo "could not clear DB" ; exit 1)
-            echo "ensure that the datadir is emptied"
+        c)  needsBuild=1
+            needsClean=1
             ;;
         n)  run=0
             ;;
         d)  dirSet=1
-            MYTMPDIR=$OPTARG
+            DATADIR=$OPTARG
             ;;
+        *)
+            showHelp
+            exit 1
     esac
 done
 
+
+if [[ $needsBuild -eq 1 ]]; then
+    echo "Strating build"
+    yarn install || \
+        ( echo "could install depenencies, is yarn instlled?" ; exit 1)
+    yarn run grunt || \
+        ( echo "could not build the server" ; exit 1)
+fi
+
+if [[ $needsClean -eq 1 ]]; then
+    echo "Strating clean"
+    node setup.js || \
+        ( echo "Could not clean database" ; exit 1)
+fi
+
+if [[ $dirSet -eq 1 ]]; then
+    echo "Checking given directory"
+    DATADIR=${DATADIR%/}
+    if [[ ! -d "$DATADIR" ]]
+    then
+        echo "$DATADIR is not a directory"
+        exit 1
+    fi
+    if [[ $needsClean -eq 1 ]]; then
+        echo "Emptying directory $DATADIR"
+        rm -r $DATADIR/*
+    fi
+else 
+        echo "Making tmp dir"
+        DATADIR=$(mktemp -d)
+        trap "echo STOP;rm -rf $DATADIR" EXIT
+fi
+
+
+
 if [[ $run -eq 1 ]]
 then
-    if [[ $dirSet -eq 0 ]]
-    then
-        echo "Making tmp dir"
-        MYTMPDIR=$(mktemp -d)
-        trap "echo STOP;rm -rf $MYTMPDIR" EXIT
-    fi
-
-    MYTMPDIR=${MYTMPDIR%/}
-    if [[ -d "$MYTMPDIR" ]]
-    then
-        node index.js "$MYTMPDIR"
-    else
-        echo "$MYTMPDIR is not a directory"
-    fi
-
+    node index.js "$DATADIR"
 else
-    echo "Not running"
+    echo "Not running (due -n)"
 fi

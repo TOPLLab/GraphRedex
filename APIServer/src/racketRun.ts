@@ -68,10 +68,9 @@ export default class ReductionRunner {
 
         return await new Promise<RacketResult>((resolve, reject) => {
             const child = spawn(
-                "./RedexServer/run.sh",
+                "../RedexServer/run.sh",
                 [path.join(this.datadir, lang.path), graph.name],
                 {
-                    cwd: process.cwd() + "/",
                     env: { LC_ALL: "C" },
                     stdio: ["pipe", "pipe", "pipe"],
                 },
@@ -105,9 +104,19 @@ export default class ReductionRunner {
             });
 
             child.on("error", (err) => {
-                console.log("Now ", err);
+                console.log("Now ", process.cwd() + "/", err);
                 errors.push(err.message);
                 reject(errors);
+                child.kill();
+            });
+
+            child.on("exit", (code) => {
+                console.log(`child process [exited] with code ${code}`);
+                if (code === 0) {
+                    resolve({ term: output, errors: errors });
+                } else {
+                    reject(errors);
+                }
             });
 
             child.on("close", (code) => {
