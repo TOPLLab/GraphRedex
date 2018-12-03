@@ -47,6 +47,7 @@ export default class ReductionRunner {
         const example = await examplesCollection.save({
             name: saveName,
             baseTerm: termId,
+            baseTermString: term,
             lang: lang._key,
         });
         await usersExamplesCollection.save(

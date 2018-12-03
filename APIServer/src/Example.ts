@@ -9,6 +9,7 @@ export interface ExampleMeta {
     _key: string;
     _id: string;
     baseTerm: string;
+    baseTermString: string;
 }
 
 export default class Example {
