@@ -1,0 +1,7 @@
+(
+  (store (x 1))
+  (threads
+     (set! x (+ x -1))
+     (set! x (+ x 1))
+  )
+)
