@@ -1,0 +1,14 @@
+(
+  ((Future-Resolver id_send_foo)) 
+  () 
+  run 
+  () 
+  () 
+  ((first run)) () ()
+  (
+    (actor first () () 
+      (let (new-actor (actor (method foo x (+ x x)))) in 
+         (when (sendf new-actor foo 2 id_send_foo) x (+ x 5)))
+    )
+  )
+)
