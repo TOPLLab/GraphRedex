@@ -1,0 +1,5 @@
+#!/bin/sh
+# Name: Start the API server and pass on options
+# By Robbert Gurdeep Singh
+################################################################################
+./APIServer/start.sh "$@"

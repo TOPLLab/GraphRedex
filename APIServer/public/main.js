@@ -315,7 +315,7 @@ function setCheckInterval(getStatus, onChange, interval) {
         <table>
             <tr><th>Key</th><th>Value</th></tr>
             ${Object.entries(d.data)
-        .filter(x => ["_stuck", "_expanded"].includes(x[0]) || !( x[0].startsWith("_") || x[0] == "term"))
+        .filter(x => ["_stuck", "_expanded"].includes(x[0]) || !(x[0].startsWith("_") || x[0] == "term"))
         .map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")}
             </table>
             `;
@@ -348,9 +348,9 @@ function setCheckInterval(getStatus, onChange, interval) {
                 .attr("y", d => (d.source.y + d.target.y) / 2)
                 .attr("transform", d => `rotate(${
                     180 * Math.atan((d.source.y - d.target.y) / (d.source.x - d.target.x)) / Math.PI},
-    ${(d.source.x + d.target.x) / 2},
-    ${(d.source.y + d.target.y) / 2}
-    )`);
+                    ${(d.source.x + d.target.x) / 2},
+                    ${(d.source.y + d.target.y) / 2}
+                    )`);
 
             node
                 .attr("cx", d => d.x)

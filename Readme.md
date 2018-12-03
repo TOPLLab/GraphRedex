@@ -3,11 +3,13 @@
 GraphRedex is a tool for ...
 
 ## Running the server
-Clone the repository  and run
+Clone the repository and run the following in the root dir
 
 ```bash
-./APIServer/start.sh -c -b
+./run -c -b
 ```
+
+Try `./run -h` to see more options.
 
 ## Known issues when uploading a new language 
 
