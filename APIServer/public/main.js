@@ -124,7 +124,22 @@ function setCheckInterval(getStatus, onChange, interval) {
  */
     function renderExample(id) {
         curExample = id;
-        d3.json("/my/example/show/" + id).then(visualise);
+        const steps = 300;
+        getit("my/example/qry/" + id, {
+            method: "POST",
+            body: `
+            LET nodes = (
+                    FOR v IN 0..${steps}
+                        OUTBOUND @start GRAPH @graph
+                        OPTIONS {bfs:true,uniqueVertices: 'global'}
+                        RETURN DISTINCT v)
+            LET edges = (
+                FOR a in nodes
+                    FOR e IN @@edges
+                        FILTER  e._from == a._id OR e._to == a._id
+                            RETURN DISTINCT e)
+            RETURN {nodes,edges}`,
+        }).then(renderIfGraph);
     }
 
     /**
@@ -153,6 +168,23 @@ function setCheckInterval(getStatus, onChange, interval) {
         });
     }
 
+    /**
+     * Rnders the
+     * @param {*} data
+     * @return {boolean} if it was a graph
+     */
+    function renderIfGraph(data) {
+        if (data.length === 1) {
+            const renderData = data[0];
+            const renderKeys = Object.keys(renderData);
+            if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
+                console.log(renderData);
+                visualise(renderData);
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Run a qry
@@ -168,11 +200,17 @@ function setCheckInterval(getStatus, onChange, interval) {
                 method: "POST",
                 body: qry,
             }).then(data => {
+                output.textContent = "Done: See developper console for output\n";
                 console.log("\n\nQry:\n" + qry);
                 console.log("\n\nResult:");
                 console.log(data);
-                output.textContent = "See developper console\n";
-                output.textContent += JSON.stringify(data, null, 2).substr(0, 400);
+                const wasGraph = renderIfGraph(data);
+
+                if (wasGraph) {
+                    form.classList.toggle("closed");
+                } else {
+                    output.textContent += JSON.stringify(data, null, 2).substr(0, 400);
+                }
             }).catch(error => {
                 output.textContent = "ERROR:" + error;
             });
@@ -268,6 +306,7 @@ function setCheckInterval(getStatus, onChange, interval) {
      * @param {Example} data
      */
     function visualise(data) {
+        console.log(data, "remdering");
         const startNode = ("meta" in data) ? data.meta.baseTerms[0] : null;
 
         const links = data.edges.map(d => ({source: d._from, target: d._to, reduction: d.reduction}));
