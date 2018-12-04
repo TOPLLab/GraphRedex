@@ -250,7 +250,7 @@ function setCheckInterval(getStatus, onChange, interval) {
             getit(`/doTerm/${lang}/${name}`, {method: "POST", body: data})
                 .then(data => {
                     submitBtn.attr("disabled", null);
-                    d3.json("/my/example/show/" + data.example._key).then(visualise);
+                    renderExample(data.example._key);
                     output.textContent = "succes";
                     document.getElementById("doReduction").classList.toggle("closed");
                 }).catch(e => {
