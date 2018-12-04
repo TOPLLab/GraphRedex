@@ -38,39 +38,6 @@ export default class Example {
     }
 
     /**
-     * Gets the outbound nodes within `steps` steps from any of the nodes in
-     * bases (specified by _key)
-     * @param bases the _key's of the nodes to start form (graph will be prepended)
-     * @param steps number of reductions
-     */
-    public async extend(bases: string[], steps: number = 1) {
-        if (steps < 0) {
-            throw "steps must be positive";
-        }
-        const fullBaseNames = bases.map((x) => this.name + "/" + x);
-        const qry = aql`
-        LET nodes = (
-            FOR docId IN ${fullBaseNames}
-                FOR v IN 0..${steps}
-                    OUTBOUND docId GRAPH ${this.name}
-                    OPTIONS {bfs:true,uniqueVertices: 'global'}
-                    RETURN DISTINCT v)
-        LET edges = (
-            FOR a in nodes
-                FOR e IN ${this.edgeCollection}
-                    FILTER  e._from == a._id OR e._to == a._id
-                        RETURN DISTINCT e)
-        RETURN {nodes,edges}`;
-
-        return await this.db.ro
-            .query(qry)
-            .then((cursor) => cursor.all())
-            .then((keys) =>
-                Object.assign({ meta: { baseTerms: fullBaseNames } }, keys[0]),
-            );
-    }
-
-    /**
      * Execute a query on the graph database
      * Binding
      *  - @@nodes to the collection of nodes
@@ -99,13 +66,5 @@ export default class Example {
             .query(qry, binds)
             .then((cursor) => cursor.all())
             .then((keys) => Object.assign(keys));
-    }
-
-    /**
-     * Get nodes and edges starting formthe base node of the graph
-     *  @param [steps=300] number of steps
-     */
-    public async showAll(steps: number = 300) {
-        return await this.extend([this.baseTerm.split("/").pop()], steps);
     }
 }

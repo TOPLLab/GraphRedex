@@ -55,63 +55,6 @@ export default class Server {
         const routeMy = express.Router();
         this.app.use("/my", routeMy);
 
-        routeMy.get(
-            "/example/show/:id",
-            this.requireLogin(
-                async (
-                    user: User,
-                    req: express.Request,
-                    res: express.Response,
-                ) => {
-                    const example: Example = await this.users.exampleOf(user, {
-                        _key: req.params.id,
-                    });
-                    res.jsonp(await example.showAll());
-                },
-            ),
-        );
-
-        // TODO: merge with next one
-        routeMy.get(
-            "/example/extend/:id([0-9,]+)/:terms([0-9,]+)/:steps(\\d+)",
-            this.requireLogin(
-                async (
-                    user: User,
-                    req: express.Request,
-                    res: express.Response,
-                ) => {
-                    const startTerms = req.params.terms
-                        .split(",")
-                        .filter((x) => x.length > 0);
-                    const steps = Number.parseInt(req.params.steps);
-                    const example: Example = await this.users.exampleOf(user, {
-                        _key: req.params.id,
-                    });
-                    res.jsonp(await example.extend(startTerms, steps));
-                },
-            ),
-        );
-
-        routeMy.get(
-            "/example/extend/:id([0-9,]+)/:terms([0-9,]+)",
-            this.requireLogin(
-                async (
-                    user: User,
-                    req: express.Request,
-                    res: express.Response,
-                ) => {
-                    const startTerms = req.params.terms
-                        .replace(/[^0-9,]/, "")
-                        .split(",")
-                        .filter((x) => x.length > 0);
-                    const example: Example = await this.users.exampleOf(user, {
-                        _key: req.params.id,
-                    });
-                    res.jsonp(await example.extend(startTerms));
-                },
-            ),
-        );
-
         routeMy.post(
             "/example/qry/:id([0-9,]+)",
             bodyParser.text({ type: "*/*" }),
