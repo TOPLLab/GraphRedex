@@ -2,8 +2,6 @@
 (provide run-echo)
 (require redex/reduction-semantics )
 (require json)
-;(require file/md5)
-;(require racket/stream)
 (require "./ArangoDB.rkt")
 
 
@@ -23,9 +21,9 @@
 
 (define (run-echo graphname relation trans)
 
-  (define-values (arangoGET arangoPOST clearall qry  lookup makenode makeedge) (createArango "graphredex-test" graphname))
+  (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-test" graphname))
 
-  (define (trans->json2 t ts trans)
+  (define (trans->json t ts trans)
     (jsexpr->string
       (make-hash
         (list
@@ -33,14 +31,6 @@
           (cons 'next (map trans ts))))))
 
   (define (expr->string e) (format "~s" e))
-
-  (define (trans->hash t ts trans)
-    (make-hash
-      (list
-        (cons 'from (trans `("TEST" ,t)))
-        (cons 'next (map trans ts)))))
-
-
 
 
 
@@ -62,8 +52,6 @@
 
 
   (define (run-echo2 terms cnt relation trans)
-    ;
-    ;(fprintf (current-error-port) "\n\n\n------------------------------\n~a\n=======\n" terms)
     (cond
       [(= 0 cnt) (fprintf (current-error-port) "\nOUT OF REDUCTIONS\n" cnt)]
       [(stream-empty? terms) (fprintf (current-error-port) "\nDONE (~a reductions left)\n" cnt)]
@@ -77,7 +65,7 @@
           (term (stream-first  terms))
           (betterTrans (lambda (x) (make-hash (cons (cons 'term (expr->string x)) (trans x)))))
           (next-terms (apply-reduction-relation/tag-with-names relation term))
-          (json       (trans->json2 term next-terms (lambda (x) (match x [(list a b) (make-hash (list (cons 'rule a) (cons 'term (expr->string b)) (cons 'data (make-hash (trans b)))))]))))
+          (json       (trans->json term next-terms (lambda (x) (match x [(list a b) (make-hash (list (cons 'rule a) (cons 'term (expr->string b)) (cons 'data (make-hash (trans b)))))]))))
           )
          (makenode (betterTrans term) #t (zero? (length next-terms)))
 
@@ -114,7 +102,6 @@
                          )
     (display (car (lookup (expr->string term))))
     (run-echo2 (stream term) 1000 relation trans)
-    ;TODO set at base
     )
 
   )
