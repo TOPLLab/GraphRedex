@@ -69,6 +69,7 @@ function setCheckInterval(getStatus, onChange, interval) {
 
 (() => {
     let curExample = null;
+    let resetZoom = x => x;
     /**
  * Update the language selectors
  */
@@ -306,11 +307,15 @@ function setCheckInterval(getStatus, onChange, interval) {
      * @param {Example} data
      */
     function visualise(data) {
+        resetZoom();
         console.log(data, "remdering");
         const startNode = ("meta" in data) ? data.meta.baseTerms[0] : null;
 
-        const links = data.edges.map(d => ({source: d._from, target: d._to, reduction: d.reduction}));
+        const nodesMap = new Map(data.nodes.map(d => [d._id, d]));
         const nodes = data.nodes.map(d => ({id: d._id, term: d.term, data: d}));
+        const links = data.edges
+            .filter(d => nodesMap.has(d._from) && nodesMap.has(d._to))
+            .map(d => ({source: d._from, target: d._to, reduction: d.reduction}));
         const simulation = forceSimulation(nodes, links);
         simulation.on("tick", ticked);
         simulation.velocityDecay(0.1);
@@ -448,14 +453,18 @@ function setCheckInterval(getStatus, onChange, interval) {
         setupDoQry();
         const width = 1000;
         const height = 1000;
+        let zoomHandler;
         // Create SVG element
         svgRoot = d3.select("svg")
             .attr("width", width)
             .attr("height", height)
             .attr("viewBox", [-width / 2, -height / 2, width, height])
-            .call(d3.zoom().on("zoom", () => {
+            .call(zoomHandler = d3.zoom().on("zoom", () => {
                 svg.attr("transform", d3.event.transform);
             }));
+        resetZoom = () => {
+            svgRoot.call(zoomHandler.transform, d3.zoomIdentity);
+        };
         defs = svgRoot.append("svg:defs");
         const svg = svgRoot.append("g");
 
