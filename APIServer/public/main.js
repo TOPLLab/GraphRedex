@@ -270,6 +270,19 @@ function setCheckInterval(getStatus, onChange, interval) {
     }
 
     let svgRoot, defs, graph;
+    /**
+     * Returns the brightness of an rgb-color
+     * from: http:// www.w3.org/WAI/ER/WD-AERT/#color-contrast
+     *
+     * Te bereadable, the diffrence should be 125 form the background
+     *
+     * @param {{r:number,g:number,b:number}} rgb color values
+     * @return {number} brightness
+     */
+    function brightness(rgb) {
+        return rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114;
+    }
+
 
     const existing = new Map();
     /**
@@ -282,9 +295,15 @@ function setCheckInterval(getStatus, onChange, interval) {
         if (!existing.has(t)) {
             const letters = "0123456789ABCDEF";
             let resCol = "";
-            for (let i = 0; i < 6; i++) {
-                resCol += letters[Math.floor(Math.random() * 16)];
-            }
+
+
+            do {
+                resCol = "";
+                for (let i = 0; i < 6; i++) {
+                    resCol += letters[Math.floor(Math.random() * 16)];
+                }
+            } while (brightness(d3.color("#" + resCol).rgb()) > 100);
+
             existing.set(t, resCol);
 
             const markersize = 3;
