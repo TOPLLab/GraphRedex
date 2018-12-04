@@ -11,7 +11,7 @@ CURLOC=$(realpath $CURPOS)
 
 (echo '#lang racket'
 echo '(require (prefix-in user: (file "'$1'")))'
-echo '(require (file "'$CURLOC'/GenericServerCode/EchoServer.rkt"))'
+echo '(require (file "'$CURLOC'/GenericServerCode/DebuggerServer.rkt"))'
 echo '(run-echo "'$2'" user:reductions user:term->kv)') > $TMPFILE
 
 
