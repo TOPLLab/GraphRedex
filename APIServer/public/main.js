@@ -121,12 +121,12 @@ function setCheckInterval(getStatus, onChange, interval) {
 
     /**
  * Get example data and render it
- * @param {Number} id
+ * @param {Example} example
  */
-    function renderExample(id) {
-        curExample = id;
+    function renderExample(example) {
+        curExample = example;
         const steps = 300;
-        getit("my/example/qry/" + id, {
+        getit("my/example/qry/" + example._key, {
             method: "POST",
             body: `
             LET nodes = (
@@ -150,7 +150,10 @@ function setCheckInterval(getStatus, onChange, interval) {
         d3.json("/my/examples").then(data => {
             const select = d3.select("#exampleSelector")
                 .on("change", () => {
-                    renderExample(select.property("value"));
+                    const si = select.property("value"),
+                        s = options.filter((d, i) => d._key === si ),
+                        data = s.datum();
+                    renderExample(data);
                 });
             console.log(data.map(d => d.name + " - " + d._key));
             const options = select.selectAll("option").data(data);
@@ -197,7 +200,7 @@ function setCheckInterval(getStatus, onChange, interval) {
             console.log(qry, curExample);
 
             output.textContent = "Wait for it...";
-            getit("my/example/qry/" + curExample, {
+            getit("my/example/qry/" + curExample._key, {
                 method: "POST",
                 body: qry,
             }).then(data => {
@@ -208,7 +211,7 @@ function setCheckInterval(getStatus, onChange, interval) {
                 const wasGraph = renderIfGraph(data);
 
                 if (wasGraph) {
-                    form.classList.toggle("closed");
+                    form.classed("closed", true);
                 } else {
                     output.textContent += JSON.stringify(data, null, 2).substr(0, 400);
                 }
@@ -250,7 +253,7 @@ function setCheckInterval(getStatus, onChange, interval) {
             getit(`/doTerm/${lang}/${name}`, {method: "POST", body: data})
                 .then(data => {
                     submitBtn.attr("disabled", null);
-                    renderExample(data.example._key);
+                    renderExample(data.example);
                     output.textContent = "succes";
                     document.getElementById("doReduction").classList.toggle("closed");
                 }).catch(e => {
@@ -328,7 +331,7 @@ function setCheckInterval(getStatus, onChange, interval) {
     function visualise(data) {
         resetZoom();
         console.log(data, "remdering");
-        const startNode = ("meta" in data) ? data.meta.baseTerms[0] : null;
+        const startNode = curExample ? curExample.baseTerm : null;
 
         const nodesMap = new Map(data.nodes.map(d => [d._id, d]));
         const nodes = data.nodes.map(d => ({id: d._id, term: d.term, data: d}));

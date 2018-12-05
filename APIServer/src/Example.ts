@@ -1,5 +1,5 @@
 import MyDatabase from "./Database";
-import { Graph, aql } from "arangojs";
+import { Graph } from "arangojs";
 import {
     GraphEdgeCollection,
     GraphVertexCollection,
