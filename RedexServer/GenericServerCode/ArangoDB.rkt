@@ -91,18 +91,19 @@
                                        "LET updatedTerm = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT updatedTerm UPDATE OLD IN @@tcol RETURN NEW._id")))
                    (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname)) ))))))
 
-      (lambda (from to reduction)
+      (lambda (from to reduction [real #t])
         (sendArango
           "POST"
           newHeaders
           "_api/cursor"
           (jsexpr->string
             `#hash(
-                   (query . "FOR f IN @@tcol  FILTER f.term == @from FOR t IN @@tcol  FILTER t.term == @to UPSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction} INSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction} UPDATE  OLD IN @@rcol")
+                   (query . "FOR f IN @@tcol  FILTER f.term == @from FOR t IN @@tcol  FILTER t.term == @to UPSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction, \"_real\":@real} INSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction,\"_real\":@real} UPDATE  OLD IN @@rcol")
                    (bindVars . #hash(
                                      (from . (unquote from ))
                                      (to . (unquote to ))
                                      (reduction . (unquote reduction ))
+                                     (real . (unquote real ))
                                      (@tcol . (unquote graphname ))
                                      (@rcol . (unquote (~a graphname "-reductions") ))
                                      ))))))

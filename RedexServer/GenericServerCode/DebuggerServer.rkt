@@ -51,7 +51,7 @@
   (define
     (doDbgNext term)
     (match term [(list bp bc 'pause h '() am tm ta k)  (map
-                   (lambda (x) (list (format "FAKE (~s)" x) (list bp bc 'pause h (list (list x)) am tm ta k)))
+                   (lambda (x) (list (format "~s" x) (list bp bc 'pause h (list (list x)) am tm ta k)))
                    '(Step-Msg-Receiver Step-Future-Resolver Step-Future-Resolution Return-From-Turn-To-Future-Resolution Step-Next-Turn Step-End-Turn Resume-Execution Pause-Execution Stop-Execution)
                    )]
                  [(list bp bc ststst   h c am tm ta k) (list)
@@ -63,14 +63,11 @@
   (define
     (doApl relation term)
     
-     (let (
-            (next-terms (apply-reduction-relation/tag-with-names relation term))
-            )
-            (fprintf (current-error-port) "~s LENNN\n" (length next-terms))
+     (let ((next-terms (apply-reduction-relation/tag-with-names relation term)))
        (if
          (zero? (length next-terms))
-         (doDbgNext term)
-         next-terms
+          (map (lambda x (cons #f (car x))) (doDbgNext term))
+          (map (lambda x (cons #t (car x))) next-terms)
          )
        )
      )
@@ -91,7 +88,6 @@
           (term (stream-first  terms))
           (betterTrans (lambda (x) (make-hash (cons (cons 'term (expr->string x)) (trans x)))))
           (next-terms (doApl relation term))
-          (json       (trans->json term next-terms (lambda (x) (match x [(list a b) (make-hash (list (cons 'rule a) (cons 'term (expr->string b)) (cons 'data (make-hash (trans b)))))]))))
           )
          (makenode (betterTrans term) #t (zero? (length next-terms)))
 
@@ -100,15 +96,18 @@
          (for
            ([x next-terms])
            (match x [
-                     (list rel term2)
+                     (list real rel term2)
                      ;(fprintf (current-error-port) "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
                      (makenode (betterTrans term2) #f #f)
-                     (makeedge (expr->string term) (expr->string term2) rel)
+                     (makeedge (expr->string term) (expr->string term2) rel real)
 
                      ])
            )
-         (fprintf (current-error-port) "Added: ~a\n" json)
-         (run-echo2 (stream-append (stream-rest terms) (map (lambda (x) (car (cdr x))) next-terms)) (- cnt 1) relation trans)
+         (run-echo2 (stream-append 
+                        (stream-rest terms) 
+                        (map (lambda (x) (car (cdr (cdr x)))) next-terms)
+                    ) 
+                    (- cnt 1) relation trans)
          )]
       )
 

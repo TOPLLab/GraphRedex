@@ -1,0 +1,81 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>GraphRedex</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .graph-nodes .paused {
+    stroke: pink;
+    fill: pink;
+}
+    </style>
+</head>
+
+<body>
+    <nav>
+        <header>GraphRedex</header>
+
+        <div>
+            <select id="exampleSelector" name="example">
+                <option disabled value="fiat">Examples</option>
+            </select>
+            <button onclick='toggle("doReduction")'>+</button>
+            <button onclick='toggle("createQry")'>New Query</button>createQry
+            <button onclick='toggle("createLanguage")'>New language</button>
+        </div>
+        <section> </section>
+        <section style="background:pink"> </section>
+    </nav>
+    <main>
+        <form id="doReduction" action="#" class="closed">
+
+            <h1>Do reduction</h1>
+            <textarea id="term" cols="30" rows="10"></textarea>
+            <select id="langselector" name="language">
+                <option disabled>No languages</option>
+            </select>
+            <input id="nameselector" placeholder="name" type="text" value="">
+            <input type="submit" value="Perform">
+            <pre id="doReductionOutput"></pre>
+        </form>
+        <form id="createLanguage" action="#" class="closed">
+
+            <h1>Create language (filename = name)</h1>
+            <input type="file" accept=".zip,.krt" name="specification" multiple="false">
+            <input type="submit" value="Create">
+        </form>
+        <form id="createQry" action="#" class="closed">
+            <h1>Execute an arangoDB query on the example (result will be in developper console)</h1>
+            <textarea id="qry" cols="30" rows="10">            LET nodes = (
+                FOR v,e,p IN 0..300
+                    OUTBOUND @start GRAPH @graph
+                    OPTIONS {bfs:true,uniqueVertices: 'global'}
+                    FILTER p.edges[*]._real NONE == false
+                    RETURN DISTINCT v)
+        LET edges = (
+            FOR a in nodes
+                FOR e IN @@edges
+                    FILTER  e._from == a._id OR e._to == a._id
+                        RETURN DISTINCT e)
+        RETURN {nodes,edges}</textarea>
+            <input type="submit" value="Find">
+            <pre>
+- @@nodes to the collection of nodes
+- @@edges to the collection of edges
+- @start  to the id of the start node
+- @graph  to the graph of the start node
+            </pre>
+            <pre id="doQryOutput"> </pre>
+        </form>
+        <svg>
+        </svg>
+    </main>
+
+    <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
+    <script src="main.1.js"></script>
+</body>
+
+</html>

@@ -151,9 +151,10 @@ function setCheckInterval(getStatus, onChange, interval) {
             const select = d3.select("#exampleSelector")
                 .on("change", () => {
                     const si = select.property("value"),
-                        s = options.filter((d, i) => d._key === si ),
-                        data = s.datum();
-                    renderExample(data);
+                        red = data.filter(d => d._key === si );
+                    if (red.length === 1) {
+                        renderExample(red[0]);
+                    }
                 });
             console.log(data.map(d => d.name + " - " + d._key));
             const options = select.selectAll("option").data(data);
@@ -369,11 +370,50 @@ function setCheckInterval(getStatus, onChange, interval) {
         node = graph.node();
         node.classed("term-node", true)
             .classed("stuck", d => d.data._stuck)
+            .classed("paused", d => d.data.action === "pause")
             .classed("expandable", d => !d.data._expanded)
             .classed("start", d => d.data._id === startNode)
             .attr("r", 10)
             .on("click", d => {
                 d.fx = null; d.fy = null;
+                console.log(d);
+                const elem = d3.select(document.getElementsByTagName("section")[1]);
+                elem.html(d.data._id);
+
+                getit("my/example/qry/" + curExample._key, {
+                    method: "POST",
+                    body: `
+                    FOR e IN @@edges
+                        FILTER  e._from == "${d.data._id}"
+                        FILTER  e._real == false
+                        RETURN DISTINCT {name:e.reduction,_to:e._to,_id:e._id}`,
+                }).then(possibleSteps => {
+                    for (const {name, _to: target} of possibleSteps) {
+                        elem.append("button")
+                            .text(name)
+                            .on("click", () => {
+                                getit("my/example/qry/" + curExample._key, {
+                                    method: "POST",
+                                    body: `            LET nodes = (
+                                        FOR v,e,p IN 0..300
+                                            OUTBOUND "${target}" GRAPH @graph
+                                            OPTIONS {bfs:true,uniqueVertices: 'global'}
+                                            FILTER p.edges[*]._real NONE == false
+                                            RETURN DISTINCT v)
+                                LET edges = (
+                                    FOR a in nodes
+                                        FOR e IN @@edges
+                                            FILTER  e._from == a._id OR e._to == a._id
+                                                RETURN DISTINCT e)
+                                RETURN {nodes,edges}`,
+                                }).then(([{nodes, edges}]) => {
+                                    data.nodes.push(...nodes);
+                                    data.edges.push(...edges);
+                                    visualise(data);
+                                });
+                            });
+                    }
+                });
             })
             .on("mouseover", d => {
                 document.getElementsByTagName("section")[0].innerHTML = `
