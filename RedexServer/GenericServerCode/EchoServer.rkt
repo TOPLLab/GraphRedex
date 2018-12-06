@@ -53,7 +53,7 @@
 
   (define (run-echo2 terms cnt relation trans)
     (cond
-      [(= 0 cnt) (fprintf (current-error-port) "\nOUT OF REDUCTIONS\n" cnt)]
+      [(= 0 cnt) (fprintf (current-error-port) "\nOUT OF REDUCTIONS\n")]
       [(stream-empty? terms) (fprintf (current-error-port) "\nDONE (~a reductions left)\n" cnt)]
       [(node-done? (stream-first terms))
        (fprintf (current-error-port) "\nSKIPPED\n")
