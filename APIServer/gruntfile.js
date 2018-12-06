@@ -6,6 +6,9 @@ module.exports = function(grunt) {
             app: {
                 tsconfig: "./tsconfig.json",
             },
+            frontend: {
+                tsconfig: "./tsconfig-frontend.json",
+            },
         },
         tslint: {
             options: {
@@ -18,7 +21,11 @@ module.exports = function(grunt) {
         watch: {
             ts: {
                 files: ["src/**/*.ts"],
-                tasks: ["ts", "tslint"],
+                tasks: ["ts:app", "tslint"],
+            },
+            frontend: {
+                files: ["public/js/**/*.ts"],
+                tasks: ["ts:frontend"],
             },
         },
     });

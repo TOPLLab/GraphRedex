@@ -3,7 +3,6 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <title>GraphRedex</title>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
     <link rel="stylesheet" href="style.css">
 
     <style>
@@ -31,8 +30,8 @@
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
-
             <h1>Do reduction</h1>
+            <input type="file" accept="" name="" id="" multiple="false">
             <textarea id="term" cols="30" rows="10"></textarea>
             <select id="langselector" name="language">
                 <option disabled>No languages</option>
@@ -74,8 +73,20 @@
         </svg>
     </main>
 
+    <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
-    <script src="main.1.js"></script>
+    <script src="require.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+        requirejs(["dist/GraphRedex"], function (dbgr) {
+            console.log(dbgr);
+            //window.toggle = dbgr.toggle;
+            const d = new dbgr.default();
+            d.init();
+             
+        })}
+        );
+    </script>
 </body>
 
 </html>
