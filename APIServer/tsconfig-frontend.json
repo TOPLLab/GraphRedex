@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "target": "ES2017",
+    "lib": [
+      "es2017", "dom"
+    ],
+    "rootDir": "public/js",
+    "outDir": "public/dist/",
+    "module": "amd",
+    "moduleResolution": "node",
+    "strict": false,
+    "declaration": true,
+    "sourceMap": true,
+    "inlineSources": true
+  },
+  "include": [
+    "./public/**/*"
+  ]
+}
