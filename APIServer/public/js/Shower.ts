@@ -199,10 +199,40 @@ export default class Shower {
         };
     }
 
+    public reset() {
+        this.data = { nodes: [], edges: [] };
+        this.nodeMap = new Map();
+
+        this.parts.arrows.remove();
+        this.parts.nodes.remove();
+        this.parts.texts.remove();
+        this.parts = {
+            arrows: this.scene
+                .append("g")
+                .classed("graph-arrows", true)
+                .selectAll("path")
+                .data([]),
+            texts: this.scene
+                .append("g")
+                .classed("graph-texts", true)
+                .selectAll("text")
+                .data([]),
+            nodes: this.scene
+                .append("g")
+                .classed("graph-nodes", true)
+                .selectAll("circle")
+                .data([]),
+        };
+
+        this.resetZoom();
+    }
+
     /**
      * shows data
      */
     public show(data: InputData) {
+        this.reset();
+
         this.data.nodes = data.nodes.map(this.convertNode);
         this.nodeMap = new Map(
             this.data.nodes.map<[string, ShowerNode]>((x) => [x.id, x]),
