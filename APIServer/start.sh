@@ -7,6 +7,8 @@
 command -v node >/dev/null 2>&1 || { echo >&2 "I require node but it's not installed.  Aborting."; exit 1; }
 command -v yarn >/dev/null 2>&1 || \
     { echo >&2 "I require yarn but it's not installed.  Aborting."; exit 1; }
+command -v realpath >/dev/null 2>&1 || \
+    { echo >&2 "I require realpath but it's not installed. It's most likely in the coreutils package. Aborting."; exit 1; }
 curl -s -I "localhost:8529" | grep 'Server: *ArangoDB' 2>/dev/null >/dev/null ||\
     { echo >&2 "I require arangoDB to be running on port 8529 but it seems not to be up.  Aborting."; exit 1; }
 
