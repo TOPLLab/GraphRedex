@@ -129,7 +129,7 @@
               #f
               )
     (display (car (lookup (expr->string term))))
-    (run-echo2 (stream term) 100 relation trans)
+    (run-echo2 (stream term) 1000 relation trans)
     ;TODO set at base
     )
 
