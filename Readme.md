@@ -27,13 +27,22 @@ All other GUI `require`s should be removed or replaced with a variant that does
 not require a display.
 
 ## Installation
-### Build dependencies
+### Dependencies
 
-```bash  
-brew install yarn
-```
+- [node](https://nodejs.org/en/)
+   * OSX: `brew install node`
+   * Arch: `pacman -S nodejs` (community/nodejs)
+- [yarn](https://yarnpkg.com/en/)
+   * OSX `brew install yarn`
+   * Arch: `pacman -S yarn` (community/yarn)
+- [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
+   * OSX: `brew install coreutils`
+   * Arch: `pacman -S coreutils` (core/coreutils)
+- [ArangoDB](https://www.arangodb.com/) (see below for setting it up)
+   * OSX: `brew install arangodb`
+   * Arch: install `aur/arangodb` from the AUR
 
-### AragnoDB (database)
+### AragnoDB setup (database)
 
 GraphRedex uses a graph database called [ArangoDB](https://www.arangodb.com/). 
 We use version `3.3.19` but I higher version should also be fine.
