@@ -3,8 +3,10 @@ import * as fs from "fs";
 import * as path from "path";
 import { User } from "./Users";
 import { spawn } from "child_process";
-import { isReadableFile, deleteDir } from "./Utils";
+import { isReadableFile, deleteDir, dirListing } from "./Utils";
 const { promisify } = require("util");
+
+const BASE_FILENAME = "PLTGraphRedex.rkt";
 
 export class Languages {
     private db: MyDatabase;
@@ -29,10 +31,17 @@ export class Languages {
         langData._key = metaData._key;
 
         langData.dir = path.join(user._key, "lang", metaData._key);
-        langData.path = path.join(langData.dir, "PLTGraphRedex.rkt");
+        langData.path = path.join(langData.dir, BASE_FILENAME);
 
         const absPathDir = path.join(this.datadir, langData.dir);
         const absPath = path.join(this.datadir, langData.path);
+
+        if (
+            !absPathDir.startsWith(this.datadir) ||
+            !absPath.startsWith(this.datadir)
+        ) {
+            throw "Invalid filename";
+        }
 
         // TODO: use id instead of key
 
@@ -41,7 +50,11 @@ export class Languages {
     }
 
     private async confirmDisk(lang: Language, user: User): Promise<Language> {
-        if (!(await isReadableFile(path.join(this.datadir, lang.path)))) {
+        const absBaseFileName = path.join(this.datadir, lang.path);
+        if (
+            !absBaseFileName.startsWith(this.datadir) || // Path outside dir
+            !(await isReadableFile(absBaseFileName)) // Not readable
+        ) {
             await deleteDir(path.join(this.datadir, lang.dir), true).catch(
                 console.error,
             );
@@ -49,7 +62,7 @@ export class Languages {
                 .languages(true)
                 .remove({ _key: "" + lang._key })
                 .catch(console.error);
-            throw lang.path + " Not found";
+            throw lang.path + " Could not be created";
         }
 
         lang.onDisk = true;
@@ -139,7 +152,16 @@ export class Languages {
             });
         });
         console.log("Unzipped " + location);
-        await promisify(fs.unlink)(location); //delete zip
+        await promisify(fs.unlink)(location);
+
+        // Move base dir one up if only one dir in zip
+        const files = await dirListing(absDir);
+        if (files.length === 1) {
+            if (files[0].isDirectory()) {
+                lang.dir = path.join(lang.dir, files[0].name);
+                lang.path = path.join(lang.dir, BASE_FILENAME);
+            }
+        }
 
         return await this.confirmDisk(lang, user);
     }

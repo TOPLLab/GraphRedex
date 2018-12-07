@@ -59,6 +59,18 @@ export function deleteDir(
     }
 }
 
+export function dirListing(path: string): Promise<fs.Dirent[]> {
+    return new Promise((resolve, reject) => {
+        fs.readdir(path, { withFileTypes: true }, (err, files: fs.Dirent[]) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(files);
+            }
+        });
+    });
+}
+
 export function asyncMiddleware(fn: express.RequestHandler) {
     return (req: express.Request, res: express.Response, next) => {
         Promise.resolve(fn(req, res, next)).catch(next);
