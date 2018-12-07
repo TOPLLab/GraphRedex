@@ -26,6 +26,25 @@ export default class GraphRedex {
                         this.showDebuggerSteps(d.data._id);
                     }
                 });
+                nodes.on("mouseover", (d) => {
+                    document.getElementsByTagName("section")[0].innerHTML = `
+                <pre style="word-wrap: break-word;white-space: pre-wrap; ">${
+                    d.data.term
+                }</pre>
+                <hr>
+                <table>
+                    <tr><th>Key</th><th>Value</th></tr>
+                    ${Object.entries(d.data)
+                        .filter(
+                            (x) =>
+                                ["_stuck", "_expanded"].includes(x[0]) ||
+                                !(x[0].startsWith("_") || x[0] == "term"),
+                        )
+                        .map((x) => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`)
+                        .join("")}
+                    </table>
+                    `;
+                });
             },
         });
     }
@@ -84,7 +103,7 @@ export default class GraphRedex {
         });
     }
 
-    async showDebuggerSteps(nodeId: string) {
+    private async showDebuggerSteps(nodeId: string) {
         const elem = d3.select(document.getElementsByTagName("section")[1]);
         elem.html("<h1>Debug</h1><small>" + nodeId + "</small>");
 
@@ -102,6 +121,8 @@ export default class GraphRedex {
             }
         });
     }
+
+    private expandNode(nodeID: string) {}
 
     renderIfGraph(data: any) {
         // TODO change to promise
@@ -241,8 +262,9 @@ export default class GraphRedex {
     private updateLangs() {
         d3.json("/my/languages").then((data: any) => {
             const select = d3.select("#langselector");
-            const options = select.selectAll("option").data(data);
-            options.enter().append("option");
+            let options = select.selectAll("option").data(data);
+            const optionsEnter = options.enter().append("option");
+            options = optionsEnter.merge(options as any);
             options.exit().remove();
             select
                 .selectAll("option")
@@ -268,8 +290,9 @@ export default class GraphRedex {
                 this.render(data);
             });
             console.log(data.map((d) => d.name + " - " + d._key));
-            const options = select.selectAll("option").data(data);
-            options.enter().append("option");
+            let options = select.selectAll("option").data(data);
+            const optionsEnter = options.enter().append("option");
+            options = optionsEnter.merge(options as any);
             options.exit().remove();
             select
                 .selectAll("option")

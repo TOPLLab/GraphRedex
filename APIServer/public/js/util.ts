@@ -66,3 +66,23 @@ export function fileToText(file: File) {
         reader.readAsText(file);
     });
 }
+
+export function randomColor(): { hex: string; hexFull: string; d3: d3.Color } {
+    const d3col = d3
+        .color(`hsl(${Math.floor(Math.random() * 360)}, 50%, 50%)`)
+        .rgb();
+    let r = Math.round(d3col.r).toString(16);
+    let g = Math.round(d3col.g).toString(16);
+    let b = Math.round(d3col.b).toString(16);
+    if (d3col.r < 16) {
+        r = "0" + r;
+    }
+    if (d3col.g < 16) {
+        g = "0" + g;
+    }
+    if (d3col.b < 16) {
+        b = "0" + b;
+    }
+    const hex = r + g + b;
+    return { hex: hex, hexFull: "#" + hex, d3: d3col };
+}

@@ -27,6 +27,7 @@
         </div>
         <section> </section>
         <section style="background:pink"> </section>
+        <section style="background:#EEE"> </section>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
@@ -79,11 +80,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function(){
         requirejs(["dist/GraphRedex"], function (dbgr) {
-            console.log(dbgr);
-            //window.toggle = dbgr.toggle;
-            const d = new dbgr.default();
-            d.init();
-             
+            (new dbgr.default()).init();
         })}
         );
     </script>
