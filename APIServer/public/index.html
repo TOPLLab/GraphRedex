@@ -3,8 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <title>GraphRedex</title>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .graph-nodes .paused {
+    stroke: pink;
+    fill: pink;
+}
+    </style>
 </head>
 
 <body>
@@ -20,11 +26,12 @@
             <button onclick='toggle("createLanguage")'>New language</button>
         </div>
         <section> </section>
+        <section style="background:pink"> </section>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
-
             <h1>Do reduction</h1>
+            <input type="file" accept="" name="" id="" multiple="false">
             <textarea id="term" cols="30" rows="10"></textarea>
             <select id="langselector" name="language">
                 <option disabled>No languages</option>
@@ -41,7 +48,18 @@
         </form>
         <form id="createQry" action="#" class="closed">
             <h1>Execute an arangoDB query on the example (result will be in developper console)</h1>
-            <textarea id="qry" cols="30" rows="10"></textarea>
+            <textarea id="qry" cols="30" rows="10">            LET nodes = (
+                FOR v,e,p IN 0..300
+                    OUTBOUND @start GRAPH @graph
+                    OPTIONS {bfs:true,uniqueVertices: 'global'}
+                    FILTER p.edges[*]._real NONE == false
+                    RETURN DISTINCT v)
+        LET edges = (
+            FOR a in nodes
+                FOR e IN @@edges
+                    FILTER  e._from == a._id OR e._to == a._id
+                        RETURN DISTINCT e)
+        RETURN {nodes,edges}</textarea>
             <input type="submit" value="Find">
             <pre>
 - @@nodes to the collection of nodes
@@ -55,8 +73,20 @@
         </svg>
     </main>
 
+    <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
-    <script src="main.js"></script>
+    <script src="require.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+        requirejs(["dist/GraphRedex"], function (dbgr) {
+            console.log(dbgr);
+            //window.toggle = dbgr.toggle;
+            const d = new dbgr.default();
+            d.init();
+             
+        })}
+        );
+    </script>
 </body>
 
 </html>
