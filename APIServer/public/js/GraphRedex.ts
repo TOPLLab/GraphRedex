@@ -94,7 +94,6 @@ export default class GraphRedex {
         });
 
         if (start) {
-            console.log(data);
             this.shower.push(data, startPos);
         } else {
             this.shower.show(data);
@@ -290,10 +289,9 @@ export default class GraphRedex {
             const select = d3.select("#langselector");
             let options = select.selectAll("option").data(data);
             const optionsEnter = options.enter().append("option");
-            options = optionsEnter.merge(options as any);
             options.exit().remove();
-            select
-                .selectAll("option")
+            options = optionsEnter.merge(options as any);
+            options
                 .text((d: any) => d.name + " - " + d._key)
                 .attr("value", (d: any) => d._key)
                 .attr("disabled", null);
@@ -310,18 +308,19 @@ export default class GraphRedex {
     private setupExampleSelector() {
         d3.json("/my/examples").then((data: any[]) => {
             const select = d3.select("#exampleSelector").on("change", () => {
-                const si = select.property("value"),
-                    s = options.filter((d) => d._key === si),
-                    data = s.datum();
-                this.render(data);
+                const si = select.property("value");
+                if (si) {
+                    const s = options.filter((d) => d._key === si);
+                    const data = s.datum();
+                    this.render(data);
+                }
             });
-            console.log(data.map((d) => d.name + " - " + d._key));
+
             let options = select.selectAll("option").data(data);
             const optionsEnter = options.enter().append("option");
-            options = optionsEnter.merge(options as any);
             options.exit().remove();
-            select
-                .selectAll("option")
+            options = optionsEnter.merge(options as any);
+            options
                 .attr("disabled", null)
                 .text((d: any) => d.name + " - " + d._key)
                 .attr("value", (d: any) => d._key);
