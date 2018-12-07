@@ -1,3 +1,5 @@
+import { randomColor } from "./util";
+
 interface NodeData {
     _id: string;
     term: string;
@@ -105,8 +107,8 @@ export default class Shower {
             )
             .force("charge", d3.forceManyBody().strength(-30))
             .force("collide", d3.forceCollide(16).strength(0.7))
-            //.force("center", d3.forceCenter())
-            .force("center", d3.forceY().strength(0.01));
+            .force("center", d3.forceCenter())
+            .force("long", d3.forceY().strength(0.01));
     }
 
     private update() {
@@ -187,7 +189,7 @@ export default class Shower {
     }
 
     private convertNode(n: NodeData): any {
-        return { id: n._id, data: n, vx: 5 };
+        return { id: n._id, data: n, vx: -30 };
     }
     private convertEdge(d: EdgeData): ShowerEdge {
         return {
@@ -209,8 +211,7 @@ export default class Shower {
             .filter((e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to))
             .map(this.convertEdge);
         this.update();
-        console.log("GO", this.data);
-        this.simulation.alphaTarget(0.3).restart();
+        this.simulation.alphaTarget(0.1).restart();
     }
 
     public push(data: InputData, startPos: string = null) {
@@ -239,6 +240,7 @@ export default class Shower {
                 .map(this.convertEdge),
         );
         this.update();
+        this.simulation.alphaTarget(0.1).restart();
         console.log("GO", this.data);
     }
 
@@ -267,7 +269,10 @@ export default class Shower {
             });
     }
 
-    private existing = new Map();
+    private existing = new Map<
+        string,
+        { hex: string; hexFull: string; d3: d3.Color }
+    >();
     /**
      * Get a random color for a name (or arrow)
      * @param {string} t name
@@ -276,33 +281,18 @@ export default class Shower {
      */
     private getRandCol(t: string, arrow: boolean = false) {
         if (!this.existing.has(t)) {
-            const d3col = d3
-                .color(`hsl(${Math.floor(Math.random() * 360)}, 50%, 50%)`)
-                .rgb();
-            var r = Math.round(d3col.r).toString(16);
-            var g = Math.round(d3col.g).toString(16);
-            var b = Math.round(d3col.b).toString(16);
-            if (d3col.r < 16) {
-                r = "0" + r;
-            }
-            if (d3col.g < 16) {
-                g = "0" + g;
-            }
-            if (d3col.b < 16) {
-                b = "0" + b;
-            }
-            const resCol = r + g + b;
+            const randColor = randomColor();
 
-            this.existing.set(t, resCol);
+            this.existing.set(t, randColor);
 
             const markersize = 3;
             this.defs
                 .append("svg:marker")
-                .attr("id", "marker-" + resCol)
-                .attr("refX", 10)
+                .attr("id", "marker-" + randColor.hex)
+                .attr("refX", 8)
                 .attr("refY", markersize / 2)
-                .attr("markerWidth", 30)
-                .attr("markerHeight", 30)
+                .attr("markerWidth", markersize * 10)
+                .attr("markerHeight", markersize * 10)
                 .attr("orient", "auto")
                 .append("path")
                 .attr(
@@ -310,9 +300,9 @@ export default class Shower {
                     `M 0 0 ${markersize} ${markersize /
                         2} 0 ${markersize} ${markersize / 4} ${markersize / 2}`,
                 )
-                .style("fill", "#" + resCol);
+                .style("fill", randColor.hexFull);
         }
         const color = this.existing.get(t);
-        return arrow ? "marker-" + color : "#" + color;
+        return arrow ? "marker-" + color.hex : color.hexFull;
     }
 }
