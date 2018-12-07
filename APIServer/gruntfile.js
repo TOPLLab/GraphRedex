@@ -24,7 +24,7 @@ module.exports = function(grunt) {
                 tasks: ["ts:app", "tslint"],
             },
             frontend: {
-                files: ["public/js/**/*.ts"],
+                files: ["public/js/**/*.ts", "tsconfig-frontend.json"],
                 tasks: ["ts:frontend"],
             },
         },

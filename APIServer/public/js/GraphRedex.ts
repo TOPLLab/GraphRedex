@@ -4,9 +4,30 @@ import Shower from "./Shower";
 
 export default class GraphRedex {
     private curExample: ExampleMeta = null;
+    private shower: Shower;
 
     constructor() {
         console.log("Booting graph visualiser");
+        this.shower = new Shower("svg", {
+            nodeMaker: (nodes: any) => {
+                nodes
+                    .classed("stuck", (d) => d.data._stuck)
+                    .classed("paused", (d) => d.data.action === "pause")
+                    .classed("expandable", (d) => !d.data._expanded)
+                    .classed(
+                        "start",
+                        (d) => d.data._id === this.curExample.baseTerm,
+                    );
+
+                nodes.on("click", (d) => {
+                    d.fx = null;
+                    d.fy = null;
+                    if (d.data.action === "pause") {
+                        this.showDebuggerSteps(d.data._id);
+                    }
+                });
+            },
+        });
     }
 
     init() {
@@ -16,12 +37,70 @@ export default class GraphRedex {
         this.setupDoQry();
         this.updateLangs();
         this.setUpTabs();
-
-        console.log(new Shower("svg"));
     }
 
-    render(example: ExampleMeta) {
-        console.log(example); //TODO
+    async render(
+        example: ExampleMeta,
+        start: string = null,
+        startPos: string = null,
+    ) {
+        this.curExample = example;
+        const steps = 300;
+
+        const [data] = await getit("my/example/qry/" + example._key, {
+            method: "POST",
+            body: `LET nodes = (
+                FOR v,e,p IN 0..${steps}
+                    OUTBOUND ${start ? `"${start}"` : "@start"} GRAPH @graph
+                    OPTIONS {bfs:true,uniqueVertices: 'global'}
+                    FILTER p.edges[*]._real NONE == false
+                    RETURN DISTINCT v)
+        LET edges = (
+            FOR a in nodes
+                FOR e IN @@edges
+                    FILTER  e._from == a._id OR e._to == a._id
+                        RETURN DISTINCT e)
+        RETURN {nodes,edges}`,
+        });
+
+        if (start) {
+            console.log(data);
+            this.shower.push(data, startPos);
+        } else {
+            this.shower.show(data);
+        }
+    }
+
+    async getNonRealSteps(
+        nodeId: string,
+    ): Promise<{ name: string; _to: string; _id: string }[]> {
+        return await getit("my/example/qry/" + this.curExample._key, {
+            method: "POST",
+            body: `
+            FOR e IN @@edges
+                FILTER  e._from == "${nodeId}"
+                FILTER  e._real == false
+                RETURN DISTINCT {name:e.reduction,_to:e._to,_id:e._id}`,
+        });
+    }
+
+    async showDebuggerSteps(nodeId: string) {
+        const elem = d3.select(document.getElementsByTagName("section")[1]);
+        elem.html("<h1>Debug</h1><small>" + nodeId + "</small>");
+
+        this.getNonRealSteps(nodeId).then((possibleSteps) => {
+            const list = elem.append("ul");
+            for (const { name, _to: target } of possibleSteps) {
+                list.append("li")
+                    .append("button")
+                    .text(name)
+                    .on("click", () => {
+                        this.render(this.curExample, target, nodeId);
+                        list.remove();
+                        elem.append("div").text(`${name} performed`);
+                    });
+            }
+        });
     }
 
     renderIfGraph(data: any) {
@@ -30,14 +109,14 @@ export default class GraphRedex {
             const renderData = data[0];
             const renderKeys = Object.keys(renderData);
             if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
-                console.log(renderData); // TODO
+                this.shower.show(renderData);
                 return true;
             }
         }
         return false;
     }
 
-    protected async doTerm(
+    private async doTerm(
         lang: string,
         name: string,
         term: string,
@@ -59,10 +138,8 @@ export default class GraphRedex {
             d3.event.preventDefault();
 
             const formData = new FormData();
-            formData.append(
-                "specification",
-                form.select('input[type="file"]').node().files[0],
-            );
+            const a: any = form.select('input[type="file"]').node();
+            formData.append("specification", a.files[0]);
 
             getit("/my/languages", {
                 method: "POST",
@@ -89,8 +166,9 @@ export default class GraphRedex {
         const submitBtn = form.select('input[type="submit"]');
         const termArea = form.select("textarea");
         fileSelector.on("change", async () => {
-            termArea.node().value = await fileToText(
-                fileSelector.node().files[0],
+            termArea.property(
+                "value",
+                await fileToText(fileSelector.property("files")[0]),
             );
         });
         form.on("submit", () => {
@@ -98,9 +176,9 @@ export default class GraphRedex {
 
             d3.event.preventDefault();
             output.innerHTML = "Working...";
-            const data = termArea.node().value;
-            const lang = form.select("#langselector").node().value;
-            const name = form.select("#nameselector").node().value;
+            const data = termArea.property("value");
+            const lang = form.select("#langselector").property("value");
+            const name = form.select("#nameselector").property("value");
 
             this.doTerm(lang, name, data)
                 .then((data: APIDoTermResult) => {
@@ -128,7 +206,7 @@ export default class GraphRedex {
     private setupDoQry() {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry").on("submit", () => {
-            const qry = form.select("textarea").node().value;
+            const qry = form.select("textarea").property("value");
             console.log(qry, this.curExample);
 
             output.textContent = "Wait for it...";
@@ -161,15 +239,15 @@ export default class GraphRedex {
     }
 
     private updateLangs() {
-        d3.json("/my/languages").then((data) => {
+        d3.json("/my/languages").then((data: any) => {
             const select = d3.select("#langselector");
             const options = select.selectAll("option").data(data);
             options.enter().append("option");
             options.exit().remove();
             select
                 .selectAll("option")
-                .text((d) => d.name + " - " + d._key)
-                .attr("value", (d) => d._key)
+                .text((d: any) => d.name + " - " + d._key)
+                .attr("value", (d: any) => d._key)
                 .attr("disabled", null);
 
             select
@@ -182,7 +260,7 @@ export default class GraphRedex {
     }
 
     private setupExampleSelector() {
-        d3.json("/my/examples").then((data) => {
+        d3.json("/my/examples").then((data: any[]) => {
             const select = d3.select("#exampleSelector").on("change", () => {
                 const si = select.property("value"),
                     s = options.filter((d) => d._key === si),
@@ -196,8 +274,8 @@ export default class GraphRedex {
             select
                 .selectAll("option")
                 .attr("disabled", null)
-                .text((d) => d.name + " - " + d._key)
-                .attr("value", (d) => d._key);
+                .text((d: any) => d.name + " - " + d._key)
+                .attr("value", (d: any) => d._key);
 
             select
                 .insert("option", ":first-child")
