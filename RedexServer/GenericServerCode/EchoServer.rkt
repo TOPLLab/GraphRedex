@@ -19,7 +19,7 @@
 
 
 
-(define (run-echo graphname relation trans)
+(define (run-echo graphname redLimit relation trans)
 
   (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-test" graphname))
 
@@ -101,7 +101,7 @@
                          #f
                          )
     (display (car (lookup (expr->string term))))
-    (run-echo2 (stream term) 1000 relation trans)
+    (run-echo2 (stream term) redLimit relation trans)
     )
 
   )

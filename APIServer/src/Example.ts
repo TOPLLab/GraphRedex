@@ -6,6 +6,7 @@ import {
 } from "arangojs/lib/cjs/graph";
 
 export interface ExampleMeta {
+    lang: any;
     _key: string;
     _id: string;
     baseTerm: string;
@@ -19,6 +20,7 @@ export default class Example {
     private vertexCollection: GraphVertexCollection;
     private edgeCollection: GraphEdgeCollection;
     private db: MyDatabase;
+    private meta: ExampleMeta;
 
     /**
      *
@@ -26,6 +28,7 @@ export default class Example {
      * @param meta     The metadata of an example
      */
     constructor(database: MyDatabase, meta: ExampleMeta) {
+        this.meta = meta;
         this.baseTerm = meta.baseTerm;
         this.db = database;
         this.name = this.baseTerm.split("/")[0];
@@ -35,6 +38,12 @@ export default class Example {
         this.edgeCollection = this.graph.edgeCollection(
             this.graph.name + "-reductions",
         );
+    }
+
+    async getLanguage(): Promise<Language> {
+        return (
+            await this.db.languages(false).lookupByKeys([this.meta.lang])
+        )[0];
     }
 
     /**

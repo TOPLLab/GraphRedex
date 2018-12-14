@@ -21,3 +21,9 @@ interface Language {
     onDisk?: boolean;
     _key?: Number;
 }
+
+interface TermMeta {
+    _id: string;
+    _key: string;
+    term: string;
+}

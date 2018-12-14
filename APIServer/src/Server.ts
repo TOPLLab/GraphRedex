@@ -27,8 +27,11 @@ export default class Server {
     /**
      * Bootstrap the application.
      */
-    public static async bootstrap(dataDir: string): Promise<Server> {
-        return new Server(await MyDatabase.bootstrap(), dataDir);
+    public static async bootstrap(
+        dataDir: string,
+        runPath: string,
+    ): Promise<Server> {
+        return new Server(await MyDatabase.bootstrap(), dataDir, runPath);
     }
 
     /**
@@ -37,10 +40,14 @@ export default class Server {
      * @class Server
      * @constructor
      */
-    private constructor(database: MyDatabase, datadir: string) {
+    private constructor(
+        database: MyDatabase,
+        datadir: string,
+        runPath: string,
+    ) {
         this.database = database;
         this.users = new Users(database);
-        this.runner = new ReductionRunner(this.database, datadir);
+        this.runner = new ReductionRunner(this.database, datadir, runPath);
         this.languages = new Languages(database, datadir);
         this.uploader = multer({ dest: datadir + "/tmp/" });
 
@@ -172,6 +179,39 @@ export default class Server {
                             res.status(500).jsonp({
                                 lang: lang,
                                 term: term,
+                                output: null,
+                                e: "somthing went wrong",
+                                errors: e.toString(),
+                            });
+                        });
+                },
+            ),
+        );
+
+        this.app.post(
+            "/continueTerm/:example/:termKey",
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.example,
+                    });
+                    console.log(req.params.termKey);
+                    await this.runner
+                        .continue(user, example, req.params.termKey)
+                        .then((example) => {
+                            res.status(201).jsonp({
+                                term: req.params.termKey,
+                                output: true,
+                                example: example,
+                            });
+                        })
+                        .catch((e) => {
+                            res.status(500).jsonp({
+                                term: req.params.termKey,
                                 output: null,
                                 e: "somthing went wrong",
                                 errors: e.toString(),
