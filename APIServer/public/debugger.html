@@ -78,11 +78,22 @@
     <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
     <script src="require.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function(){
-        requirejs(["dist/GraphRedex"], function (dbgr) {
-            (new dbgr.default()).init();
-        })}
+        document.addEventListener("DOMContentLoaded", function () {
+            requirejs(["dist/GraphRedex"], function (dbgr) {
+                (new dbgr.default()).init();
+            })
+        }
         );
+
+        window.toggle = (elID) => {
+            document.querySelectorAll("main>form").forEach((e) => {
+                if (e.id !== elID) {
+                    e.classList.add("closed")
+                        ;
+                }
+            });
+            document.getElementById(elID).classList.toggle("closed");
+        };
     </script>
 </body>
 

@@ -3,7 +3,7 @@ import { Readable } from "stream";
 import * as path from "path";
 import MyDatabase from "./Database";
 import { User } from "./Users";
-import { ExampleMeta } from "./Example";
+import Example, { ExampleMeta } from "./Example";
 import { Graph } from "arangojs";
 import { isReadableFile } from "./Utils";
 
@@ -12,17 +12,25 @@ interface RacketResult {
     errors: string[];
 }
 
+interface IOResult {
+    output: string;
+    errors: string[];
+    exitcode: number;
+}
+
 export default class ReductionRunner {
     private db: MyDatabase;
     private datadir: string;
+    private runPath: string;
     /**
      *
      * @param db         Database connection for creating graphs
      * @param datadir    Directory in which the datafiles live
      */
-    constructor(db: MyDatabase, datadir: string) {
+    constructor(db: MyDatabase, datadir: string, runPath: string) {
         this.db = db;
         this.datadir = datadir;
+        this.runPath = runPath;
     }
 
     public async run(
@@ -58,6 +66,33 @@ export default class ReductionRunner {
         return example;
     }
 
+    public async continue(
+        user: User,
+        example: Example,
+        termKey: string,
+    ): Promise<boolean> {
+        const lang: Language = await example.getLanguage();
+        const graph = await this.db.reductionGraph(user, lang, true);
+
+        console.log("Starting form", termKey);
+        const term: TermMeta = (
+            await graph.vertexCollection(graph.name).lookupByKeys([termKey])
+        )[0];
+
+        await this.startRun(
+            [
+                "DebuggerServer",
+                "run-echo",
+                path.join(this.datadir, lang.path),
+                graph.name,
+                "50",
+            ],
+            term.term,
+        ).then(({ output, errors }) => ({ term: output, errors: errors }));
+
+        return true;
+    }
+
     private async performReductions(
         term: string,
         graph: Graph,
@@ -67,28 +102,41 @@ export default class ReductionRunner {
             throw lang.path + " is not found";
         }
 
-        return await new Promise<RacketResult>((resolve, reject) => {
-            const child = spawn(
-                "../RedexServer/run.sh",
-                [path.join(this.datadir, lang.path), graph.name],
-                {
-                    env: { LC_ALL: "C" },
-                    stdio: ["pipe", "pipe", "pipe"],
-                },
-            );
+        return await this.startRun(
+            [
+                "DebuggerServer",
+                "run-echo",
+                path.join(this.datadir, lang.path),
+                graph.name,
+                "50",
+            ],
+            term,
+        ).then(({ output, errors }) => ({ term: output, errors: errors }));
+    }
 
-            console.log("supplying", term);
-            const stdinStream = new Readable();
-            stdinStream.on("error", (e) => {
-                reject(e);
+    private async startRun(
+        params: string[],
+        stdin: string = null,
+    ): Promise<IOResult> {
+        return new Promise<IOResult>((resolve, reject) => {
+            const child = spawn(this.runPath, params, {
+                env: { LC_ALL: "C" },
+                stdio: ["pipe", "pipe", "pipe"],
             });
-            if (stdinStream.push(term)) {
-                // Add data to the internal queue for users of the stream to consume
-                stdinStream.push(null); // Signals the end of the stream (EOF)
-            }
-            stdinStream.pipe(child.stdin);
 
-            console.log("Term supplied");
+            if (stdin) {
+                console.log("supplying", stdin);
+                const stdinStream = new Readable();
+                stdinStream.on("error", (e) => {
+                    reject(e);
+                });
+                if (stdinStream.push(stdin)) {
+                    // Add data to the internal queue for users of the stream to consume
+                    stdinStream.push(null); // Signals the end of the stream (EOF)
+                }
+                stdinStream.pipe(child.stdin);
+                console.log("Term supplied");
+            }
 
             let output: string = "";
             child.stdout.on("data", (data) => {
@@ -114,7 +162,7 @@ export default class ReductionRunner {
             child.on("exit", (code) => {
                 console.log(`child process [exited] with code ${code}`);
                 if (code === 0) {
-                    resolve({ term: output, errors: errors });
+                    resolve({ output: output, errors: errors, exitcode: code });
                 } else {
                     reject(errors);
                 }
@@ -123,7 +171,7 @@ export default class ReductionRunner {
             child.on("close", (code) => {
                 console.log(`child process exited with code ${code}`);
                 if (code === 0) {
-                    resolve({ term: output, errors: errors });
+                    resolve({ output: output, errors: errors, exitcode: code });
                 } else {
                     reject(errors);
                 }

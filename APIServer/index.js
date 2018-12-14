@@ -15,7 +15,10 @@ const datadir = process.argv[2];
 console.log(process.argv);
 
 require("./dist/Server.js")
-    .default.bootstrap(datadir)
+    .default.bootstrap(
+        datadir,
+        path.join(__dirname, "..", "RedexServer", "run.sh"),
+    )
     .catch((e) => {
         console.log(e.code);
         switch (e.code) {

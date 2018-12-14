@@ -1,4 +1,4 @@
-import { APIDoTermResult, ExampleMeta } from "./_global";
+import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 import { getit, fileToText } from "./util";
 import Shower from "./Shower";
 
@@ -20,10 +20,19 @@ export default class GraphRedex {
                     );
 
                 nodes.on("click", (d) => {
+                    console.log("clicked-", d);
                     d.fx = null;
                     d.fy = null;
                     if (d.data.action === "pause") {
-                        this.showDebuggerSteps(d.data._id);
+                        this.showDebuggerSteps(d.data);
+                    }
+                });
+                nodes.on("dblclick", (d) => {
+                    d3.event.preventDefault();
+                    d3.event.stopPropagation();
+                    console.log("dblclick", d);
+                    if (!d.data._expanded) {
+                        this.expandNode(d.data);
                     }
                 });
                 nodes.on("mouseover", (d) => {
@@ -34,13 +43,16 @@ export default class GraphRedex {
                 <hr>
                 <table>
                     <tr><th>Key</th><th>Value</th></tr>
-                    ${Object.entries(d.data)
+                    ${Object.keys(d.data)
                         .filter(
                             (x) =>
-                                ["_stuck", "_expanded"].includes(x[0]) ||
-                                !(x[0].startsWith("_") || x[0] == "term"),
+                                ["_stuck", "_expanded"].includes(x) ||
+                                !(x.startsWith("_") || x === "term"),
                         )
-                        .map((x) => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`)
+                        .map(
+                            (x) =>
+                                `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
+                        )
                         .join("")}
                     </table>
                     `;
@@ -55,7 +67,6 @@ export default class GraphRedex {
         this.setupExampleSelector();
         this.setupDoQry();
         this.updateLangs();
-        this.setUpTabs();
     }
 
     async render(
@@ -91,30 +102,39 @@ export default class GraphRedex {
     }
 
     async getNonRealSteps(
-        nodeId: string,
+        term: TermMeta,
     ): Promise<{ name: string; _to: string; _id: string }[]> {
         return await getit("my/example/qry/" + this.curExample._key, {
             method: "POST",
             body: `
             FOR e IN @@edges
-                FILTER  e._from == "${nodeId}"
+                FILTER  e._from == "${term._id}"
                 FILTER  e._real == false
                 RETURN DISTINCT {name:e.reduction,_to:e._to,_id:e._id}`,
         });
     }
 
-    private async showDebuggerSteps(nodeId: string) {
+    private async showDebuggerSteps(node: TermMeta) {
+        console.info(node, "clicked");
         const elem = d3.select(document.getElementsByTagName("section")[1]);
-        elem.html("<h1>Debug</h1><small>" + nodeId + "</small>");
+        elem.html(
+            `<h1>Debug</h1><small>${node._id} (node is ${
+                node._expanded ? "" : " not "
+            })</small>`,
+        );
 
-        this.getNonRealSteps(nodeId).then((possibleSteps) => {
+        if (!node._expanded) {
+            await this.expandNode(node);
+        }
+
+        this.getNonRealSteps(node).then((possibleSteps) => {
             const list = elem.append("ul");
             for (const { name, _to: target } of possibleSteps) {
                 list.append("li")
                     .append("button")
                     .text(name)
                     .on("click", () => {
-                        this.render(this.curExample, target, nodeId);
+                        this.render(this.curExample, target, node._id);
                         list.remove();
                         elem.append("div").text(`${name} performed`);
                     });
@@ -122,7 +142,13 @@ export default class GraphRedex {
         });
     }
 
-    private expandNode(nodeID: string) {}
+    private async expandNode(node: TermMeta) {
+        console.log("expanding", node._key);
+        await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
+            method: "POST",
+        });
+        await this.render(this.curExample, node._id, node._id);
+    }
 
     renderIfGraph(data: any) {
         // TODO change to promise
@@ -307,17 +333,5 @@ export default class GraphRedex {
                 .attr("selected", "selected")
                 .attr("disabled", "disabled");
         });
-    }
-
-    setUpTabs(): any {
-        window.toggle = (elID: string) => {
-            // tslint:disable-line
-            document.querySelectorAll("main>form").forEach((e: Element) => {
-                if (e.id !== elID) {
-                    e.classList.add("closed");
-                }
-            });
-            document.getElementById(elID).classList.toggle("closed");
-        };
     }
 }
