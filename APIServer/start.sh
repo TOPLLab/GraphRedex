@@ -18,7 +18,7 @@ CURPOS=$(dirname $0)
 CURLOC=$(realpath $CURPOS)
 cd $CURLOC
 
-function showHelp {
+showHelp () {
 echo "$0 [options]"
 cat <<HELP
   -b         to build
@@ -56,7 +56,7 @@ while getopts "h?bcnd:" opt; do
 done
 
 
-if [[ $needsBuild -eq 1 ]]; then
+if [ $needsBuild -eq 1 ]; then
     echo "Strating build"
     yarn install || \
         ( echo "could install depenencies, is yarn instlled?" ; exit 1)
@@ -64,21 +64,21 @@ if [[ $needsBuild -eq 1 ]]; then
         ( echo "could not build the server" ; exit 1)
 fi
 
-if [[ $needsClean -eq 1 ]]; then
+if [ $needsClean -eq 1 ]; then
     echo "Strating clean"
     node setup.js || \
         ( echo "Could not clean database" ; exit 1)
 fi
 
-if [[ $dirSet -eq 1 ]]; then
+if [ $dirSet -eq 1 ]; then
     echo "Checking given directory"
     DATADIR=${DATADIR%/}
-    if [[ ! -d "$DATADIR" ]]
+    if [ ! -d "$DATADIR" ]
     then
         echo "$DATADIR is not a directory"
         exit 1
     fi
-    if [[ $needsClean -eq 1 ]]; then
+    if [ $needsClean -eq 1 ]; then
         echo "Emptying directory $DATADIR"
         rm -r $DATADIR/*
     fi
@@ -90,7 +90,7 @@ fi
 
 
 
-if [[ $run -eq 1 ]]
+if [ $run -eq 1 ]
 then
     node index.js "$DATADIR"
 else
