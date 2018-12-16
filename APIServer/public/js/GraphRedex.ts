@@ -19,6 +19,14 @@ export default class GraphRedex {
                         (d) => d.data._id === this.curExample.baseTerm,
                     );
 
+                const firstNode = nodes.filter(
+                    (d) => d.data._id === this.curExample.baseTerm,
+                );
+                if (firstNode.size() === 1) {
+                    firstNode.datum().fx = 0;
+                    firstNode.datum().fy = 0;
+                }
+
                 nodes.on("click", (d) => {
                     console.log("clicked-", d);
                     d.fx = null;
