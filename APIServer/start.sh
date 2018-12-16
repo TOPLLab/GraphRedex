@@ -26,14 +26,17 @@ cat <<HELP
              if -n 
   -d PATH    set directory
              if -c is set, the directory will be emptied
+  -m         Make directory form -d if not exists
   -h         show this help
 HELP
 }
 
 needsBuild=0
 needsClean=0
+dirMakeIfNotExist=0
 
-while getopts "h?bcnd:" opt; do
+
+while getopts "h?bcnmd:" opt; do
     case "$opt" in
         h|\?)
             showHelp
@@ -48,6 +51,8 @@ while getopts "h?bcnd:" opt; do
             ;;
         d)  dirSet=1
             DATADIR=$OPTARG
+            ;;
+        m)  dirMakeIfNotExists=1
             ;;
         *)
             showHelp
@@ -72,20 +77,26 @@ fi
 
 if [ $dirSet -eq 1 ]; then
     echo "Checking given directory"
-    DATADIR=${DATADIR%/}
+    DATADIR="${DATADIR%/}"
     if [ ! -d "$DATADIR" ]
     then
-        echo "$DATADIR is not a directory"
-        exit 1
+        if [ $dirMakeIfNotExists -eq 1 ]; then
+            echo "Creating $DATADIR"
+            mkdir -p "$DATADIR" || echo "Dir could not be created";
+        fi
+        if [ ! -d "$DATADIR" ]; then
+            echo "Stopping"
+            exit 1
+        fi
     fi
     if [ $needsClean -eq 1 ]; then
         echo "Emptying directory $DATADIR"
-        rm -r $DATADIR/*
+        rm -r "$DATADIR/*"
     fi
 else 
         echo "Making tmp dir"
         DATADIR=$(mktemp -d)
-        trap "echo STOP;rm -rf $DATADIR" EXIT
+        trap "echo STOP;rm -rf '$DATADIR'" EXIT
 fi
 
 
