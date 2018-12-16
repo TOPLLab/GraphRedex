@@ -67,6 +67,7 @@ export default class GraphRedex {
         this.setupExampleSelector();
         this.setupDoQry();
         this.updateLangs();
+        this.setUpReheatBtn();
     }
 
     async render(
@@ -331,6 +332,12 @@ export default class GraphRedex {
                 .attr("value", "")
                 .attr("selected", "selected")
                 .attr("disabled", "disabled");
+        });
+    }
+
+    private setUpReheatBtn() {
+        d3.select("#reheat").on("click", () => {
+            this.shower.heatFor(5000);
         });
     }
 }

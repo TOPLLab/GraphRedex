@@ -241,7 +241,7 @@ export default class Shower {
             .filter((e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to))
             .map(this.convertEdge);
         this.update();
-        this.simulation.alphaTarget(0.1).restart();
+        this.heatFor();
     }
 
     public push(data: InputData, startPos: string = null) {
@@ -270,8 +270,9 @@ export default class Shower {
                 .map(this.convertEdge),
         );
         this.update();
-        this.simulation.alphaTarget(0.1).restart();
+        this.simulation.alphaTarget(0.3).restart();
         console.log("GO", this.data);
+        this.heatFor();
     }
 
     public resetZoom() {
@@ -297,6 +298,15 @@ export default class Shower {
                     this.simulation.alphaTarget(0);
                 }
             });
+    }
+
+    private heatTimeout = null;
+    public heatFor(timeout: number = 5000) {
+        window.clearTimeout(this.heatTimeout);
+        this.simulation.alphaTarget(0.3).restart();
+        this.heatTimeout = window.setTimeout(() => {
+            this.simulation.alphaTarget(0);
+        }, timeout);
     }
 
     private existing = new Map<
