@@ -1,6 +1,6 @@
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 import { getit, fileToText } from "./util";
-import Shower from "./Shower";
+import Shower from "./shower/Shower";
 
 export default class GraphRedex {
     private curExample: ExampleMeta = null;
@@ -40,7 +40,13 @@ export default class GraphRedex {
                     d3.event.stopPropagation();
                     console.log("dblclick", d);
                     if (!d.data._expanded) {
-                        this.expandNode(d.data);
+                        d.data._expanding = true;
+                        this.shower.update();
+                        this.expandNode(d.data).then(() => {
+                            d.data._expanding = false;
+                            d.data._expanded = true;
+                            this.shower.update();
+                        });
                     }
                 });
                 nodes.on("mouseover", (d) => {
@@ -66,6 +72,11 @@ export default class GraphRedex {
                     `;
                 });
             },
+            nodeUpdate: (nodes: any) => {
+                nodes
+                    .classed("expandable", (d) => !d.data._expanded)
+                    .classed("expanding", (d) => d.data._expanding || false);
+            },
         });
     }
 
@@ -84,6 +95,7 @@ export default class GraphRedex {
         startPos: string = null,
     ) {
         this.curExample = example;
+        this.shower.setRoot(this.curExample.baseTerm);
         const steps = 300;
 
         const [data] = await getit("my/example/qry/" + example._key, {
