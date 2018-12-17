@@ -106,9 +106,7 @@ export default class Server {
             ),
         );
 
-        routeMy.post(
-            "/languages",
-            this.uploader.single("specification"),
+        const makeLanguage = (debugging: boolean) =>
             this.requireLogin(
                 async (
                     user: User,
@@ -125,6 +123,7 @@ export default class Server {
                                 user,
                                 fileName,
                                 file.path,
+                                debugging,
                             );
                             res.jsonp({ ok: true, type: "zip", r: fileName });
                             break;
@@ -133,6 +132,7 @@ export default class Server {
                                 user,
                                 fileName,
                                 file.path,
+                                debugging,
                             );
                             res.jsonp({
                                 ok: true,
@@ -148,7 +148,17 @@ export default class Server {
                             });
                     }
                 },
-            ),
+            );
+
+        routeMy.post(
+            "/languages/regular",
+            this.uploader.single("specification"),
+            makeLanguage(false),
+        );
+        routeMy.post(
+            "/languages/debugger",
+            this.uploader.single("specification"),
+            makeLanguage(true),
         );
 
         this.app.post(

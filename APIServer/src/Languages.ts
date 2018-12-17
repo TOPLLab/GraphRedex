@@ -20,12 +20,14 @@ export class Languages {
     private async createInDB(
         user: User,
         name: string,
+        debugging: boolean,
     ): Promise<{ lang: Language; absPath: string; absDir: string }> {
         const langData: Language = {
             name: name,
             path: "",
             dir: "",
             onDisk: false,
+            debugging: debugging,
         };
         const metaData = await this.db.languages(true).save(langData);
         langData._key = metaData._key;
@@ -84,8 +86,9 @@ export class Languages {
         user: User,
         name: string,
         location: string,
+        debugging: boolean,
     ): Promise<Language> {
-        const { lang, absPath } = await this.createInDB(user, name);
+        const { lang, absPath } = await this.createInDB(user, name, debugging);
 
         await promisify(fs.rename)(location, absPath);
 
@@ -106,8 +109,9 @@ export class Languages {
         user: User,
         name: string,
         location: string,
+        debugging: boolean,
     ): Promise<Language> {
-        const { lang, absDir } = await this.createInDB(user, name);
+        const { lang, absDir } = await this.createInDB(user, name, debugging);
 
         if (!absDir.startsWith(this.datadir)) {
             throw "Invalid filename";

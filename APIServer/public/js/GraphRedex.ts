@@ -3,54 +3,51 @@ import { getit, fileToText } from "./util";
 import Shower from "./shower/Shower";
 
 export default class GraphRedex {
-    private curExample: ExampleMeta = null;
-    private shower: Shower;
+    protected curExample: ExampleMeta = null;
+    protected shower: Shower;
 
-    constructor() {
+    constructor(showerConfig: ShowerConfig = null) {
         console.log("Booting graph visualiser");
-        this.shower = new Shower("svg", {
-            nodeMaker: (nodes: any) => {
-                nodes
-                    .classed("stuck", (d) => d.data._stuck)
-                    .classed("paused", (d) => d.data.action === "pause")
-                    .classed("expandable", (d) => !d.data._expanded)
-                    .classed(
+        this.shower = new Shower(
+            "svg",
+            showerConfig || {
+                nodeMaker: (nodes: any) => {
+                    nodes.classed(
                         "start",
                         (d) => d.data._id === this.curExample.baseTerm,
                     );
 
-                const firstNode = nodes.filter(
-                    (d) => d.data._id === this.curExample.baseTerm,
-                );
-                if (firstNode.size() === 1) {
-                    firstNode.datum().fx = 0;
-                    firstNode.datum().fy = 0;
-                }
+                    const firstNode = nodes.filter(
+                        (d) => d.data._id === this.curExample.baseTerm,
+                    );
+                    if (firstNode.size() === 1) {
+                        firstNode.datum().fx = 0;
+                        firstNode.datum().fy = 0;
+                    }
 
-                nodes.on("click", (d) => {
-                    console.log("clicked-", d);
-                    d.fx = null;
-                    d.fy = null;
-                    if (d.data.action === "pause") {
-                        this.showDebuggerSteps(d.data);
-                    }
-                });
-                nodes.on("dblclick", (d) => {
-                    d3.event.preventDefault();
-                    d3.event.stopPropagation();
-                    console.log("dblclick", d);
-                    if (!d.data._expanded) {
-                        d.data._expanding = true;
-                        this.shower.update();
-                        this.expandNode(d.data).then(() => {
-                            d.data._expanding = false;
-                            d.data._expanded = true;
+                    nodes.on("click", (d) => {
+                        console.log("clicked-", d);
+                        d.fx = null;
+                        d.fy = null;
+                    });
+                    nodes.on("dblclick", (d) => {
+                        d3.event.preventDefault();
+                        d3.event.stopPropagation();
+                        console.log("dblclick", d);
+                        if (!d.data._expanded) {
+                            d.data._expanding = true;
                             this.shower.update();
-                        });
-                    }
-                });
-                nodes.on("mouseover", (d) => {
-                    document.getElementsByTagName("section")[0].innerHTML = `
+                            this.expandNode(d.data).then(() => {
+                                d.data._expanding = false;
+                                d.data._expanded = true;
+                                this.shower.update();
+                            });
+                        }
+                    });
+                    nodes.on("mouseover", (d) => {
+                        document.getElementsByTagName(
+                            "section",
+                        )[0].innerHTML = `
                 <pre style="word-wrap: break-word;white-space: pre-wrap; ">${
                     d.data.term
                 }</pre>
@@ -70,14 +67,18 @@ export default class GraphRedex {
                         .join("")}
                     </table>
                     `;
-                });
+                    });
+                },
+                nodeUpdate: (nodes: any) => {
+                    nodes
+                        .classed("expandable", (d) => !d.data._expanded)
+                        .classed(
+                            "expanding",
+                            (d) => d.data._expanding || false,
+                        );
+                },
             },
-            nodeUpdate: (nodes: any) => {
-                nodes
-                    .classed("expandable", (d) => !d.data._expanded)
-                    .classed("expanding", (d) => d.data._expanding || false);
-            },
-        });
+        );
     }
 
     init() {
@@ -121,7 +122,7 @@ export default class GraphRedex {
         }
     }
 
-    async getNonRealSteps(
+    protected async getNonRealSteps(
         term: TermMeta,
     ): Promise<{ name: string; _to: string; _id: string }[]> {
         return await getit("my/example/qry/" + this.curExample._key, {
@@ -134,35 +135,7 @@ export default class GraphRedex {
         });
     }
 
-    private async showDebuggerSteps(node: TermMeta) {
-        console.info(node, "clicked");
-        const elem = d3.select(document.getElementsByTagName("section")[1]);
-        elem.html(
-            `<h1>Debug</h1><small>${node._id} (node is ${
-                node._expanded ? "" : " not "
-            })</small>`,
-        );
-
-        if (!node._expanded) {
-            await this.expandNode(node);
-        }
-
-        this.getNonRealSteps(node).then((possibleSteps) => {
-            const list = elem.append("ul");
-            for (const { name, _to: target } of possibleSteps) {
-                list.append("li")
-                    .append("button")
-                    .text(name)
-                    .on("click", () => {
-                        this.render(this.curExample, target, node._id);
-                        list.remove();
-                        elem.append("div").text(`${name} performed`);
-                    });
-            }
-        });
-    }
-
-    private async expandNode(node: TermMeta) {
+    protected async expandNode(node: TermMeta) {
         console.log("expanding", node._key);
         await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
             method: "POST",
@@ -200,7 +173,7 @@ export default class GraphRedex {
         });
     }
 
-    private setUpCreateLang() {
+    protected setUpCreateLang() {
         const form = d3.select("#createLanguage").on("submit", () => {
             d3.event.preventDefault();
 
@@ -208,7 +181,7 @@ export default class GraphRedex {
             const a: any = form.select('input[type="file"]').node();
             formData.append("specification", a.files[0]);
 
-            getit("/my/languages", {
+            getit("/my/languages/regular", {
                 method: "POST",
                 body: formData,
             })
@@ -226,7 +199,7 @@ export default class GraphRedex {
         });
     }
 
-    private setupDoReductions() {
+    protected setupDoReductions() {
         const output = document.getElementById("doReductionOutput");
         const form = d3.select("#doReduction");
         const fileSelector = form.select('input[type="file"]');
@@ -270,7 +243,7 @@ export default class GraphRedex {
         });
     }
 
-    private setupDoQry() {
+    protected setupDoQry() {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry").on("submit", () => {
             const qry = form.select("textarea").property("value");
@@ -305,7 +278,7 @@ export default class GraphRedex {
         });
     }
 
-    private updateLangs() {
+    protected updateLangs() {
         d3.json("/my/languages").then((data: any) => {
             const select = d3.select("#langselector");
             let options = select.selectAll("option").data(data);
@@ -326,7 +299,7 @@ export default class GraphRedex {
         });
     }
 
-    private setupExampleSelector() {
+    protected setupExampleSelector() {
         d3.json("/my/examples").then((data: any[]) => {
             const select = d3.select("#exampleSelector").on("change", () => {
                 const si = select.property("value");
@@ -355,7 +328,7 @@ export default class GraphRedex {
         });
     }
 
-    private setUpReheatBtn() {
+    protected setUpReheatBtn() {
         d3.select("#reheat").on("click", () => {
             this.shower.heatFor(5000);
         });

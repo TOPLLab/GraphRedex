@@ -81,7 +81,7 @@ export default class ReductionRunner {
 
         await this.startRun(
             [
-                "DebuggerServer",
+                lang.debugging ? "DebuggerServer" : "EchoServer",
                 "run-echo",
                 path.join(this.datadir, lang.path),
                 graph.name,
@@ -104,7 +104,7 @@ export default class ReductionRunner {
 
         return await this.startRun(
             [
-                "DebuggerServer",
+                lang.debugging ? "DebuggerServer" : "EchoServer",
                 "run-echo",
                 path.join(this.datadir, lang.path),
                 graph.name,

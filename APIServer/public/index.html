@@ -28,6 +28,7 @@
         </div>
         <section> </section>
         <section style="background:pink"> </section>
+        <a href="debugger.html" style="display: block;position: absolute;bottom: 0;background: red;color: white;padding: .5em;">Go to debugger</a>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
@@ -49,18 +50,7 @@
         </form>
         <form id="createQry" action="#" class="closed">
             <h1>Execute an arangoDB query on the example (result will be in developper console)</h1>
-            <textarea id="qry" cols="30" rows="10">            LET nodes = (
-                FOR v,e,p IN 0..300
-                    OUTBOUND @start GRAPH @graph
-                    OPTIONS {bfs:true,uniqueVertices: 'global'}
-                    FILTER p.edges[*]._real NONE == false
-                    RETURN DISTINCT v)
-        LET edges = (
-            FOR a in nodes
-                FOR e IN @@edges
-                    FILTER  e._from == a._id OR e._to == a._id
-                        RETURN DISTINCT e)
-        RETURN {nodes,edges}</textarea>
+            <textarea id="qry" cols="30" rows="10"> </textarea>
             <input type="submit" value="Find">
             <pre>
 - @@nodes to the collection of nodes
