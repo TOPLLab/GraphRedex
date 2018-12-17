@@ -1,41 +1,6 @@
-import { randomColor } from "./util";
-
-interface NodeData {
-    _id: string;
-    term: string;
-}
-interface EdgeData {
-    _id: string;
-    _from: string;
-    _to: string;
-    reduction: string;
-    _real: boolean;
-}
-
-interface ShowerNode {
-    id: string;
-    data: NodeData;
-    x?: any;
-    y?: any;
-}
-interface ShowerEdge {
-    source: ShowerNode;
-    target: ShowerNode;
-    data: EdgeData;
-}
-interface InputData {
-    nodes: NodeData[];
-    edges: EdgeData[];
-}
-
-interface ShowerData {
-    nodes: ShowerNode[];
-    edges: ShowerEdge[];
-}
-
-interface ShowerConfig {
-    nodeMaker?: (nodes: d3.Selection<any, ShowerNode, any, any>) => void;
-}
+import { randomColor } from "../util";
+import treeForce from "./treeForce";
+/// <reference path="./ShowerTypes.d.ts"/>
 
 export default class Shower {
     private svgRoot: any;
@@ -107,17 +72,37 @@ export default class Shower {
             )
             .force("charge", d3.forceManyBody().strength(-30))
             .force("collide", d3.forceCollide(16).strength(0.7))
-            .force("center", d3.forceCenter())
+            //.force("center", d3.forceCenter())
             .force("long", d3.forceY().strength(0.01));
+
+        // TODO move to other file
+        this.simulation.force(
+            "dfsDepth",
+            treeForce(80, () => {
+                return this.config.rootId;
+            }),
+        );
     }
 
-    private update() {
+    public setRoot(rootId: string) {
+        this.config.rootId = rootId;
+    }
+
+    /**
+     * Update the node colors...
+     */
+    public update() {
         // Redefine and restart simulation
         this.simulation.nodes(this.data.nodes).on("tick", () => this.ticked());
 
         this.simulation.velocityDecay(0.1);
         const linkForce: d3.ForceLink<any, any> = this.simulation.force("link");
         linkForce.links(this.data.edges);
+
+        if (this.config.rootId) {
+            const dfsForce: any = this.simulation.force("dfsDepth");
+            dfsForce.links(this.data.edges);
+        }
 
         const p = this.parts;
 
@@ -159,6 +144,9 @@ export default class Shower {
         }
         p.nodes = nodeEnter.merge(p.nodes);
         p.nodes.exit().remove();
+        if ("nodeUpdate" in this.config) {
+            this.config.nodeUpdate(p.nodes);
+        }
     }
 
     private ticked() {
@@ -246,6 +234,7 @@ export default class Shower {
 
     public push(data: InputData, startPos: string = null) {
         this.simulation.alphaTarget(0.3).restart();
+
         const newNodes = data.nodes
             .filter((n) => !this.nodeMap.has(n._id))
             .map(this.convertNode);

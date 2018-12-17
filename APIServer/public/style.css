@@ -82,6 +82,11 @@ main>form>* {
 .graph-nodes .start {
     fill: greenyellow;
 }
+
+.graph-nodes .expanding {
+    fill: orange;
+}
+
 .graph-nodes .start.stuck {
     fill: greenyellow;
     stroke: red;
