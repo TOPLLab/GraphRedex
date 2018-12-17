@@ -20,6 +20,7 @@ interface Language {
     dir: string;
     onDisk?: boolean;
     _key?: Number;
+    debugging: boolean;
 }
 
 interface TermMeta {

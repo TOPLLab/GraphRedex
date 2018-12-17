@@ -15,7 +15,7 @@
 
 <body>
     <nav>
-        <header>GraphRedex</header>
+        <header>GraphRedex Debug</header>
 
         <div>
             <select id="exampleSelector" name="example">
@@ -24,10 +24,10 @@
             <button onclick='toggle("doReduction")'>+</button>
             <button onclick='toggle("createQry")'>New Query</button>createQry
             <button onclick='toggle("createLanguage")'>New language</button>
+            <button id="reheat">🔥</button>
         </div>
         <section> </section>
         <section style="background:pink"> </section>
-        <section style="background:#EEE"> </section>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
@@ -43,7 +43,7 @@
         </form>
         <form id="createLanguage" action="#" class="closed">
 
-            <h1>Create language (filename = name)</h1>
+            <h1>Create <strong>debugging</strong> language (filename = name)</h1>
             <input type="file" accept=".zip,.krt" name="specification" multiple="false">
             <input type="submit" value="Create">
         </form>
@@ -79,8 +79,12 @@
     <script src="require.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            requirejs(["dist/GraphRedex"], function (dbgr) {
-                (new dbgr.default()).init();
+            requirejs(["dist/DebugRedex"], function (dbgr) {
+                console.log(dbgr);
+                //window.toggle = dbgr.toggle;
+                const d = new dbgr.default();
+                d.init();
+
             })
         }
         );
