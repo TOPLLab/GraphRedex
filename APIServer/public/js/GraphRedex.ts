@@ -5,6 +5,7 @@ import Shower from "./shower/Shower";
 export default class GraphRedex {
     protected curExample: ExampleMeta = null;
     protected shower: Shower;
+    protected expanding: Set<string> = new Set();
 
     constructor(showerConfig: ShowerConfig = null) {
         console.log("Booting graph visualiser");
@@ -12,36 +13,36 @@ export default class GraphRedex {
             "svg",
             showerConfig || {
                 nodeMaker: (nodes: any) => {
-                    nodes.classed(
-                        "start",
-                        (d) => d.data._id === this.curExample.baseTerm,
-                    );
-
-                    const firstNode = nodes.filter(
-                        (d) => d.data._id === this.curExample.baseTerm,
-                    );
-                    if (firstNode.size() === 1) {
-                        firstNode.datum().fx = 0;
-                        firstNode.datum().fy = 0;
-                    }
+                    nodes
+                        .classed(
+                            "start",
+                            (d) => d.data._id === this.curExample.baseTerm,
+                        )
+                        .classed("stuck", (d) => d.data._stuck);
 
                     nodes.on("click", (d) => {
-                        console.log("clicked-", d);
                         d.fx = null;
                         d.fy = null;
                     });
                     nodes.on("dblclick", (d) => {
                         d3.event.preventDefault();
                         d3.event.stopPropagation();
-                        console.log("dblclick", d);
-                        if (!d.data._expanded) {
-                            d.data._expanding = true;
+
+                        if (d.data._limited) {
+                            d.data._limited = false;
                             this.shower.update();
-                            this.expandNode(d.data).then(() => {
-                                d.data._expanding = false;
-                                d.data._expanded = true;
-                                this.shower.update();
-                            });
+                            this.render(
+                                this.curExample,
+                                d.data._id,
+                                d.data._id,
+                            );
+                        } else {
+                            if (d3.event.shiftKey && d.data._expanded) {
+                                // get all unexpanded node within 50 steps and expand them
+                                this.expandBelow(d.data);
+                            } else {
+                                this.expandNode(d.data);
+                            }
                         }
                     });
                     nodes.on("mouseover", (d) => {
@@ -72,10 +73,10 @@ export default class GraphRedex {
                 nodeUpdate: (nodes: any) => {
                     nodes
                         .classed("expandable", (d) => !d.data._expanded)
-                        .classed(
-                            "expanding",
-                            (d) => d.data._expanding || false,
-                        );
+                        .classed("expanding", (d) =>
+                            this.expanding.has(d.data._id),
+                        )
+                        .classed("limited", (d) => d.data._limited);
                 },
             },
         );
@@ -105,8 +106,7 @@ export default class GraphRedex {
                 FOR v,e,p IN 0..${steps}
                     OUTBOUND ${start ? `"${start}"` : "@start"} GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
-                    FILTER p.edges[*]._real NONE == false
-                    RETURN DISTINCT v)
+                    RETURN DISTINCT MERGE(v,{"_limited": (LENGTH(p.edges) == ${steps} && v._expanded && !v._stuck)}))
         LET edges = (
             FOR a in nodes
                 FOR e IN @@edges
@@ -136,11 +136,58 @@ export default class GraphRedex {
     }
 
     protected async expandNode(node: TermMeta) {
-        console.log("expanding", node._key);
-        await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
-            method: "POST",
-        });
-        await this.render(this.curExample, node._id, node._id);
+        if (!node._expanded && !this.expanding.has(node._id)) {
+            this.expanding.add(node._id);
+            console.log("expanding", node._key);
+            await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
+                method: "POST",
+            });
+            this.expanding.delete(node._id);
+            node._expanded = true;
+            await this.render(this.curExample, node._id, node._id);
+        }
+    }
+
+    protected async expandBelow(node: TermMeta, depth: number = 50) {
+        if (!node._expanded) {
+            this.expandNode(node);
+        } else {
+            const nodes = (
+                await getit("my/example/qry/" + this.curExample._key, {
+                    method: "POST",
+                    body: `FOR v IN 0..${depth}
+                    OUTBOUND "${node._id}" GRAPH @graph
+                    OPTIONS {bfs:true,uniqueVertices: 'global'}
+                    FILTER v._expanded == false
+                    RETURN DISTINCT {_key:v._key,_id:v._id}`,
+                })
+            ).filter((e) => !this.expanding.has(e._id));
+
+            // Mark all selected nodes as expanding
+            nodes.forEach((n) => this.expanding.add(n._id));
+
+            this.shower.update(); // and update this in the graph
+
+            await Promise.all(
+                nodes.map((n) =>
+                    getit(`/continueTerm/${this.curExample._key}/${n._key}`, {
+                        method: "POST",
+                    })
+                        .then(() => {
+                            this.expanding.delete(n._id);
+                            this.shower.updateNodeData(n._id, (d: any) => {
+                                d._expanded = true;
+                            });
+                        })
+                        .catch((e) => {
+                            console.error(e);
+                            this.expanding.delete(n._id);
+                        }),
+                ),
+            );
+
+            this.render(this.curExample, node._id, node._id);
+        }
     }
 
     renderIfGraph(data: any) {
