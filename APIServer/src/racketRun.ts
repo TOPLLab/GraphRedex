@@ -52,12 +52,17 @@ export default class ReductionRunner {
         const usersExamplesCollection = this.db.rw.edgeCollection(
             "users-examples",
         );
-        const example = await examplesCollection.save({
-            name: saveName,
-            baseTerm: termId,
-            baseTermString: term,
-            lang: lang._key,
-        });
+        const example: ExampleMeta = (
+            await examplesCollection.save(
+                {
+                    name: saveName,
+                    baseTerm: termId,
+                    baseTermString: term,
+                    lang: lang._key,
+                },
+                { returnNew: true },
+            )
+        ).new;
         await usersExamplesCollection.save(
             { creator: user._id },
             user,
