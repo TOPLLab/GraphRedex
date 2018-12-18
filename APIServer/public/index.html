@@ -5,11 +5,43 @@
     <title>GraphRedex</title>
     <link rel="stylesheet" href="style.css">
 
-    <style>
-        .graph-nodes .paused {
-    stroke: pink;
-    fill: pink;
-}
+    <style id="SVGstyle">
+        .graph-arrows {
+            stroke-width: 2;
+            fill: transparent;
+        }
+
+        .graph-nodes {
+            cursor: move;
+            fill: rgb(86, 198, 212);
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+
+        .graph-nodes .expandable {
+            stroke: grey;
+        }
+
+        .graph-nodes .stuck {
+            fill: red;
+        }
+        .graph-nodes .start {
+            fill: greenyellow;
+        }
+
+        .graph-nodes .expanding {
+            fill: orange;
+        }
+
+        .graph-nodes .start.stuck {
+            fill: greenyellow;
+            stroke: red;
+        }
+
+        .graph-texts {
+            font-size: .3rem;
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -28,7 +60,8 @@
         </div>
         <section> </section>
         <section style="background:pink"> </section>
-        <a href="debugger.html" style="display: block;position: absolute;bottom: 0;background: red;color: white;padding: .5em;">Go to debugger</a>
+        <a href="debugger.html" style="display: block;position: absolute;bottom: 0;background: red;color: white;padding: .5em;">Go
+            to debugger</a>
     </nav>
     <main>
         <form id="doReduction" action="#" class="closed">
