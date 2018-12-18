@@ -88,6 +88,12 @@ export default class Shower {
         this.config.rootId = rootId;
     }
 
+    public updateNodeData(id: string, f: (data: NodeData) => any) {
+        if (this.nodeMap.has(id)) {
+            f(this.nodeMap.get(id).data);
+        }
+    }
+
     /**
      * Update the node colors...
      */

@@ -15,16 +15,7 @@ export default class DebugRedex extends GraphRedex {
                         (d) => d.data._id === this.curExample.baseTerm,
                     );
 
-                const firstNode = nodes.filter(
-                    (d) => d.data._id === this.curExample.baseTerm,
-                );
-                if (firstNode.size() === 1) {
-                    firstNode.datum().fx = 0;
-                    firstNode.datum().fy = 0;
-                }
-
                 nodes.on("click", (d) => {
-                    console.log("clicked-", d);
                     d.fx = null;
                     d.fy = null;
                     if (d.data.action === "pause") {
@@ -34,15 +25,12 @@ export default class DebugRedex extends GraphRedex {
                 nodes.on("dblclick", (d) => {
                     d3.event.preventDefault();
                     d3.event.stopPropagation();
-                    console.log("dblclick", d);
-                    if (!d.data._expanded) {
-                        d.data._expanding = true;
-                        this.shower.update();
-                        this.expandNode(d.data).then(() => {
-                            d.data._expanding = false;
-                            d.data._expanded = true;
-                            this.shower.update();
-                        });
+
+                    if (d3.event.shiftKey) {
+                        // get all unexpanded node within 50 steps and expand them
+                        this.expandBelow(d.data);
+                    } else {
+                        this.expandNode(d.data);
                     }
                 });
                 nodes.on("mouseover", (d) => {
@@ -83,7 +71,7 @@ export default class DebugRedex extends GraphRedex {
     ) {
         this.curExample = example;
         this.shower.setRoot(this.curExample.baseTerm);
-        const steps = 300;
+        const steps = 3000;
 
         const [data] = await getit("my/example/qry/" + example._key, {
             method: "POST",
@@ -109,17 +97,20 @@ export default class DebugRedex extends GraphRedex {
     }
 
     private async showDebuggerSteps(node: TermMeta) {
-        console.info(node, "clicked");
         const elem = d3.select(document.getElementsByTagName("section")[1]);
         elem.html(
-            `<h1>Debug</h1><small>${node._id} (node is ${
-                node._expanded ? "" : " not "
-            })</small>`,
+            `<h1>Debug</h1><small>${node._id} (node ${
+                node._expanded ? "has been" : " <strong>is being<strong>"
+            } expanded)</small>`,
         );
 
         if (!node._expanded) {
             await this.expandNode(node);
         }
+
+        elem.html(
+            `<h1>Debug</h1><small>${node._id} (node has been expanded)</small>`,
+        );
 
         this.getNonRealSteps(node).then((possibleSteps) => {
             const list = elem.append("ul");
