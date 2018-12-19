@@ -257,6 +257,10 @@ export default class GraphRedex {
                 "value",
                 await fileToText(fileSelector.property("files")[0]),
             );
+            form.select("#nameselector").property(
+                "value",
+                fileSelector.property("files")[0].name,
+            );
         });
         form.on("submit", () => {
             submitBtn.attr("disabled", "disabled");
