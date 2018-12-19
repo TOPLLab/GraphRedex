@@ -159,10 +159,11 @@ export default class Shower {
     }
 
     private ticked() {
-        console.log("sim");
-        this.parts.arrows.attr("d", (d) => {
-            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-        });
+        this.parts.arrows.attr(
+            "d",
+            (d) =>
+                `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`,
+        );
 
         if (this.isClose) {
             this.parts.texts
