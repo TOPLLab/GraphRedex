@@ -1,0 +1,22 @@
+(((func make-philosopher ((fork1 : (mutex int)) (fork2 : (mutex int))) : void
+           (block ((philosopher : join-handle = (uninitialized)))
+                  ((philosopher = (fork
+                                   ((fork1 : (mutex int) = fork1)
+                                    (fork2 : (mutex int) = fork2))
+                                   (block ((locked-fork1 : (mutex-guard int) = (uninitialized))
+                                           (locked-fork2 : (mutex-guard int) = (uninitialized)))
+                                          ((locked-fork1 = (lock fork1))
+                                           (locked-fork2 = (lock fork2))
+                                           (locked-fork1 = (locked-fork1 + 1))
+                                           (locked-fork2 = (locked-fork2 + 1)))))))))
+     (func make-philosophers ((first-fork : (mutex int)) (last-fork : (mutex int)) (n_philosophers : int)) : void
+           (block ((new-fork : (mutex int) = (uninitialized)))
+                  ((new-fork = last-fork)
+                   (if (n_philosophers > 1)
+                       (block ()
+                              ((new-fork = (mutex 0))
+                               (call make-philosophers (new-fork last-fork (n_philosophers + -1))))))
+                   (call make-philosopher (first-fork new-fork))))))
+    (block ((initial-fork : (mutex int) = (uninitialized)))
+           ((initial-fork = (mutex 0))
+(call make-philosophers (initial-fork initial-fork 3)))))
