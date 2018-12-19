@@ -196,6 +196,16 @@ export default class GraphRedex {
             const renderData = data[0];
             const renderKeys = Object.keys(renderData);
             if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
+                if (
+                    renderData.nodes
+                        .map((x) => x._id)
+                        .includes(this.curExample.baseTerm)
+                ) {
+                    this.shower.setRoot(this.curExample.baseTerm);
+                } else {
+                    // start not included, dont use bfs TODO: use bfs
+                    this.shower.setRoot(null);
+                }
                 this.shower.show(renderData);
                 return true;
             }
