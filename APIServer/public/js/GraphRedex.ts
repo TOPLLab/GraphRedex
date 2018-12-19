@@ -88,7 +88,7 @@ export default class GraphRedex {
         this.setupExampleSelector();
         this.setupDoQry();
         this.updateLangs();
-        this.setUpReheatBtn();
+        this.setUpShowerBtns();
     }
 
     async render(
@@ -375,9 +375,12 @@ export default class GraphRedex {
         });
     }
 
-    protected setUpReheatBtn() {
+    protected setUpShowerBtns() {
         d3.select("#reheat").on("click", () => {
             this.shower.heatFor(5000);
+        });
+        d3.select("#rezoom").on("click", () => {
+            this.shower.resetZoom();
         });
     }
 }

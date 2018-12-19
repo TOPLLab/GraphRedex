@@ -18,6 +18,7 @@ export default class Shower {
     private nodeMap: Map<string, ShowerNode>;
     private simulation: d3.Simulation<any, any>;
     private config: ShowerConfig;
+    private isClose: boolean;
 
     constructor(svg: any, showerConfig: ShowerConfig) {
         this.svgRoot = d3.select(svg);
@@ -32,7 +33,9 @@ export default class Shower {
             ])
             .call(
                 (this.zoomHandler = d3.zoom().on("zoom", () => {
+                    this.isClose = d3.event.transform.k > 1;
                     this.scene.attr("transform", d3.event.transform);
+                    this.ticked();
                 })),
             );
         this.defs = this.svgRoot.append("svg:defs");
@@ -158,26 +161,29 @@ export default class Shower {
     private ticked() {
         console.log("sim");
         this.parts.arrows.attr("d", (d) => {
-            const dx = d.target.x - d.source.x;
-            const dy = d.target.y - d.source.y;
-            return `M ${d.source.x} ${d.source.y} q ${dx / 2} ${dy /
-                2} ${dx} ${dy}`;
+            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
         });
 
-        this.parts.texts
-            .attr("x", (d) => (d.source.x + d.target.x) / 2)
-            .attr("y", (d) => (d.source.y + d.target.y) / 2)
-            .attr(
-                "transform",
-                (d) => `rotate(${(180 *
-                    Math.atan(
-                        (d.source.y - d.target.y) / (d.source.x - d.target.x),
-                    )) /
-                    Math.PI},
+        if (this.isClose) {
+            this.parts.texts
+                .attr("x", (d) => (d.source.x + d.target.x) / 2)
+                .attr("y", (d) => (d.source.y + d.target.y) / 2)
+                .attr(
+                    "transform",
+                    (d) => `rotate(${(180 *
+                        Math.atan(
+                            (d.source.y - d.target.y) /
+                                (d.source.x - d.target.x),
+                        )) /
+                        Math.PI},
                     ${(d.source.x + d.target.x) / 2},
                     ${(d.source.y + d.target.y) / 2}
                     )`,
-            );
+                )
+                .style("display", null);
+        } else {
+            this.parts.texts.style("display", "none");
+        }
 
         this.parts.nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
     }
