@@ -1,0 +1,11 @@
+LET stuckNodes = (FOR n in @@nodes FILTER n._stuck RETURN n)
+
+LET path = (
+    FOR v,e IN OUTBOUND SHORTEST_PATH 
+      @start TO stuckNodes[0]._id GRAPH @graph
+        RETURN {v,e})
+                
+RETURN {
+    edges: (FOR d in path FILTER d.e != null RETURN DISTINCT d.e),
+    nodes: (FOR d in path FILTER d.v != null RETURN DISTINCT d.v)
+}
