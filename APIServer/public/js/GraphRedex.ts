@@ -152,7 +152,7 @@ export default class GraphRedex {
     protected async expandNode(node: TermMeta) {
         if (!node._expanded && !this.expanding.has(node._id)) {
             this.expanding.add(node._id);
-            console.log("expanding", node._key);
+            this.shower.update();
             await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
                 method: "POST",
             });
