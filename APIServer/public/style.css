@@ -59,3 +59,7 @@ main>form>* {
     margin: .5rem auto;
     width: calc( 100% - 2rem);
 }
+
+.previewExport {
+    max-width: 100%;
+}

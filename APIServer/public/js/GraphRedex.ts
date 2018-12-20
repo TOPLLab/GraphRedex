@@ -1,5 +1,5 @@
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
-import { getit, fileToText } from "./util";
+import { getit, fileToText, downloadFileLink } from "./util";
 import Shower from "./shower/Shower";
 
 export default class GraphRedex {
@@ -425,5 +425,72 @@ export default class GraphRedex {
         d3.select("#rezoom").on("click", () => {
             this.shower.resetZoom();
         });
+
+        d3.select("#getSVG").on("click", () => {
+            const statusSection: d3.Selection<any, any, any, any> = d3.select(
+                "#statusSection",
+            );
+
+            statusSection.html("Preparing your export");
+            const { linkEl, url } = downloadFileLink(
+                "export.svg",
+                this.shower.getSVG(svgCSS),
+                "image/svg+xml",
+            );
+
+            statusSection.html("Download your SVG below");
+            statusSection.node().appendChild(linkEl);
+            statusSection
+                .append("img")
+                .attr("src", url)
+                .classed("previewExport", true);
+            linkEl.click();
+        });
     }
 }
+
+/**
+ * CSS to use for export to SVG
+ */
+const svgCSS = `.graph-arrows {
+    stroke-width: 2;
+    fill: transparent;
+}
+
+.graph-nodes {
+    cursor: move;
+    fill: rgb(86, 198, 212);
+    stroke: #ffffff;
+    stroke-width: 2;
+}
+
+.graph-nodes .expandable {
+    stroke: grey;
+}
+
+.graph-nodes .limited {
+    stroke: pink;
+}
+
+
+
+.graph-nodes .stuck {
+    fill: red;
+}
+.graph-nodes .start {
+    fill: greenyellow;
+}
+
+.graph-nodes .expanding {
+    fill: orange;
+}
+
+.graph-nodes .start.stuck {
+    fill: greenyellow;
+    stroke: red;
+}
+
+.graph-texts {
+    font-size: 9px;
+    font-family: "Noto Sans","Courier New",monospace;
+}`;
