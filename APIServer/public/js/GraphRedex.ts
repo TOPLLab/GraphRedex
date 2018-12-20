@@ -102,6 +102,7 @@ export default class GraphRedex {
         startPos: string = null,
     ) {
         this.curExample = example;
+        this.setupExampleSelector();
         this.shower.setRoot(this.curExample.baseTerm);
         const steps = 300;
 
@@ -397,18 +398,22 @@ export default class GraphRedex {
 
             let options = select.selectAll("option").data(data);
             const optionsEnter = options.enter().append("option");
+            const curKey = this.curExample ? this.curExample._key : null;
             options.exit().remove();
             options = optionsEnter.merge(options as any);
             options
                 .attr("disabled", null)
                 .text((d: any) => d.name + " - " + d._key)
-                .attr("value", (d: any) => d._key);
+                .attr("selected", (d) =>
+                    curKey === d._key ? "selected" : null,
+                )
+                .property("value", (d: any) => d._key);
 
             select
                 .insert("option", ":first-child")
                 .text("Example")
-                .attr("value", "")
-                .attr("selected", "selected")
+                .property("value", "")
+                .attr("selected", this.curExample === null ? "selected" : null)
                 .attr("disabled", "disabled");
         });
     }
