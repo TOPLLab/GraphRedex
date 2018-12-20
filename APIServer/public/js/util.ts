@@ -70,3 +70,28 @@ export function randomColor(): { hex: string; hexFull: string; d3: d3.Color } {
     const hex = r + g + b;
     return { hex: hex, hexFull: "#" + hex, d3: d3col };
 }
+
+export function downloadFileLink(
+    filename: string,
+    dataValue: string,
+    mime: string,
+) {
+    var a = document.createElement("a");
+    a.download = filename;
+
+    var bb = new Blob([dataValue], { type: mime });
+    const url = window.URL.createObjectURL(bb);
+    a.href = url;
+
+    a.textContent = filename;
+    a.classList.add("downloadLink");
+
+    a.dataset.downloadurl = [mime, a.download, a.href].join(":");
+    a.draggable = true; // Don't really need, but good practice.
+    a.classList.add("dragout");
+
+    return {
+        linkEl: a,
+        url: url,
+    };
+}
