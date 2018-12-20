@@ -1,6 +1,7 @@
 /**
  * Wrapper around window.fetch that returns JSON
  * and throws on nonzero output
+ * @see window.fetch
  */
 export function getit(input: RequestInfo, init: RequestInit): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -35,38 +36,21 @@ export function getit(input: RequestInfo, init: RequestInit): Promise<any> {
 }
 
 /**
- * Do a check
- * @param {*} getStatus gets the current status
- * @param {*} onChange function called on chenge of getStatus output
- * @param {*} interval interval for checking
+ * @param file file to get text from
  */
-export function setCheckInterval(
-    getStatus: () => any,
-    onChange: (ststus: any) => any,
-    interval: number,
-) {
-    let oldStatus = getStatus();
-    window.setInterval(() => {
-        const newStatus = getStatus();
-        if (oldStatus !== newStatus) {
-            onChange(newStatus);
-        }
-        oldStatus = newStatus;
-    }, interval);
-    onChange(oldStatus);
-}
-
-export function fileToText(file: File) {
+export function fileToText(file: File): Promise<string> {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function() {
-            const text = reader.result;
+            const text = reader.result as string; // spec says it is a string
             resolve(text);
         };
         reader.readAsText(file);
     });
 }
-
+/**
+ * Get a random colour with 50% saturation and lightness (good contrast on white)
+ */
 export function randomColor(): { hex: string; hexFull: string; d3: d3.Color } {
     const d3col = d3
         .color(`hsl(${Math.floor(Math.random() * 360)}, 50%, 50%)`)

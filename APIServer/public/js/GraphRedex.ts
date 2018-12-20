@@ -38,7 +38,6 @@ export default class GraphRedex {
                             );
                         } else {
                             if (d3.event.shiftKey && d.data._expanded) {
-                                // get all unexpanded node within 50 steps and expand them
                                 this.expandBelow(d.data);
                             } else {
                                 this.expandNode(d.data);
@@ -91,6 +90,12 @@ export default class GraphRedex {
         this.setUpShowerBtns();
     }
 
+    /**
+     * Render or extend render of the example given
+     * @param example the example the query
+     * @param start node from which the BFS search is started
+     * @param startPos node from whose position the new nodes will be created
+     */
     async render(
         example: ExampleMeta,
         start: string = null,
@@ -122,6 +127,11 @@ export default class GraphRedex {
         }
     }
 
+    /**
+     * Get a list of steps from a given node in the current example that are
+     * marked as _real=false. Note that this does not expand the queried node.
+     * @param term node to expand
+     */
     protected async getNonRealSteps(
         term: TermMeta,
     ): Promise<{ name: string; _to: string; _id: string }[]> {
@@ -135,6 +145,10 @@ export default class GraphRedex {
         });
     }
 
+    /**
+     * Send a continueTerm query for the given term and re-render that node and
+     * its (new) children.
+     */
     protected async expandNode(node: TermMeta) {
         if (!node._expanded && !this.expanding.has(node._id)) {
             this.expanding.add(node._id);
@@ -148,6 +162,11 @@ export default class GraphRedex {
         }
     }
 
+    /**
+     * Expand non-expanded nodes below the given one
+     * @param node node to start from
+     * @param depth depth to search for unexpanded
+     */
     protected async expandBelow(node: TermMeta, depth: number = 50) {
         if (!node._expanded) {
             this.expandNode(node);
@@ -168,6 +187,7 @@ export default class GraphRedex {
 
             this.shower.update(); // and update this in the graph
 
+            // wait till they are all expanded
             await Promise.all(
                 nodes.map((n) =>
                     getit(`/continueTerm/${this.curExample._key}/${n._key}`, {
@@ -190,6 +210,10 @@ export default class GraphRedex {
         }
     }
 
+    /**
+     * Render a graph of the argument if it is an array of length 1
+     * whose only element has a nodes and edges key
+     */
     renderIfGraph(data: any) {
         // TODO change to promise
         if (data.length === 1) {
@@ -203,7 +227,7 @@ export default class GraphRedex {
                 ) {
                     this.shower.setRoot(this.curExample.baseTerm);
                 } else {
-                    // start not included, dont use bfs TODO: use bfs
+                    // start not included, don't use BFS TODO: use bfs
                     this.shower.setRoot(null);
                 }
                 this.shower.show(renderData);
@@ -285,7 +309,7 @@ export default class GraphRedex {
                 .then((data: APIDoTermResult) => {
                     submitBtn.attr("disabled", null);
                     this.render(data.example);
-                    output.textContent = "succes";
+                    output.textContent = "success";
                     form.classed("closed", true);
                 })
                 .catch((e) => {
@@ -317,8 +341,8 @@ export default class GraphRedex {
             })
                 .then((data) => {
                     output.textContent =
-                        "Done: See developper console for output\n";
-                    console.log("\n\nQry:\n" + qry);
+                        "Done: See developer console for output\n";
+                    console.log("\n\nQuery:\n" + qry);
                     console.log("\n\nResult:");
                     console.log(data);
                     const wasGraph = this.renderIfGraph(data);

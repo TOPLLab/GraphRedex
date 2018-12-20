@@ -12,11 +12,11 @@ export default function(
     intervalLen: number = 80,
     startNodeGetter: () => string,
 ) {
-    var strength = 0.1,
-        nodes,
+    let strength: number = 0.1,
+        nodes: ShowerNode[],
         hasLinks = false,
-        xz,
-        nodesIndexes;
+        nodeDepth: number[],
+        nodesIndexes: Map<string, number>;
 
     const force = (alpha: number) => {
         if (!hasLinks || !startNodeGetter()) {
@@ -24,36 +24,30 @@ export default function(
         }
         for (var i = 0, n = nodes.length, node; i < n; ++i) {
             (node = nodes[i]),
-                (node.vx += (xz[i] * intervalLen - node.x) * strength * alpha);
+                (node.vx +=
+                    (nodeDepth[i] * intervalLen - node.x) * strength * alpha);
         }
     };
 
-    function initialize() {
-        if (!nodes) {
-            return;
-        }
-    }
-
-    force.initialize = function(_: ShowerNode[]) {
-        nodes = _;
+    force.initialize = function(inputNodes: ShowerNode[]) {
+        nodes = inputNodes;
         nodesIndexes = new Map(
-            _.map<[string, number]>((e, i) => [e.data._id, i]),
+            inputNodes.map<[string, number]>((e, i) => [e.data._id, i]),
         );
-        initialize();
     };
 
     /**
      * Setter and getter for the force (deault 0.1)
      * @param strength optional new strenght
      */
-    force.strength = function(_: number) {
-        return arguments.length ? (strength = _) : strength;
+    force.strength = function(newStrength: number) {
+        return arguments.length ? (strength = newStrength) : strength;
     };
 
     function setDepths(cur: number, linkMap: number[][], depth: number) {
-        if (!(xz[cur] && xz[cur] <= depth)) {
+        if (!(nodeDepth[cur] && nodeDepth[cur] <= depth)) {
             // not visited with lower depth
-            xz[cur] = depth;
+            nodeDepth[cur] = depth;
             const n = linkMap[cur].length;
             const nextDepth = depth + 1;
             for (let i = 0; i < n; ++i) {
@@ -79,16 +73,14 @@ export default function(
                 }
             }
 
-            xz = new Array(n);
+            nodeDepth = new Array(n);
             for (let i = 0; i < n; ++i) {
-                xz[i] = null;
+                nodeDepth[i] = null;
             }
 
             setDepths(nodesIndexes.get(startNodeGetter()), linkMap, 0);
 
             hasLinks = true;
-            console.log(this, nodes, linkMap, xz);
-            initialize();
         }
     };
 
