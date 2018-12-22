@@ -16,7 +16,8 @@
             },
             "presentation": {
                 "reveal": "always",
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "clear": true,
             },
             "problemMatcher":"$tsc"
         },
