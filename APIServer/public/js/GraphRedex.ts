@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
+import TreeShower from "./shower/TreeShower";
 import { downloadFileLink, fileToText, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 
@@ -27,7 +27,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualiser");
-        this.shower = new ForceShower(
+        this.shower = new TreeShower(
             "svg",
             showerConfig || {
                 nodeOptions: (node) => {
@@ -72,19 +72,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                             return false;
                         },
                     });
-
-                    if (node.fx !== null || node.fy !== null) {
-                        ret.push({
-                            name: "Unpin",
-                            size: 1,
-                            icon: "unpin",
-                            action: () => {
-                                node.fx = null;
-                                node.fy = null;
-                                return false;
-                            },
-                        });
-                    }
 
                     return ret;
                 },

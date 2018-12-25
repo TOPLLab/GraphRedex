@@ -69,8 +69,10 @@ export default abstract class Shower<
             ] as any)
             .call(
                 (this.zoomHandler = d3.zoom().on("zoom", () => {
-                    this.isClose = d3.event.transform.k > 1;
-                    this.scene.attr("transform", d3.event.transform);
+                    const t = d3.event.transform;
+                    this.zoomAdapt(t);
+                    this.isClose = t.k > 1;
+                    this.scene.attr("transform", t);
                     this.ticked();
                 })),
             );
@@ -111,6 +113,10 @@ export default abstract class Shower<
      */
     public setRoot(rootId: string | null) {
         this.config.rootId = rootId;
+    }
+
+    protected zoomAdapt(_: d3.ZoomTransform) {
+        return;
     }
 
     protected async showBubble(node: N) {
@@ -276,10 +282,16 @@ export default abstract class Shower<
             .style("display", (d) => (d ? null : "none"))
             .attr("transform", (d) => (d ? `translate(${d.x},${d.y})` : ""));
         this.parts.arrows
+            .transition()
+            .duration(100)
+            .style("opacity", (d) =>
+                d.source.shown && d.target.shown ? 1.0 : 0.0,
+            )
             .attr(
                 "d",
                 ({ source: s, target: t }) => `M${s.x} ${s.y}L${t.x} ${t.y}`,
             )
+            .transition()
             .style("display", (d) =>
                 d.source.shown && d.target.shown ? null : "none",
             );
@@ -301,6 +313,8 @@ export default abstract class Shower<
                 );
             this.parts.texts
                 .filter((d) => d.source.shown && d.target.shown)
+                .transition()
+                .duration(100)
                 .attr("x", (d) => (d.source.x + d.target.x) / 2)
                 .attr("y", (d) => (d.source.y + d.target.y) / 2)
                 .attr(
@@ -316,10 +330,17 @@ export default abstract class Shower<
             this.parts.texts.style("display", "none");
         }
 
-        this.parts.nodes.style("display", (d) => (d.shown ? null : "none"));
+        this.parts.nodes
+            .transition("fader")
+            .duration(100)
+            .style("opacity", (d) => (d.shown ? 1.0 : 0.0))
+            .transition()
+            .style("display", (d) => (d.shown ? null : "none"));
         this.parts.nodes
             .filter((d) => d.shown)
             .style("display", null)
+            .transition("placer")
+            .duration(100)
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y);
     }
