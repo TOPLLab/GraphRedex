@@ -126,3 +126,24 @@ export async function awaitArray<T>(b: T[] | Promise<T[]>): Promise<T[]> {
         });
     }
 }
+
+/**
+ * Yield the indexes of the array from boundary to middle
+ * [0,1,2,3,4,5,6] will give in order:
+ *   [ 0, 0 ],
+     [ 6, 6 ],
+     [ 1, 1 ],
+     [ 5, 5 ],
+     [ 2, 2 ],
+     [ 4, 4 ],
+     [ 3, 3 ]
+ * @param array Array to loop over
+ */
+export function* mLast<U>(array: U[]): IterableIterator<[U, number]> {
+    const n = array.length;
+    for (let i = 0; i < array.length; i++) {
+        const balancedi = i % 2 === 0 ? i / 2 : n - (i + 1) / 2;
+        const element = array[balancedi];
+        yield [element, balancedi];
+    }
+}
