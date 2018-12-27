@@ -1,18 +1,34 @@
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 import { getit, fileToText, downloadFileLink } from "./util";
-import Shower from "./shower/Shower";
+import Shower, { GraphShower } from "./shower/Shower";
 
-export default class GraphRedex {
+interface GRND extends NodeData {
+    _id: string;
+    _key: string;
+    term: string;
+    _stuck: boolean;
+    _limited?: boolean;
+    _expanded: boolean;
+}
+interface GRED extends EdgeData {
+    _id: string;
+    _from: string;
+    _to: string;
+    reduction: string;
+    _real: boolean;
+}
+
+export default class GraphRedex<N extends GRND, E extends GRED> {
     protected curExample: ExampleMeta = null;
-    protected shower: Shower;
+    protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
 
-    constructor(showerConfig: ShowerConfig = null) {
+    constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualiser");
         this.shower = new Shower(
             "svg",
             showerConfig || {
-                nodeMaker: (nodes: any) => {
+                nodeMaker: (nodes) => {
                     nodes
                         .classed(
                             "start",
@@ -69,7 +85,7 @@ export default class GraphRedex {
                     `;
                     });
                 },
-                nodeUpdate: (nodes: any) => {
+                nodeUpdate: (nodes) => {
                     nodes
                         .classed("expandable", (d) => !d.data._expanded)
                         .classed("expanding", (d) =>
@@ -196,7 +212,7 @@ export default class GraphRedex {
                     })
                         .then(() => {
                             this.expanding.delete(n._id);
-                            this.shower.updateNodeData(n._id, (d: any) => {
+                            this.shower.updateNodeData(n._id, (d) => {
                                 d._expanded = true;
                             });
                         })
