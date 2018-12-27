@@ -11,18 +11,18 @@ interface EdgeData {
     _real: boolean;
 }
 
-interface ShowerNode {
+interface ShowerNode<ND extends NodeData> {
     id: string;
-    data: NodeData;
+    data: ND;
     x?: any;
     y?: any;
     fx?: number;
     fy?: number;
 }
-interface ShowerEdge {
-    source: ShowerNode;
-    target: ShowerNode;
-    data: EdgeData;
+interface ShowerEdge<ND extends NodeData, ED extends EdgeData> {
+    source: ShowerNode<ND>;
+    target: ShowerNode<ND>;
+    data: ED;
 }
 
 interface InputData {
@@ -30,16 +30,32 @@ interface InputData {
     edges: EdgeData[];
 }
 
-interface ShowerData {
-    nodes: ShowerNode[];
-    edges: ShowerEdge[];
+interface ShowerData<N, E> {
+    nodes: N[];
+    edges: E[];
 }
 
-interface ShowerConfig {
+type ShowerConfig<ND extends NodeData, ED extends EdgeData> = ShowerConfigFull<
+    ND,
+    ED,
+    ShowerNode<ND>,
+    ShowerEdge<ND, ED>
+>;
+
+interface ShowerConfigFull<
+    ND extends NodeData,
+    ED extends EdgeData,
+    N extends ShowerNode<ND>,
+    E extends ShowerEdge<ND, ED>
+> {
     /** function that is called on newly created nodes in the graph */
-    nodeMaker?: (nodes: d3.Selection<any, ShowerNode, any, any>) => void;
+    nodeMaker?: (nodes: d3.Selection<any, N, any, any>) => void;
     /** function that is called on all nodes every time there is an update */
-    nodeUpdate?: (nodes: d3.Selection<any, ShowerNode, any, any>) => void;
+    nodeUpdate?: (nodes: d3.Selection<any, N, any, any>) => void;
+    /** function called when a node is selected (eg by clicking or traversal) */
+    nodeSelected?: (node: N) => void;
+    /** function called when a node is selected (eg by clicking or traversal) */
+    edgeSelected?: (edge: E) => void;
     /** the root node of the visualisation that will be used to find out the
      * depth of other nodes.
      */

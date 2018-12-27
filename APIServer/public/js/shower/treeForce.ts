@@ -13,7 +13,7 @@ export default function(
     startNodeGetter: () => string,
 ) {
     let strength: number = 0.1,
-        nodes: ShowerNode[],
+        nodes: ShowerNode<any>[],
         hasLinks = false,
         nodeDepth: number[],
         nodesIndexes: Map<string, number>;
@@ -29,7 +29,7 @@ export default function(
         }
     };
 
-    force.initialize = function(inputNodes: ShowerNode[]) {
+    force.initialize = function(inputNodes: ShowerNode<any>[]) {
         nodes = inputNodes;
         nodesIndexes = new Map(
             inputNodes.map<[string, number]>((e, i) => [e.data._id, i]),

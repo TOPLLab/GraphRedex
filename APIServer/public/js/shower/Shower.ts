@@ -2,7 +2,19 @@ import { randomColor } from "../util";
 import treeForce from "./treeForce";
 /// <reference path="./ShowerTypes.d.ts"/>
 
-export default class Shower {
+export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
+    ND,
+    ED,
+    ShowerNode<ND>,
+    ShowerEdge<ND, ED>
+>;
+
+export default class Shower<
+    ND extends NodeData,
+    ED extends EdgeData,
+    N extends ShowerNode<ND>,
+    E extends ShowerEdge<ND, ED>
+> {
     // SVG tings
     private svgRoot: d3.Selection<any, any, any, any>;
     private width: number = 1000;
@@ -11,7 +23,7 @@ export default class Shower {
     /** zoom handler that will effect the `scene` and `isClose` variables */
     private zoomHandler: d3.ZoomBehavior<any, any>;
     /** The group that is the immediate child of svg that has zoom transforms */
-    private scene: d3.Selection<any, ShowerNode, any, any>;
+    private scene: d3.Selection<any, N, any, any>;
     /** User has zoomed in closely */
     private isClose: boolean;
     /** A <defs> element in the svg used for defining arrows and shapes */
@@ -19,9 +31,9 @@ export default class Shower {
 
     /** Parts of the visualisation that is rendered */
     private parts: {
-        nodes: d3.Selection<any, ShowerNode, any, any>;
-        arrows: d3.Selection<any, ShowerEdge, any, any>;
-        texts: d3.Selection<any, ShowerEdge, any, any>;
+        nodes: d3.Selection<any, N, any, any>;
+        arrows: d3.Selection<any, E, any, any>;
+        texts: d3.Selection<any, E, any, any>;
     };
 
     // data
@@ -29,22 +41,22 @@ export default class Shower {
      * if is assumed that nodes and edges will only be added, never removed
      * unless the entire view is reset.
      */
-    private data: ShowerData;
+    private data: ShowerData<N, E>;
     /** Node map maps node names on the nodes in the tree to find them quickly */
-    private nodeMap: Map<string, ShowerNode>;
+    private nodeMap: Map<string, N>;
 
     /** d3 force simulation that puts the nodes in the right place */
     private simulation: d3.Simulation<any, any>;
 
     /** Configuration o the visualisation */
-    private config: ShowerConfig;
+    private config: ShowerConfigFull<ND, ED, N, E>;
 
     /**
      *
      * @param svg selector for the svg element to draw in, will be cleared
      * @param showerConfig configuration
      */
-    constructor(svg: any, showerConfig: ShowerConfig) {
+    constructor(svg: any, showerConfig: ShowerConfigFull<ND, ED, N, E>) {
         this.svgRoot = d3.select(svg);
         this.svgRoot.html(""); // empty the element, it is now ours
         this.svgRoot
@@ -96,9 +108,9 @@ export default class Shower {
                 "link",
                 d3
                     .forceLink()
-                    .distance((d: ShowerEdge) => (d.data._real ? 60 : 90))
+                    .distance((d: E) => (d.data._real ? 60 : 90))
                     .strength(1.5)
-                    .id((d: ShowerNode) => d.id),
+                    .id((d: N) => d.id),
             )
             .force("charge", d3.forceManyBody().strength(-30))
             .force("collide", d3.forceCollide(16).strength(0.7))
@@ -126,7 +138,7 @@ export default class Shower {
      */
     public updateNodeData(
         id: string,
-        f: (data: NodeData) => any,
+        f: (data: ND) => any,
         update: boolean = false,
     ) {
         if (this.nodeMap.has(id)) {
@@ -230,32 +242,28 @@ export default class Shower {
      * @param n node to convert to internal form
      * @param startPos initial position (if x or y not given, the value will be 0)
      */
-    private convertNode(
-        n: NodeData,
-        startPos: { x?: number; y?: number } = null,
-    ): any {
+    private convertNode(n: ND, startPos: { x?: number; y?: number } = null): N {
         if (startPos) {
             return {
                 id: n._id,
                 data: n,
-                vx: -30,
                 x: startPos.x || 0,
                 y: startPos.y || 0,
-            };
+            } as N;
         } else {
-            return { id: n._id, data: n, vx: -30 };
+            return { id: n._id, data: n } as N;
         }
     }
 
     /**
      * @param e edge to convert to internal form
      */
-    private convertEdge(e: EdgeData): ShowerEdge {
+    private convertEdge(e: ED): E {
         return {
             source: e._from as any,
             target: e._to as any,
             data: e,
-        };
+        } as E;
     }
 
     /**
@@ -296,7 +304,7 @@ export default class Shower {
 
         this.data.nodes = data.nodes.map((n) => this.convertNode(n));
         this.nodeMap = new Map(
-            this.data.nodes.map<[string, ShowerNode]>((x) => [x.id, x]),
+            this.data.nodes.map<[string, N]>((x) => [x.id, x]),
         );
         this.data.edges = data.edges
             .filter((e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to))
@@ -313,7 +321,7 @@ export default class Shower {
     public push(data: InputData, startPos: string = null) {
         this.simulation.alphaTarget(0.3).restart();
 
-        let startNode: ShowerNode = null;
+        let startNode: N = null;
         if (startPos) {
             startNode = this.nodeMap.get(startPos) || null;
         }
@@ -349,14 +357,14 @@ export default class Shower {
     private drag() {
         return d3
             .drag()
-            .on("start", (d: ShowerNode) => {
+            .on("start", (d: N) => {
                 if (!d3.event.active) {
                     this.simulation.alphaTarget(0.3).restart();
                 }
                 d.fx = d.x;
                 d.fy = d.y;
             })
-            .on("drag", (d: ShowerNode) => {
+            .on("drag", (d: N) => {
                 d.fx = d3.event.x;
                 d.fy = d3.event.y;
             })

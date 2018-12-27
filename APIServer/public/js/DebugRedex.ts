@@ -2,10 +2,28 @@ import { ExampleMeta, TermMeta } from "./_global";
 import { getit } from "./util";
 import GraphRedex from "./GraphRedex";
 
-export default class DebugRedex extends GraphRedex {
+interface GRND extends NodeData {
+    _id: string;
+    _key: string;
+    term: string;
+    _stuck: boolean;
+    _limited?: boolean;
+    _expanded: boolean;
+    action: string;
+    _expanding?: boolean;
+}
+interface GRED extends EdgeData {
+    _id: string;
+    _from: string;
+    _to: string;
+    reduction: string;
+    _real: boolean;
+}
+
+export default class DebugRedex extends GraphRedex<GRND, GRED> {
     constructor() {
         super({
-            nodeMaker: (nodes: any) => {
+            nodeMaker: (nodes) => {
                 nodes
                     .classed("stuck", (d) => d.data._stuck)
                     .classed("paused", (d) => d.data.action === "pause")
@@ -56,7 +74,7 @@ export default class DebugRedex extends GraphRedex {
                     `;
                 });
             },
-            nodeUpdate: (nodes: any) => {
+            nodeUpdate: (nodes) => {
                 nodes
                     .classed("expandable", (d) => !d.data._expanded)
                     .classed("expanding", (d) => d.data._expanding || false);
