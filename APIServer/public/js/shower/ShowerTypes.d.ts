@@ -16,8 +16,6 @@ interface ShowerNode<ND extends NodeData> {
     data: ND;
     x?: any;
     y?: any;
-    fx?: number;
-    fy?: number;
     shown: boolean;
 }
 interface ShowerEdge<ND extends NodeData, ED extends EdgeData> {
@@ -43,6 +41,19 @@ type ShowerConfig<ND extends NodeData, ED extends EdgeData> = ShowerConfigFull<
     ShowerEdge<ND, ED>
 >;
 
+type ShowerOptionData = {
+    /** Name to be shown */
+    name: string;
+    /** Inportance of the option */
+    size?: number;
+    /** action to carry out when the option is selected
+     * @return true if the node should remain open
+     */
+    action: () => boolean | Promise<boolean>;
+    /** Icon to show */
+    icon?: string;
+};
+
 interface ShowerConfigFull<
     ND extends NodeData,
     ED extends EdgeData,
@@ -53,8 +64,14 @@ interface ShowerConfigFull<
     nodeMaker?: (nodes: d3.Selection<any, N, any, any>) => void;
     /** function that is called on all nodes every time there is an update */
     nodeUpdate?: (nodes: d3.Selection<any, N, any, any>) => void;
-    /** function called when a node is selected (eg by clicking or traversal) */
-    nodeSelected?: (node: N) => void;
+    /** function called when a node is selected (eg by clicking or traversal)
+     * @return true if nodeOptions should be shown
+     */
+    nodeSelected?: (node: N) => boolean;
+    /** function that returns the options for a node */
+    nodeOptions?: (
+        node: N,
+    ) => ShowerOptionData[] | Promise<ShowerOptionData[]> | null;
     /** function called when a node is selected (eg by clicking or traversal) */
     edgeSelected?: (edge: E) => void;
     /** the root node of the visualisation that will be used to find out the

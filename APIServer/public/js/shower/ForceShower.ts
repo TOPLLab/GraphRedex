@@ -96,12 +96,16 @@ export default class ForceShower<
                 x: startPos.x || 0,
                 y: startPos.y || 0,
                 shown: true,
+                fx: null,
+                fy: null,
             };
         } else {
             return {
                 id: n._id,
                 data: n,
                 shown: true,
+                fx: null,
+                fy: null,
             };
         }
     }

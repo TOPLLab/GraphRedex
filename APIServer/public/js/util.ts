@@ -96,3 +96,33 @@ export function downloadFileLink(
         url: url,
     };
 }
+
+export function fracToRad(fraction: number) {
+    return 2 * Math.PI * fraction;
+}
+
+export async function awaitBoolean(
+    b: boolean | Promise<boolean>,
+): Promise<boolean> {
+    if (typeof b === "boolean") {
+        return b;
+    } else {
+        // Promise
+        return await b.catch((e) => {
+            console.info(e, "assumed false");
+            return false;
+        });
+    }
+}
+
+export async function awaitArray<T>(b: T[] | Promise<T[]>): Promise<T[]> {
+    if (Array.isArray(b)) {
+        return b;
+    } else {
+        // Promise
+        return await b.catch((e) => {
+            console.info(e, "assumed no options");
+            return [];
+        });
+    }
+}
