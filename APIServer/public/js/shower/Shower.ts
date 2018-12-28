@@ -1,5 +1,6 @@
 import { randomColor } from "../util";
-import treeForce from "./treeForce";
+import * as d3 from "d3";
+
 /// <reference path="./ShowerTypes.d.ts"/>
 
 export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
@@ -8,29 +9,28 @@ export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
     ShowerNode<ND>,
     ShowerEdge<ND, ED>
 >;
-
-export default class Shower<
+export default abstract class Shower<
     ND extends NodeData,
     ED extends EdgeData,
     N extends ShowerNode<ND>,
     E extends ShowerEdge<ND, ED>
 > {
     // SVG tings
-    private svgRoot: d3.Selection<any, any, any, any>;
-    private width: number = 1000;
-    private height: number = 1000;
+    protected svgRoot: d3.Selection<any, any, any, any>;
+    protected width: number = 1000;
+    protected height: number = 1000;
 
     /** zoom handler that will effect the `scene` and `isClose` variables */
-    private zoomHandler: d3.ZoomBehavior<any, any>;
+    protected zoomHandler: d3.ZoomBehavior<any, any>;
     /** The group that is the immediate child of svg that has zoom transforms */
-    private scene: d3.Selection<any, N, any, any>;
+    protected scene: d3.Selection<any, any, any, any>;
     /** User has zoomed in closely */
-    private isClose: boolean;
+    protected isClose: boolean;
     /** A <defs> element in the svg used for defining arrows and shapes */
-    private defs: d3.Selection<any, any, any, any>;
+    protected defs: d3.Selection<any, any, any, any>;
 
     /** Parts of the visualisation that is rendered */
-    private parts: {
+    protected parts: {
         nodes: d3.Selection<any, N, any, any>;
         arrows: d3.Selection<any, E, any, any>;
         texts: d3.Selection<any, E, any, any>;
@@ -41,15 +41,12 @@ export default class Shower<
      * if is assumed that nodes and edges will only be added, never removed
      * unless the entire view is reset.
      */
-    private data: ShowerData<N, E>;
+    protected data: ShowerData<N, E>;
     /** Node map maps node names on the nodes in the tree to find them quickly */
-    private nodeMap: Map<string, N>;
-
-    /** d3 force simulation that puts the nodes in the right place */
-    private simulation: d3.Simulation<any, any>;
+    protected nodeMap: Map<string, N>;
 
     /** Configuration o the visualisation */
-    private config: ShowerConfigFull<ND, ED, N, E>;
+    protected config: ShowerConfigFull<ND, ED, N, E>;
 
     /**
      *
@@ -101,25 +98,6 @@ export default class Shower<
                 .selectAll("circle")
                 .data([]),
         };
-
-        this.simulation = d3
-            .forceSimulation()
-            .force(
-                "link",
-                d3
-                    .forceLink()
-                    .distance((d: E) => (d.data._real ? 60 : 90))
-                    .strength(1.5)
-                    .id((d: N) => d.id),
-            )
-            .force("charge", d3.forceManyBody().strength(-30))
-            .force("collide", d3.forceCollide(16).strength(0.7))
-            .force("long", d3.forceY().strength(0.01));
-
-        this.simulation.force(
-            "dfsDepth",
-            treeForce(80, () => this.config.rootId),
-        );
     }
 
     /**
@@ -153,18 +131,6 @@ export default class Shower<
      * Update the node colors...
      */
     public update() {
-        // Redefine and restart simulation
-        this.simulation.nodes(this.data.nodes).on("tick", () => this.ticked());
-
-        this.simulation.velocityDecay(0.1);
-        const linkForce: d3.ForceLink<any, any> = this.simulation.force("link");
-        linkForce.links(this.data.edges);
-
-        if (this.config.rootId) {
-            const dfsForce: any = this.simulation.force("dfsDepth");
-            dfsForce.links(this.data.edges);
-        }
-
         const p = this.parts;
 
         // arrows
@@ -205,21 +171,34 @@ export default class Shower<
         if ("nodeUpdate" in this.config) {
             this.config.nodeUpdate(p.nodes);
         }
+
+        // render updated positions
+        this.ticked();
     }
 
     /**
      * Function that is executed on each tick of the force simulation
      * (or if zoom occurred)
      */
-    private ticked() {
-        this.parts.arrows.attr(
-            "d",
-            ({ source: s, target: t }) => `M${s.x} ${s.y}L${t.x} ${t.y}`,
-        );
+    protected ticked() {
+        this.parts.arrows
+            .attr(
+                "d",
+                ({ source: s, target: t }) => `M${s.x} ${s.y}L${t.x} ${t.y}`,
+            )
+            .style("display", (d) =>
+                d.source.shown && d.target.shown ? null : "none",
+            );
 
         if (this.isClose) {
             // only render text if close enough
             this.parts.texts
+                .transition()
+                .style("display", (d) =>
+                    d.source.shown && d.target.shown ? null : "none",
+                );
+            this.parts.texts
+                .filter((d) => d.source.shown && d.target.shown)
                 .attr("x", (d) => (d.source.x + d.target.x) / 2)
                 .attr("y", (d) => (d.source.y + d.target.y) / 2)
                 .attr(
@@ -235,36 +214,27 @@ export default class Shower<
             this.parts.texts.style("display", "none");
         }
 
-        this.parts.nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+        this.parts.nodes.style("display", (d) => (d.shown ? null : "none"));
+        this.parts.nodes
+            .filter((d) => d.shown)
+            .style("display", null)
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y);
     }
 
     /**
      * @param n node to convert to internal form
      * @param startPos initial position (if x or y not given, the value will be 0)
      */
-    private convertNode(n: ND, startPos: { x?: number; y?: number } = null): N {
-        if (startPos) {
-            return {
-                id: n._id,
-                data: n,
-                x: startPos.x || 0,
-                y: startPos.y || 0,
-            } as N;
-        } else {
-            return { id: n._id, data: n } as N;
-        }
-    }
+    protected abstract convertNode(
+        n: ND,
+        startPos: { x?: number; y?: number },
+    ): N;
 
     /**
      * @param e edge to convert to internal form
      */
-    private convertEdge(e: ED): E {
-        return {
-            source: e._from as any,
-            target: e._to as any,
-            data: e,
-        } as E;
-    }
+    protected abstract convertEdge(e: ED): E;
 
     /**
      * Reset the view: clear data, remove elements form svg, reset zoom
@@ -299,18 +269,9 @@ export default class Shower<
     /**
      * Clears the screen and ingests new data to render
      */
-    public show(data: InputData) {
+    public show(data: InputData, update: boolean = true) {
         this.reset();
-
-        this.data.nodes = data.nodes.map((n) => this.convertNode(n));
-        this.nodeMap = new Map(
-            this.data.nodes.map<[string, N]>((x) => [x.id, x]),
-        );
-        this.data.edges = data.edges
-            .filter((e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to))
-            .map((e) => this.convertEdge(e));
-        this.update();
-        this.heatFor();
+        this.push(data, null, update);
     }
 
     /**
@@ -318,9 +279,11 @@ export default class Shower<
      * @param data New data to be added to the graph
      * @param startPos node id of the initial position of the new nodes
      */
-    public push(data: InputData, startPos: string = null) {
-        this.simulation.alphaTarget(0.3).restart();
-
+    public push(
+        data: InputData,
+        startPos: string = null,
+        update: boolean = true,
+    ) {
         let startNode: N = null;
         if (startPos) {
             startNode = this.nodeMap.get(startPos) || null;
@@ -328,7 +291,7 @@ export default class Shower<
 
         const newNodes = data.nodes
             .filter((n) => !this.nodeMap.has(n._id))
-            .map((n) => this.convertNode(n, startNode));
+            .map((n) => this.convertNode(n as ND, startNode));
 
         this.data.nodes.push(...newNodes);
         newNodes.forEach((n) => this.nodeMap.set(n.id, n));
@@ -339,13 +302,12 @@ export default class Shower<
                 .filter(
                     (e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to),
                 )
-                .map(this.convertEdge),
+                .map((e) => this.convertEdge(e as ED)),
         );
 
-        this.update();
-        this.simulation.alphaTarget(0.3).restart();
-
-        this.heatFor();
+        if (update) {
+            this.update();
+        }
     }
 
     /** Go back to initial zoom position and scale */
@@ -354,13 +316,10 @@ export default class Shower<
     }
 
     /** create a drag handler */
-    private drag() {
+    protected drag(): d3.DragBehavior<any, N, any> {
         return d3
-            .drag()
+            .drag<any, N>()
             .on("start", (d: N) => {
-                if (!d3.event.active) {
-                    this.simulation.alphaTarget(0.3).restart();
-                }
                 d.fx = d.x;
                 d.fy = d.y;
             })
@@ -368,23 +327,18 @@ export default class Shower<
                 d.fx = d3.event.x;
                 d.fy = d3.event.y;
             })
-            .on("end", () => {
-                if (!d3.event.active) {
-                    this.simulation.alphaTarget(0);
-                }
+            .on("end", (d: N) => {
+                d.fx = null;
+                d.fy = null;
             });
     }
 
-    private heatTimeout = null;
     /**
-     * Set the alphaTarget to 0.3 for some time (reset to 0 afterwards)
+     * Heat the visualisation,
+     * Whatever that may mean
      */
-    public heatFor(timeout: number = 5000) {
-        window.clearTimeout(this.heatTimeout);
-        this.simulation.alphaTarget(0.3).restart();
-        this.heatTimeout = window.setTimeout(() => {
-            this.simulation.alphaTarget(0);
-        }, timeout);
+    public heatFor(_time: number = null) {
+        return;
     }
 
     /**

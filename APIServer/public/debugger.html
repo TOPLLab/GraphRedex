@@ -110,12 +110,18 @@
         </svg>
     </main>
 
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
     <script src="require.js"></script>
     <script>
+
+        requirejs.config({
+            "baseUrl": "dist",
+            paths: {
+                "d3": ["https://d3js.org/d3.v5.min","/d3.v5.min"]
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", function () {
-            requirejs(["dist/DebugRedex"], function (dbgr) {
+            requirejs(["DebugRedex"], function (dbgr) {
                 console.log(dbgr);
                 //window.toggle = dbgr.toggle;
                 const d = new dbgr.default();
