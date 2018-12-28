@@ -1,4 +1,4 @@
-import { randomColor } from "../util";
+import { randomColor, fracToRad, awaitBoolean, awaitArray } from "../util";
 import * as d3 from "d3";
 
 /// <reference path="./ShowerTypes.d.ts"/>
@@ -47,6 +47,7 @@ export default abstract class Shower<
 
     /** Configuration o the visualisation */
     protected config: ShowerConfigFull<ND, ED, N, E>;
+    protected bullet: d3.Selection<any, any, any, any>;
 
     /**
      *
@@ -98,6 +99,9 @@ export default abstract class Shower<
                 .selectAll("circle")
                 .data([]),
         };
+        this.bullet = this.scene
+            .insert("g", ".graph-nodes")
+            .classed("bullet", true);
     }
 
     /**
@@ -107,6 +111,61 @@ export default abstract class Shower<
      */
     public setRoot(rootId: string | null) {
         this.config.rootId = rootId;
+    }
+
+    protected async showBullet(node: N) {
+        if ("nodeOptions" in this.config && this.config.nodeOptions) {
+            this.bullet.html('<circle r="20" cx="0" cy="0"></circle>');
+            const options = await awaitArray(this.config.nodeOptions(node));
+            const s = options.reduce((acc, x) => acc + (x.size || 1), 0);
+            let prevRad = -fracToRad((options[0].size || 1) / s) / 2;
+            let correctTarget = prevRad;
+            for (const option of options) {
+                const target = fracToRad((option.size || 1) / s);
+                correctTarget += target;
+                const iconTarget = prevRad + target / 2;
+                const r = 20,
+                    largearcflag = target > Math.PI, // true if > 180 deg
+                    xs = r * Math.cos(prevRad),
+                    ys = r * Math.sin(prevRad),
+                    xe = r * Math.cos(correctTarget),
+                    ye = r * Math.sin(correctTarget);
+
+                this.bullet
+                    .append("path")
+                    .attr(
+                        "d",
+                        options.length === 1
+                            ? `M${xs} ${ys} A${r},${r} 0 ${
+                                  largearcflag ? 1 : 0
+                              } 1 ${xe} ${ye}`
+                            : `M0 0 L${xs} ${ys} A${r},${r} 0 ${
+                                  largearcflag ? 1 : 0
+                              } 1 ${xe} ${ye}L0 0`,
+                    )
+                    .attr("title", option.name)
+                    .on("click", async () => {
+                        if (!(await awaitBoolean(option.action()))) {
+                            this.bullet.datum(null);
+                        }
+                    });
+
+                const iconx = r * 0.75 * Math.cos(iconTarget),
+                    icony = r * 0.75 * Math.sin(iconTarget),
+                    icondim = r / 5;
+                this.bullet
+                    .append("use")
+                    .attr("height", icondim)
+                    .attr("width", icondim)
+                    .attr("href", `svg.svg#${option.icon || "cogs"}`)
+                    .attr("x", iconx - icondim / 2)
+                    .attr("y", icony - icondim / 2);
+                prevRad = correctTarget;
+            }
+
+            this.bullet.datum(node);
+            this.ticked();
+        }
     }
 
     /**
@@ -141,6 +200,12 @@ export default abstract class Shower<
             .attr("stroke", (d) => this.getRandCol(d.data.reduction))
             .attr("stroke-dasharray", (d) => (d.data._real ? null : "5,5"))
             .attr("marker-end", (d) => this.getRandCol(d.data.reduction, true));
+
+        if ("edgeSelected" in this.config && this.config.edgeSelected) {
+            arrowsEnter.on("click", (d) => {
+                this.config.edgeSelected(d);
+            });
+        }
         p.arrows = arrowsEnter.merge(p.arrows);
         p.arrows.exit().remove();
 
@@ -152,6 +217,11 @@ export default abstract class Shower<
             .attr("text-anchor", "middle")
             .attr("fill", (d) => this.getRandCol(d.data.reduction))
             .html((d) => "<tspan dy='-5'>" + d.data.reduction + "</tspan>");
+        if ("edgeSelected" in this.config && this.config.edgeSelected) {
+            textEnter.on("click", (d) => {
+                this.config.edgeSelected(d);
+            });
+        }
         p.texts = textEnter.merge(p.texts);
         p.texts.exit().remove();
 
@@ -165,6 +235,26 @@ export default abstract class Shower<
             .call(this.drag());
         if ("nodeMaker" in this.config) {
             this.config.nodeMaker(nodeEnter);
+        }
+
+        if ("nodeOptions" in this.config && this.config.nodeOptions) {
+            nodeEnter.on("click", (d) => {
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+                if ("nodeSelected" in this.config && this.config.nodeSelected) {
+                    if (this.config.nodeSelected(d)) {
+                        this.showBullet(d);
+                    }
+                } else {
+                    this.showBullet(d);
+                }
+            });
+        } else {
+            if ("nodeSelected" in this.config && this.config.nodeSelected) {
+                nodeEnter.on("click", (d) => {
+                    this.config.nodeSelected(d);
+                });
+            }
         }
         p.nodes = nodeEnter.merge(p.nodes);
         p.nodes.exit().remove();
@@ -181,6 +271,9 @@ export default abstract class Shower<
      * (or if zoom occurred)
      */
     protected ticked() {
+        this.bullet
+            .style("display", (d) => (d ? null : "none"))
+            .attr("transform", (d) => (d ? `translate(${d.x},${d.y})` : ""));
         this.parts.arrows
             .attr(
                 "d",
@@ -263,6 +356,7 @@ export default abstract class Shower<
 
         this.resetZoom();
 
+        this.bullet.datum(null); // hide bullet
         // Note that defs are kept
     }
 
@@ -317,20 +411,7 @@ export default abstract class Shower<
 
     /** create a drag handler */
     protected drag(): d3.DragBehavior<any, N, any> {
-        return d3
-            .drag<any, N>()
-            .on("start", (d: N) => {
-                d.fx = d.x;
-                d.fy = d.y;
-            })
-            .on("drag", (d: N) => {
-                d.fx = d3.event.x;
-                d.fy = d3.event.y;
-            })
-            .on("end", (d: N) => {
-                d.fx = null;
-                d.fy = null;
-            });
+        return d3.drag<any, N>();
     }
 
     /**
@@ -368,6 +449,8 @@ export default abstract class Shower<
 
         // reset zoom
         clone.getElementsByTagName("g")[0].removeAttribute("transform");
+
+        clone.querySelector("g>g.bullet").remove();
 
         if (css.length > 0) {
             const styleTag = document.createElement("style");

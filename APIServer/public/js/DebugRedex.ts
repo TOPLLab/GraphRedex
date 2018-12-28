@@ -24,6 +24,101 @@ interface GRED extends EdgeData {
 export default class DebugRedex extends GraphRedex<GRND, GRED> {
     constructor() {
         super({
+            nodeSelected: (node) => {
+                if (node.data.action === "pause") {
+                    this.showDebuggerSteps(node.data);
+                }
+                return true;
+            },
+            nodeOptions: (node) => {
+                if (node.data.action === "pause") {
+                    const debugStep = (name, edgename, icon, size = 1) => ({
+                        name: name,
+                        icon: icon,
+                        size: size,
+                        action: async () => {
+                            const steps = await this.getNonRealSteps(node.data);
+                            const step = steps.filter(
+                                (x) => x.name === edgename,
+                            )[0]; // TODO add check
+                            this.render(
+                                this.curExample,
+                                step._to,
+                                node.data._id,
+                            );
+                            return false;
+                        },
+                    });
+                    return [
+                        debugStep("resume", "Resume-Execution", "resume", 3),
+                        debugStep("pause", "Pause-Execution", "pause", 1),
+                        debugStep(
+                            "step-into",
+                            "Step-Msg-Receiver",
+                            "step-into",
+                            2,
+                        ),
+                        debugStep(
+                            "step-into",
+                            "Step-Future-Resolution",
+                            "step-over",
+                            2,
+                        ),
+                        {
+                            name: "unpin",
+                            action: () => {
+                                const n = node as any;
+                                n.fx = null;
+                                n.fy = null;
+                                return true;
+                            },
+                            icon: "unpin",
+                            size: 1,
+                        },
+                        {
+                            name: "info",
+                            action: () => {
+                                alert(node.data.term);
+                                return true;
+                            },
+                            icon: "info",
+                            size: 1,
+                        },
+                    ];
+                } else {
+                    return [
+                        {
+                            name: "expand",
+                            icon: "expand",
+                            size: 2,
+                            action: () => {
+                                this.expandBelow(node.data);
+                                return false;
+                            },
+                        },
+                        {
+                            name: "unpin",
+                            action: () => {
+                                const n = node as any;
+                                n.fx = null;
+                                n.fy = null;
+                                return false;
+                            },
+                            icon: "unpin",
+                            size: 1,
+                        },
+                        {
+                            name: "info",
+                            action: () => {
+                                alert(node.data.term);
+                                return false;
+                            },
+                            icon: "info",
+                            size: 1,
+                        },
+                    ];
+                }
+            },
             nodeMaker: (nodes) => {
                 nodes
                     .classed("stuck", (d) => d.data._stuck)
@@ -34,13 +129,6 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
                         (d) => d.data._id === this.curExample.baseTerm,
                     );
 
-                nodes.on("click", (d) => {
-                    d.fx = null;
-                    d.fy = null;
-                    if (d.data.action === "pause") {
-                        this.showDebuggerSteps(d.data);
-                    }
-                });
                 nodes.on("dblclick", (d) => {
                     d3.event.preventDefault();
                     d3.event.stopPropagation();

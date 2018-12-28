@@ -46,6 +46,31 @@
         .graph-nodes .paused {
             fill: pink;
         }
+
+
+        .bullet>circle {
+            fill: url("svg.svg#bulletGradient");
+            stroke: transparent;
+        }
+        .bullet>use {
+            pointer-events: none;
+        }
+        .bullet>path {
+            fill: #EEE;
+            cursor: pointer;
+            mix-blend-mode: darken;
+            stroke: #AAA;
+            stroke-width: 0.5;
+        }
+        .bullet>path + use {
+            fill: black;
+        }
+        .bullet>path:hover {
+            fill: #ff2d2d;
+        }
+        .bullet>path:hover + use{
+            fill: white;
+        }
     </style>
 </head>
 

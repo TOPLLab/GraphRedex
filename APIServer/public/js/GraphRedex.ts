@@ -30,6 +30,79 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.shower = new ForceShower(
             "svg",
             showerConfig || {
+                nodeOptions: (node) => {
+                    let ret = [] as Array<ShowerOptionData>;
+                    if (node.data._expanded === false) {
+                        ret.push({
+                            name: "Expand node",
+                            size: 4,
+                            icon: "connect",
+                            action: () => {
+                                alert("Expanding" + node.data.term);
+                                return true;
+                            },
+                        });
+                    } else {
+                        if (node.data._limited === true) {
+                            ret.push({
+                                name: "Expand node",
+                                size: 4,
+                                icon: "connect",
+                                action: () => {
+                                    alert("Unlimiting" + node.data.term);
+                                    return true;
+                                },
+                            });
+                        }
+                    }
+
+                    if (node.data._stuck === true) {
+                        ret.push({
+                            name: "Stuck term info",
+                            size: 2,
+                            icon: "inspect",
+                            action: () => {
+                                alert("Stuck????" + node.data.term);
+                                return false;
+                            },
+                        });
+                    }
+
+                    ret.push({
+                        name: "Alert",
+                        size: 1,
+                        icon: "cogs",
+                        action: () => {
+                            alert("Term" + node.data.term);
+                            return true;
+                        },
+                    });
+
+                    ret.push({
+                        name: "Expand below",
+                        size: 1,
+                        icon: "fast-forward",
+                        action: () => {
+                            alert("Term" + node.data.term);
+                            return true;
+                        },
+                    });
+
+                    if (node.fx !== null || node.fy !== null) {
+                        ret.push({
+                            name: "release",
+                            size: 1,
+                            icon: "unlock",
+                            action: () => {
+                                node.fx = null;
+                                node.fy = null;
+                                return true;
+                            },
+                        });
+                    }
+
+                    return ret;
+                },
                 nodeMaker: (nodes) => {
                     nodes
                         .classed(
@@ -38,10 +111,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         )
                         .classed("stuck", (d) => d.data._stuck);
 
-                    nodes.on("click", (d) => {
-                        d.fx = null;
-                        d.fy = null;
-                    });
                     nodes.on("dblclick", (d) => {
                         d3.event.preventDefault();
                         d3.event.stopPropagation();
