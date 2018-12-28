@@ -18,6 +18,7 @@ interface ShowerNode<ND extends NodeData> {
     y?: any;
     fx?: number;
     fy?: number;
+    shown: boolean;
 }
 interface ShowerEdge<ND extends NodeData, ED extends EdgeData> {
     source: ShowerNode<ND>;

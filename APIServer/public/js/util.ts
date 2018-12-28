@@ -1,3 +1,5 @@
+import * as d3 from "d3";
+
 /**
  * Wrapper around window.fetch that returns JSON
  * and throws on nonzero output
@@ -10,7 +12,6 @@ export function getit(input: RequestInfo, init: RequestInit): Promise<any> {
             .then((x) => {
                 if (x.ok) {
                     x.text().then((txt) => {
-                        console.log(txt);
                         try {
                             const data = JSON.parse(txt);
                             resolve(data);

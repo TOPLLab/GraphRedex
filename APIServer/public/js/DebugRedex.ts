@@ -1,6 +1,7 @@
 import { ExampleMeta, TermMeta } from "./_global";
 import { getit } from "./util";
 import GraphRedex from "./GraphRedex";
+import * as d3 from "d3";
 
 interface GRND extends NodeData {
     _id: string;

@@ -1,6 +1,8 @@
+import * as d3 from "d3";
+import ForceShower from "./shower/ForceShower";
+import { GraphShower } from "./shower/Shower";
+import { downloadFileLink, fileToText, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
-import { getit, fileToText, downloadFileLink } from "./util";
-import Shower, { GraphShower } from "./shower/Shower";
 
 interface GRND extends NodeData {
     _id: string;
@@ -25,7 +27,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualiser");
-        this.shower = new Shower(
+        this.shower = new ForceShower(
             "svg",
             showerConfig || {
                 nodeMaker: (nodes) => {

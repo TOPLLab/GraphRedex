@@ -47,6 +47,21 @@
             font-size: .3rem;
             pointer-events: none;
         }
+
+        .graph-arrows .selected, .graph-nodes .selected {
+            filter: drop-shadow( 0 0 5px rgba(255, 0, 0, 0.664) );
+        }
+
+        .graph-arrows .inaccessible.selected {
+            filter: saturate(0.3) opacity(0.3) drop-shadow( 0 0 5px rgba(255, 0, 0, 0.664) );
+        }
+
+        .graph-arrows .inaccessible {
+            filter: saturate(0.3) opacity(0.3);
+        }
+        .graph-nodes .inaccessible {
+            filter: saturate(0.5);
+        }
     </style>
 </head>
 
@@ -106,16 +121,24 @@
             </pre>
             <pre id="doQryOutput"> </pre>
         </form>
-        <svg>
+        <svg focusable=true tabindex="0" title="visulisation">
         </svg>
     </main>
 
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script>window.d3 || document.write('<script src="d3.v5.min.js">\x3C/script>')</script>
     <script src="require.js"></script>
     <script>
+
+        requirejs.config({
+            "baseUrl": "dist",
+            paths: {
+                "d3": ["https://d3js.org/d3.v5.min","/d3.v5.min"]
+            }
+        });
+
+
+
         document.addEventListener("DOMContentLoaded", function () {
-            requirejs(["dist/GraphRedex"], function (dbgr) {
+            requirejs(["GraphRedex"], function (dbgr) {
                 console.log(dbgr);
                 //window.toggle = dbgr.toggle;
                 const d = new dbgr.default();
