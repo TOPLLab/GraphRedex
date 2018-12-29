@@ -285,6 +285,14 @@ export default abstract class Shower<
 
         if (this.isClose) {
             // only render text if close enough
+            const calcAngle = (s, t) => {
+                const tanValue = (s.y - t.y) / (s.x - t.x);
+                if (isNaN(tanValue)) {
+                    return 0;
+                } else {
+                    return (180 * Math.atan(tanValue)) / Math.PI;
+                }
+            };
             this.parts.texts
                 .transition()
                 .style("display", (d) =>
@@ -297,7 +305,7 @@ export default abstract class Shower<
                 .attr(
                     "transform",
                     ({ source: s, target: t }) => `rotate(
-                    ${(180 * Math.atan((s.y - t.y) / (s.x - t.x))) / Math.PI},
+                    ${calcAngle(s, t)},
                     ${(s.x + t.x) / 2},
                     ${(s.y + t.y) / 2}
                     )`,
