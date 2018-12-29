@@ -143,12 +143,13 @@ export default abstract class Shower<
                                   largearcflag ? 1 : 0
                               } 1 ${xe} ${ye}L0 0`,
                     )
-                    .attr("title", option.name)
                     .on("click", async () => {
                         if (!(await awaitBoolean(option.action()))) {
                             this.bullet.datum(null);
                         }
-                    });
+                    })
+                    .append("title")
+                    .text(option.name);
 
                 const iconx = r * 0.75 * Math.cos(iconTarget),
                     icony = r * 0.75 * Math.sin(iconTarget),
