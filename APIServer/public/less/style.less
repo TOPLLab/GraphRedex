@@ -33,14 +33,16 @@ main {
     margin-left: 400px;
     height: 100%;
     padding: 0;
-}
 
-main>svg {
-    width: 100%;
-    height: 100%;
-}
+    >svg {
+        width: 100%;
+        height: 100%;
+    }
 
-main>form {
+
+
+
+>form {
     display: block;
     box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
     overflow: hidden;
@@ -48,18 +50,49 @@ main>form {
     box-sizing: border-box;
     transition: max-height 0.3s;
     margin: 0;
-}
 
-main>form.closed {
-    max-height: 0vh;
-}
+    &.closed {
+        max-height: 0vh;
+    }
 
-main>form>* {
-    display: block;
-    margin: .5rem auto;
-    width: calc( 100% - 2rem);
+    >* {
+        display: block;
+        margin: .5rem auto;
+        width: calc( 100% - 2rem);
+    }
 }
-
+}
 .previewExport {
     max-width: 100%;
+}
+
+.bubble {
+    >circle {
+        fill: url("svg.svg#bubbleGradient");
+        stroke: transparent;
+    }
+
+    >use {
+        pointer-events: none;
+    }
+
+    >path {
+        fill: #EEE;
+        cursor: pointer;
+        mix-blend-mode: darken;
+        stroke: #AAA;
+        stroke-width: 0.5;
+
+        &:hover{
+            fill: #ff2d2d;
+        }
+    }
+
+    >path+use {
+        fill: black;
+    }
+
+    >path:hover+use {
+        fill: white;
+    }
 }

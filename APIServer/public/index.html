@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <title>GraphRedex</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dist/style.css">
 
     <style id="SVGstyle">
         .graph-arrows {
@@ -61,31 +61,6 @@
         }
         .graph-nodes .inaccessible {
             filter: saturate(0.5);
-        }
-
-
-        .bubble>circle {
-            fill: url("svg.svg#bubbleGradient");
-            stroke: transparent;
-        }
-        .bubble>use {
-            pointer-events: none;
-        }
-        .bubble>path {
-            fill: #EEE;
-            cursor: pointer;
-            mix-blend-mode: darken;
-            stroke: #AAA;
-            stroke-width: 0.5;
-        }
-        .bubble>path + use {
-            fill: black;
-        }
-        .bubble>path:hover {
-            fill: #ff2d2d;
-        }
-        .bubble>path:hover + use{
-            fill: white;
         }
     </style>
 </head>
