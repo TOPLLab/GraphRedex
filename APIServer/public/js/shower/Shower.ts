@@ -47,7 +47,7 @@ export default abstract class Shower<
 
     /** Configuration o the visualisation */
     protected config: ShowerConfigFull<ND, ED, N, E>;
-    protected bullet: d3.Selection<any, any, any, any>;
+    protected bubble: d3.Selection<any, any, any, any>;
 
     /**
      *
@@ -99,9 +99,9 @@ export default abstract class Shower<
                 .selectAll("circle")
                 .data([]),
         };
-        this.bullet = this.scene
+        this.bubble = this.scene
             .insert("g", ".graph-nodes")
-            .classed("bullet", true);
+            .classed("bubble", true);
     }
 
     /**
@@ -113,9 +113,9 @@ export default abstract class Shower<
         this.config.rootId = rootId;
     }
 
-    protected async showBullet(node: N) {
+    protected async showBubble(node: N) {
         if ("nodeOptions" in this.config && this.config.nodeOptions) {
-            this.bullet.html('<circle r="20" cx="0" cy="0"></circle>');
+            this.bubble.html('<circle r="20" cx="0" cy="0"></circle>');
             const options = await awaitArray(this.config.nodeOptions(node));
             const s = options.reduce((acc, x) => acc + (x.size || 1), 0);
             let prevRad = -fracToRad((options[0].size || 1) / s) / 2;
@@ -131,7 +131,7 @@ export default abstract class Shower<
                     xe = r * Math.cos(correctTarget),
                     ye = r * Math.sin(correctTarget);
 
-                this.bullet
+                this.bubble
                     .append("path")
                     .attr(
                         "d",
@@ -145,7 +145,7 @@ export default abstract class Shower<
                     )
                     .on("click", async () => {
                         if (!(await awaitBoolean(option.action()))) {
-                            this.bullet.datum(null);
+                            this.bubble.datum(null);
                         }
                     })
                     .append("title")
@@ -154,7 +154,7 @@ export default abstract class Shower<
                 const iconx = r * 0.75 * Math.cos(iconTarget),
                     icony = r * 0.75 * Math.sin(iconTarget),
                     icondim = r / 5;
-                this.bullet
+                this.bubble
                     .append("use")
                     .attr("height", icondim)
                     .attr("width", icondim)
@@ -164,7 +164,7 @@ export default abstract class Shower<
                 prevRad = correctTarget;
             }
 
-            this.bullet.datum(node);
+            this.bubble.datum(node);
             this.ticked();
         }
     }
@@ -244,10 +244,10 @@ export default abstract class Shower<
                 d3.event.stopPropagation();
                 if ("nodeSelected" in this.config && this.config.nodeSelected) {
                     if (this.config.nodeSelected(d)) {
-                        this.showBullet(d);
+                        this.showBubble(d);
                     }
                 } else {
-                    this.showBullet(d);
+                    this.showBubble(d);
                 }
             });
         } else {
@@ -272,7 +272,7 @@ export default abstract class Shower<
      * (or if zoom occurred)
      */
     protected ticked() {
-        this.bullet
+        this.bubble
             .style("display", (d) => (d ? null : "none"))
             .attr("transform", (d) => (d ? `translate(${d.x},${d.y})` : ""));
         this.parts.arrows
@@ -365,7 +365,7 @@ export default abstract class Shower<
 
         this.resetZoom();
 
-        this.bullet.datum(null); // hide bullet
+        this.bubble.datum(null); // hide bubble
         // Note that defs are kept
     }
 
@@ -459,7 +459,7 @@ export default abstract class Shower<
         // reset zoom
         clone.getElementsByTagName("g")[0].removeAttribute("transform");
 
-        clone.querySelector("g>g.bullet").remove();
+        clone.querySelector("g>g.bubble").remove();
 
         if (css.length > 0) {
             const styleTag = document.createElement("style");

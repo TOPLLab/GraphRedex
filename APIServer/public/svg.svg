@@ -2,7 +2,7 @@
 <svg width="500" height="500" viewBox="-100,-100,200,200" 
     xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <radialGradient id="bulletGradient">
+        <radialGradient id="bubbleGradient">
             <stop stop-color="#CCC" offset="57%"></stop>
             <stop stop-color="white" offset="61%"></stop>
             <stop offset="90%" stop-color="white"></stop>
