@@ -18,10 +18,23 @@ module.exports = function(grunt) {
                 src: ["src/**/*.ts"],
             },
         },
+        less: {
+            production: {
+                files: {
+                    "public/dist/style.css": "public/less/style.less",
+                },
+                compress: true,
+                sourceMap: true,
+            },
+        },
         watch: {
             ts: {
                 files: ["src/**/*.ts"],
                 tasks: ["ts:app", "tslint"],
+            },
+            less: {
+                files: ["public/less/**/*.less"],
+                tasks: ["less"],
             },
             frontend: {
                 files: ["public/js/**/*.ts", "tsconfig-frontend.json"],
@@ -33,6 +46,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks("grunt-tslint");
+    grunt.loadNpmTasks("grunt-contrib-less");
 
     grunt.registerTask("default", ["ts", "tslint"]);
 };
