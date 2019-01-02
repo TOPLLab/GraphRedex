@@ -464,7 +464,7 @@ export default abstract class Shower<
         if (css.length > 0) {
             const styleTag = document.createElement("style");
             styleTag.innerHTML = css;
-            clone.appendChild(styleTag);
+            clone.getElementsByTagName("defs")[0].appendChild(styleTag);
         }
 
         clone.insertBefore(
