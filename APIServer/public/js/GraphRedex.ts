@@ -32,29 +32,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             showerConfig || {
                 nodeOptions: (node) => {
                     let ret = [] as Array<ShowerOptionData>;
-                    if (node.data._expanded === false) {
-                        ret.push({
-                            name: "Expand node",
-                            size: 4,
-                            icon: "connect",
-                            action: () => {
-                                alert("Expanding" + node.data.term);
-                                return true;
-                            },
-                        });
-                    } else {
-                        if (node.data._limited === true) {
-                            ret.push({
-                                name: "Expand node",
-                                size: 4,
-                                icon: "connect",
-                                action: () => {
-                                    alert("Unlimiting" + node.data.term);
-                                    return true;
-                                },
-                            });
-                        }
-                    }
 
                     if (node.data._stuck === true) {
                         ret.push({
@@ -66,37 +43,45 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                 return false;
                             },
                         });
+                    } else {
+                        ret.push({
+                            name: "Expand node",
+                            size: 4,
+                            icon: "expand",
+                            action: () => {
+                                if (node.data._limited) {
+                                    this.render(
+                                        this.curExample,
+                                        node.data._id,
+                                        node.data._id,
+                                    );
+                                } else {
+                                    this.expandBelow(node.data);
+                                }
+                                return false;
+                            },
+                        });
                     }
 
                     ret.push({
-                        name: "Alert",
+                        name: "Show term",
                         size: 1,
-                        icon: "cogs",
+                        icon: "info",
                         action: () => {
-                            alert("Term" + node.data.term);
-                            return true;
-                        },
-                    });
-
-                    ret.push({
-                        name: "Expand below",
-                        size: 1,
-                        icon: "fast-forward",
-                        action: () => {
-                            alert("Term" + node.data.term);
-                            return true;
+                            alert("Term\n" + node.data.term);
+                            return false;
                         },
                     });
 
                     if (node.fx !== null || node.fy !== null) {
                         ret.push({
-                            name: "release",
+                            name: "Unpin",
                             size: 1,
-                            icon: "unlock",
+                            icon: "unpin",
                             action: () => {
                                 node.fx = null;
                                 node.fy = null;
-                                return true;
+                                return false;
                             },
                         });
                     }
@@ -135,25 +120,29 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         document.getElementsByTagName(
                             "section",
                         )[0].innerHTML = `
-                <pre style="word-wrap: break-word;white-space: pre-wrap; ">${
-                    d.data.term
-                }</pre>
-                <hr>
                 <table>
                     <tr><th>Key</th><th>Value</th></tr>
                     ${Object.keys(d.data)
-                        .filter(
-                            (x) =>
-                                ["_stuck", "_expanded"].includes(x) ||
-                                !(x.startsWith("_") || x === "term"),
-                        )
+                        .filter((x) => !(x.startsWith("_") || x === "term"))
                         .map(
                             (x) =>
                                 `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
                         )
                         .join("")}
                     </table>
-                    `;
+                    ${
+                        d.data._stuck
+                            ? "<br>This term has no further reductions."
+                            : ""
+                    }
+                    ${
+                        d.data._limited || !d.data._expanded
+                            ? `<br>Double click node or single click and choose:
+                                <svg width='1em' height='1em'>
+                                    <use href='svg.svg#expand'></use>
+                                </svg>.`
+                            : ""
+                    }`;
                     });
                 },
                 nodeUpdate: (nodes) => {
