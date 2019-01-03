@@ -510,7 +510,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             statusSection.html("Preparing your export");
             const { linkEl, url } = downloadFileLink(
                 "export.svg",
-                this.shower.getSVG(svgCSS),
+                this.shower.getSVG(this.svgCSS),
                 "image/svg+xml",
             );
 
@@ -523,50 +523,49 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             linkEl.click();
         });
     }
+
+    protected get svgCSS() {
+        return `.graph-arrows {
+            stroke-width: 2;
+            fill: transparent;
+        }
+
+        .graph-nodes {
+            cursor: move;
+            fill: rgb(86, 198, 212);
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+
+        .graph-nodes .expandable {
+            stroke: grey;
+        }
+
+        .graph-nodes .limited {
+            stroke: pink;
+        }
+
+
+
+        .graph-nodes .stuck {
+            fill: red;
+        }
+        .graph-nodes .start {
+            fill: greenyellow;
+        }
+
+        .graph-nodes .expanding {
+            fill: orange;
+        }
+
+        .graph-nodes .start.stuck {
+            fill: greenyellow;
+            stroke: red;
+        }
+
+        .graph-texts {
+            font-size: 5px;
+            font-family: "Noto Sans","Courier New",monospace;
+        }`;
+    }
 }
-
-/**
- * CSS to use for export to SVG
- */
-const svgCSS = `.graph-arrows {
-    stroke-width: 2;
-    fill: transparent;
-}
-
-.graph-nodes {
-    cursor: move;
-    fill: rgb(86, 198, 212);
-    stroke: #ffffff;
-    stroke-width: 2;
-}
-
-.graph-nodes .expandable {
-    stroke: grey;
-}
-
-.graph-nodes .limited {
-    stroke: pink;
-}
-
-
-
-.graph-nodes .stuck {
-    fill: red;
-}
-.graph-nodes .start {
-    fill: greenyellow;
-}
-
-.graph-nodes .expanding {
-    fill: orange;
-}
-
-.graph-nodes .start.stuck {
-    fill: greenyellow;
-    stroke: red;
-}
-
-.graph-texts {
-    font-size: 9px;
-    font-family: "Noto Sans","Courier New",monospace;
-}`;
