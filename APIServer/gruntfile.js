@@ -48,5 +48,5 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-tslint");
     grunt.loadNpmTasks("grunt-contrib-less");
 
-    grunt.registerTask("default", ["ts", "tslint"]);
+    grunt.registerTask("default", ["ts", "tslint", "less"]);
 };
