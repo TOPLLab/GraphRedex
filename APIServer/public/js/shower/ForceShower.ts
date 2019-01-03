@@ -60,7 +60,7 @@ export default class ForceShower<
                     .strength(1.5)
                     .id((d: ForceShowerNode<ND>) => d.id),
             )
-            .force("charge", d3.forceManyBody().strength(-30))
+            .force("charge", d3.forceManyBody().strength(-60))
             .force("collide", d3.forceCollide(16).strength(0.7))
             .force("long", d3.forceY().strength(0.01));
 
