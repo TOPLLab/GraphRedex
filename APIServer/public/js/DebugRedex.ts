@@ -204,7 +204,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
     }
 
     private async showDebuggerSteps(node: TermMeta) {
-        const elem = d3.select(document.getElementsByTagName("section")[1]);
+        const elem = d3.select("#debuggerSection");
         elem.html(
             `<h1>Debug</h1><small>${node._id} (node ${
                 node._expanded ? "has been" : " <strong>is being<strong>"
@@ -258,5 +258,48 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
 
             return false;
         });
+    }
+
+    protected get svgCSS() {
+        return `.graph-arrows {
+            stroke-width: 2;
+            fill: transparent;
+        }
+
+        .graph-nodes {
+            fill: rgb(86, 198, 212);
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+
+        .graph-nodes .expandable {
+            stroke: grey;
+        }
+
+        .graph-nodes .stuck {
+            fill: red;
+        }
+        .graph-nodes .start {
+            fill: greenyellow;
+        }
+
+        .graph-nodes .expanding {
+            fill: orange;
+        }
+
+        .graph-nodes .start.stuck {
+            fill: greenyellow;
+            stroke: red;
+        }
+
+
+        .graph-nodes .paused {
+            fill: pink;
+        }
+
+        .graph-texts {
+            font-size: 3px;
+            font-family: "Noto Sans","Courier New",monospace;
+        }`;
     }
 }
