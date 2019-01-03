@@ -33,7 +33,7 @@ module.exports = function(grunt) {
                 tasks: ["ts:app", "tslint"],
             },
             less: {
-                files: ["public/less/**/*.less"],
+                files: ["public/less/**/*.less", "public/less/*.less"],
                 tasks: ["less"],
             },
             frontend: {
