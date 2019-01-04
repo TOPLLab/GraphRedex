@@ -73,6 +73,21 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     },
                 });
 
+                if (this.forceNow) {
+                    // TODO remove
+                    const n = node as any;
+                    ret.push({
+                        name: "Unpin",
+                        size: 1,
+                        icon: "unpin",
+                        action: () => {
+                            n.fx = null;
+                            n.fy = null;
+                            return false;
+                        },
+                    });
+                }
+
                 return ret;
             },
             nodeMaker: (nodes) => {
@@ -100,7 +115,10 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     }
                 });
                 nodes.on("mouseover", (d) => {
-                    document.getElementsByTagName("section")[0].innerHTML = `
+                    d3.select("#statusSection").html(`
+                    <pre style="max-width: 100%;white-space: pre-wrap;">${
+                        d.data.term
+                    }</pre> <hl>
                 <table>
                     <tr><th>Key</th><th>Value</th></tr>
                     ${Object.keys(d.data)
@@ -123,7 +141,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                     <use href='svg.svg#expand'></use>
                                 </svg>.`
                             : ""
-                    }`;
+                    }`);
                 });
             },
             nodeUpdate: (nodes) => {
