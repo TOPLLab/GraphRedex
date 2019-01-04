@@ -2,10 +2,16 @@ import Shower from "./Shower";
 import * as d3 from "d3";
 import { mLast } from "../util";
 
+const enum Direction {
+    Forward,
+    Backward,
+}
+
 interface ShowerNodeTree<ND extends NodeData, ED extends EdgeData>
     extends ShowerNode<ND> {
     forwardArrows: Map<string, ShowerEdgeTree<ND, ED>>;
     backArrows: Map<string, ShowerEdgeTree<ND, ED>>;
+    arrows: (direction: Direction) => Map<string, ShowerEdgeTree<ND, ED>>;
 }
 
 interface ShowerEdgeTree<ND extends NodeData, ED extends EdgeData> {
@@ -60,7 +66,7 @@ export default class TreeShower<
 
     private selectedIndex = 0;
     private selectedNode: ShowerNodeTree<ND, ED> = null;
-    private selectedDirection = +1;
+    private selectedDirection: Direction = Direction.Forward;
 
     protected zoomAdapt(t: any) {
         // TODO x is read only
@@ -68,10 +74,7 @@ export default class TreeShower<
     }
 
     private get selectedArrow() {
-        const selectedSet =
-            this.selectedDirection === +1
-                ? this.selectedNode.forwardArrows
-                : this.selectedNode.backArrows;
+        const selectedSet = this.selectedNode.arrows(this.selectedDirection);
         return [...selectedSet.values()][this.selectedIndex % selectedSet.size];
     }
 
@@ -88,19 +91,19 @@ export default class TreeShower<
     private handleArrow(direction: string) {
         switch (direction) {
             case "Left":
-                if (-1 === this.selectedDirection) {
+                if (this.selectedDirection === Direction.Backward) {
                     this.selectNode(this.selectedArrow.source);
                 } else {
-                    this.selectedDirection = -1;
+                    this.selectedDirection = Direction.Backward;
                     this.selectedIndex = 0;
                 }
                 break;
             case "Right":
-                if (+1 === this.selectedDirection) {
+                if (this.selectedDirection === Direction.Forward) {
                     this.selectNode(this.selectedArrow.target);
                     this.selectedIndex = 0;
                 } else {
-                    this.selectedDirection = +1;
+                    this.selectedDirection = Direction.Forward;
                 }
                 this.selectedIndex = 0;
                 break;
@@ -114,10 +117,9 @@ export default class TreeShower<
                 return; // no further action
         }
         while (this.selectedIndex < 0) {
-            const numPossibilities =
-                this.selectedDirection === +1
-                    ? this.selectedNode.forwardArrows.size
-                    : this.selectedNode.backArrows.size;
+            const numPossibilities = this.selectedNode.arrows(
+                this.selectedDirection,
+            ).size;
             if (numPossibilities === 0) {
                 break;
             }
@@ -213,7 +215,7 @@ export default class TreeShower<
             .classed(
                 "inaccessible",
                 (d) =>
-                    this.selectedDirection > 0 &&
+                    this.selectedDirection === Direction.Forward &&
                     !accessibleSet.has(d.data._id),
             );
 
@@ -231,7 +233,7 @@ export default class TreeShower<
             .classed(
                 "inaccessible",
                 (d) =>
-                    this.selectedDirection > 0 &&
+                    this.selectedDirection === Direction.Forward &&
                     !accessibleSet.has(d.data._id),
             );
     }
@@ -240,27 +242,21 @@ export default class TreeShower<
         n: ND,
         startPos: { x?: number; y?: number } = null,
     ): ShowerNodeTree<ND, ED> {
-        if (startPos) {
-            return {
-                id: n._id,
-                data: n,
-                x: startPos.x || 11000,
-                y: startPos.y || 0,
-                backArrows: new Map(),
-                forwardArrows: new Map(),
-                shown: false,
-            };
-        } else {
-            return {
-                id: n._id,
-                data: n,
-                x: 11000,
-                y: 0,
-                backArrows: new Map(),
-                forwardArrows: new Map(),
-                shown: false,
-            };
-        }
+        const o = {
+            id: n._id,
+            data: n,
+            x: startPos && startPos.x ? startPos.x : 11000,
+            y: startPos && startPos.y ? startPos.y : 0,
+            backArrows: new Map(),
+            forwardArrows: new Map(),
+            shown: false,
+            arrows: (dir: Direction) => {
+                return dir === Direction.Forward
+                    ? o.forwardArrows
+                    : o.backArrows;
+            },
+        };
+        return o;
     }
 
     protected convertEdge(e: ED): ShowerEdgeTree<ND, ED> {
