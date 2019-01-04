@@ -3,6 +3,7 @@ import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
 import { downloadFileLink, fileToText, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
+import ForceShower from "./shower/ForceShower";
 
 interface GRND extends NodeData {
     _id: string;
@@ -24,89 +25,82 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected curExample: ExampleMeta = null;
     protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
+    forceNow: boolean;
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualiser");
-        this.shower = new TreeShower(
-            "svg",
-            showerConfig || {
-                nodeOptions: (node) => {
-                    let ret = [] as Array<ShowerOptionData>;
+        const config: ShowerConfig<N, E> = showerConfig || {
+            nodeOptions: (node) => {
+                let ret = [] as Array<ShowerOptionData>;
 
-                    if (node.data._stuck === true) {
-                        ret.push({
-                            name: "Stuck term info",
-                            size: 2,
-                            icon: "inspect",
-                            action: () => {
-                                alert("Stuck????" + node.data.term);
-                                return false;
-                            },
-                        });
-                    } else {
-                        ret.push({
-                            name: "Expand node",
-                            size: 4,
-                            icon: "expand",
-                            action: () => {
-                                if (node.data._limited) {
-                                    this.render(
-                                        this.curExample,
-                                        node.data._id,
-                                        node.data._id,
-                                    );
-                                } else {
-                                    this.expandBelow(node.data);
-                                }
-                                return false;
-                            },
-                        });
-                    }
-
+                if (node.data._stuck === true) {
                     ret.push({
-                        name: "Show term",
-                        size: 1,
-                        icon: "info",
+                        name: "Stuck term info",
+                        size: 2,
+                        icon: "inspect",
                         action: () => {
-                            alert("Term\n" + node.data.term);
+                            alert("Stuck????" + node.data.term);
                             return false;
                         },
                     });
-
-                    return ret;
-                },
-                nodeMaker: (nodes) => {
-                    nodes
-                        .classed(
-                            "start",
-                            (d) => d.data._id === this.curExample.baseTerm,
-                        )
-                        .classed("stuck", (d) => d.data._stuck);
-
-                    nodes.on("dblclick", (d) => {
-                        d3.event.preventDefault();
-                        d3.event.stopPropagation();
-
-                        if (d.data._limited) {
-                            d.data._limited = false;
-                            this.shower.update();
-                            this.render(
-                                this.curExample,
-                                d.data._id,
-                                d.data._id,
-                            );
-                        } else {
-                            if (d3.event.shiftKey && d.data._expanded) {
-                                this.expandBelow(d.data);
+                } else {
+                    ret.push({
+                        name: "Expand node",
+                        size: 4,
+                        icon: "expand",
+                        action: () => {
+                            if (node.data._limited) {
+                                this.render(
+                                    this.curExample,
+                                    node.data._id,
+                                    node.data._id,
+                                );
                             } else {
-                                this.expandNode(d.data);
+                                this.expandBelow(node.data);
                             }
-                        }
+                            return false;
+                        },
                     });
-                    nodes.on("mouseover", (d) => {
-                        document.getElementsByTagName(
-                            "section",
-                        )[0].innerHTML = `
+                }
+
+                ret.push({
+                    name: "Show term",
+                    size: 1,
+                    icon: "info",
+                    action: () => {
+                        alert("Term\n" + node.data.term);
+                        return false;
+                    },
+                });
+
+                return ret;
+            },
+            nodeMaker: (nodes) => {
+                nodes
+                    .classed(
+                        "start",
+                        (d) => d.data._id === this.curExample.baseTerm,
+                    )
+                    .classed("stuck", (d) => d.data._stuck);
+
+                nodes.on("dblclick", (d) => {
+                    d3.event.preventDefault();
+                    d3.event.stopPropagation();
+
+                    if (d.data._limited) {
+                        d.data._limited = false;
+                        this.shower.update();
+                        this.render(this.curExample, d.data._id, d.data._id);
+                    } else {
+                        if (d3.event.shiftKey && d.data._expanded) {
+                            this.expandBelow(d.data);
+                        } else {
+                            this.expandNode(d.data);
+                        }
+                    }
+                });
+                nodes.on("mouseover", (d) => {
+                    document.getElementsByTagName("section")[0].innerHTML = `
                 <table>
                     <tr><th>Key</th><th>Value</th></tr>
                     ${Object.keys(d.data)
@@ -130,18 +124,18 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                 </svg>.`
                             : ""
                     }`;
-                    });
-                },
-                nodeUpdate: (nodes) => {
-                    nodes
-                        .classed("expandable", (d) => !d.data._expanded)
-                        .classed("expanding", (d) =>
-                            this.expanding.has(d.data._id),
-                        )
-                        .classed("limited", (d) => d.data._limited);
-                },
+                });
             },
-        );
+            nodeUpdate: (nodes) => {
+                nodes
+                    .classed("expandable", (d) => !d.data._expanded)
+                    .classed("expanding", (d) => this.expanding.has(d.data._id))
+                    .classed("limited", (d) => d.data._limited);
+            },
+        };
+
+        this.shower = new ForceShower("svg", config);
+        this.forceNow = true;
     }
 
     init() {
@@ -509,6 +503,20 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 .classed("previewExport", true);
             linkEl.click();
         });
+
+        const toggleRenderBtn = d3.select("#toggleRender").on("click", () => {
+            this.forceNow = !this.forceNow;
+            toggleRenderBtn.text(this.forceNow ? "use tree" : "use force");
+            this.shower.swapFor((el, conf, data) => {
+                this.shower = this.forceNow
+                    ? new ForceShower(el, conf)
+                    : new TreeShower(el, conf);
+                this.shower.show(data);
+                return this.shower;
+            });
+        });
+
+        toggleRenderBtn.text(this.forceNow ? "use tree" : "use force");
     }
 
     protected get svgCSS() {
