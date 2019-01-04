@@ -85,6 +85,21 @@ export default class ForceShower<
         super.update();
     }
 
+    public swapFor<N extends ShowerNode<ND>, E extends ShowerEdge<ND, ED>>(
+        constructor: (
+            element: SVGSVGElement,
+            config: ShowerConfigFull<ND, ED, N, E>,
+            data: InputData<ND, ED>,
+        ) => Shower<ND, ED, N, E>,
+    ) {
+        window.clearTimeout(this.heatTimeout);
+        this.simulation.stop();
+        this.simulation = null;
+        super.swapFor(constructor);
+        this.nodeMap = null;
+        this.data = null;
+    }
+
     protected convertNode(
         n: ND,
         startPos: { x?: number; y?: number } = null,
@@ -118,13 +133,13 @@ export default class ForceShower<
         };
     }
 
-    public show(data: InputData) {
+    public show(data: InputData<ND, ED>) {
         this.simulation.alphaTarget(0.3).restart();
         super.show(data);
         this.heatFor();
     }
 
-    public push(data: InputData, startPos: string = null) {
+    public push(data: InputData<ND, ED>, startPos: string = null) {
         this.simulation.alphaTarget(0.3).restart();
         super.push(data, startPos);
         this.heatFor();
