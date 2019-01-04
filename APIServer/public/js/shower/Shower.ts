@@ -58,6 +58,9 @@ export default abstract class Shower<
         this.svgRoot = d3.select(svg);
         this.svgRoot.html(""); // empty the element, it is now ours
         this.svgRoot
+            .on("*", null) // remove all listeners
+            .attr("focusable", "true") // allow listening for keys
+            .attr("tabindex", 0) // allow access for keys
             .attr("width", this.width)
             .attr("height", this.height)
             .attr("viewBox", [
