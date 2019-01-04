@@ -16,7 +16,7 @@ export default abstract class Shower<
     E extends ShowerEdge<ND, ED>
 > {
     // SVG tings
-    protected svgRoot: d3.Selection<any, any, any, any>;
+    protected svgRoot: d3.Selection<SVGSVGElement, any, any, any>;
     protected width: number = 1000;
     protected height: number = 1000;
 
@@ -57,8 +57,8 @@ export default abstract class Shower<
     constructor(svg: any, showerConfig: ShowerConfigFull<ND, ED, N, E>) {
         this.svgRoot = d3.select(svg);
         this.svgRoot.html(""); // empty the element, it is now ours
+        this.svgRoot.on("*", null); // remove all listeners
         this.svgRoot
-            .on("*", null) // remove all listeners
             .attr("focusable", "true") // allow listening for keys
             .attr("tabindex", 0) // allow access for keys
             .attr("width", this.width)
@@ -107,6 +107,19 @@ export default abstract class Shower<
         this.bubble = this.scene
             .insert("g", ".graph-nodes")
             .classed("bubble", true);
+    }
+
+    public swapFor(
+        constructor: (
+            element: SVGSVGElement,
+            config: ShowerConfigFull<ND, ED, N, E>,
+            data: InputData<ND, ED>,
+        ) => Shower<ND, ED, N, E>,
+    ) {
+        constructor(this.svgRoot.node(), this.config, {
+            nodes: this.data.nodes.map((x) => x.data),
+            edges: this.data.edges.map((x) => x.data),
+        });
     }
 
     /**
@@ -376,7 +389,7 @@ export default abstract class Shower<
     /**
      * Clears the screen and ingests new data to render
      */
-    public show(data: InputData, update: boolean = true) {
+    public show(data: InputData<ND, ED>, update: boolean = true) {
         this.reset();
         this.push(data, null, update);
     }
@@ -387,7 +400,7 @@ export default abstract class Shower<
      * @param startPos node id of the initial position of the new nodes
      */
     public push(
-        data: InputData,
+        data: InputData<ND, ED>,
         startPos: string = null,
         update: boolean = true,
     ) {
@@ -444,7 +457,9 @@ export default abstract class Shower<
         const oldIsClose = this.isClose;
         this.isClose = true;
         this.ticked();
-        const clone: SVGElement = this.svgRoot.node().cloneNode(true);
+        const clone: SVGSVGElement = this.svgRoot
+            .node()
+            .cloneNode(true) as SVGSVGElement;
         const { width, height, x, y } = this.scene.node().getBBox();
         this.isClose = oldIsClose;
         this.ticked();

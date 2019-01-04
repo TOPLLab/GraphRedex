@@ -24,9 +24,9 @@ interface ShowerEdge<ND extends NodeData, ED extends EdgeData> {
     data: ED;
 }
 
-interface InputData {
-    nodes: NodeData[];
-    edges: EdgeData[];
+interface InputData<ND extends NodeData, ED extends EdgeData> {
+    nodes: ND[];
+    edges: ED[];
 }
 
 interface ShowerData<N, E> {
