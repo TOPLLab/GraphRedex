@@ -19,5 +19,7 @@
         "latex",
         "plaintext",
         "typescript"
-    ]
+    ],
+    "tslint.ignoreDefinitionFiles": false,
+    "typescript.implementationsCodeLens.enabled": true
 }

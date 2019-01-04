@@ -44,7 +44,7 @@ type ShowerConfig<ND extends NodeData, ED extends EdgeData> = ShowerConfigFull<
 type ShowerOptionData = {
     /** Name to be shown */
     name: string;
-    /** Inportance of the option */
+    /** Importance of the option */
     size?: number;
     /** action to carry out when the option is selected
      * @return true if the node should remain open
@@ -64,7 +64,7 @@ interface ShowerConfigFull<
     nodeMaker?: (nodes: d3.Selection<any, N, any, any>) => void;
     /** function that is called on all nodes every time there is an update */
     nodeUpdate?: (nodes: d3.Selection<any, N, any, any>) => void;
-    /** function called when a node is selected (eg by clicking or traversal)
+    /** function called when a node is selected (e.g. by clicking or traversal)
      * @return true if nodeOptions should be shown
      */
     nodeSelected?: (node: N) => boolean;
@@ -72,7 +72,7 @@ interface ShowerConfigFull<
     nodeOptions?: (
         node: N,
     ) => ShowerOptionData[] | Promise<ShowerOptionData[]> | null;
-    /** function called when a node is selected (eg by clicking or traversal) */
+    /** function called when a node is selected (e.g. by clicking or traversal) */
     edgeSelected?: (edge: E) => void;
     /** the root node of the visualisation that will be used to find out the
      * depth of other nodes.

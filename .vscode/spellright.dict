@@ -25,3 +25,7 @@ SVG
 svg
 xml
 img
+keydown
+focusable
+tabindex
+href
