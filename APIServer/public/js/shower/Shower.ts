@@ -285,16 +285,10 @@ export default abstract class Shower<
             .style("display", (d) => (d ? null : "none"))
             .attr("transform", (d) => (d ? `translate(${d.x},${d.y})` : ""));
         this.parts.arrows
-            .transition()
-            .duration(100)
-            .style("opacity", (d) =>
-                d.source.shown && d.target.shown ? 1.0 : 0.0,
-            )
             .attr(
                 "d",
                 ({ source: s, target: t }) => `M${s.x} ${s.y}L${t.x} ${t.y}`,
             )
-            .transition()
             .style("display", (d) =>
                 d.source.shown && d.target.shown ? null : "none",
             );
@@ -309,41 +303,27 @@ export default abstract class Shower<
                     return (180 * Math.atan(tanValue)) / Math.PI;
                 }
             };
-            this.parts.texts
-                .transition()
-                .style("display", (d) =>
-                    d.source.shown && d.target.shown ? null : "none",
-                );
+            this.parts.texts.style("display", (d) =>
+                d.source.shown && d.target.shown ? null : "none",
+            );
             this.parts.texts
                 .filter((d) => d.source.shown && d.target.shown)
-                .transition()
-                .duration(100)
                 .attr("x", (d) => (d.source.x + d.target.x) / 2)
                 .attr("y", (d) => (d.source.y + d.target.y) / 2)
                 .attr(
                     "transform",
-                    ({ source: s, target: t }) => `rotate(
-                    ${calcAngle(s, t)},
-                    ${(s.x + t.x) / 2},
-                    ${(s.y + t.y) / 2}
-                    )`,
-                )
-                .style("display", null /* = default */);
+                    ({ source: s, target: t }) =>
+                        `rotate(${calcAngle(s, t)},${(s.x + t.x) / 2},${(s.y +
+                            t.y) /
+                            2})`,
+                );
         } else {
             this.parts.texts.style("display", "none");
         }
 
-        this.parts.nodes
-            .transition("fader")
-            .duration(100)
-            .style("opacity", (d) => (d.shown ? 1.0 : 0.0))
-            .transition()
-            .style("display", (d) => (d.shown ? null : "none"));
+        this.parts.nodes.style("display", (d) => (d.shown ? null : "none"));
         this.parts.nodes
             .filter((d) => d.shown)
-            .style("display", null)
-            .transition("placer")
-            .duration(100)
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y);
     }
