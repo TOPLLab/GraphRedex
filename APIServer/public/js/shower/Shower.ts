@@ -474,7 +474,7 @@ export default abstract class Shower<
         clone.setAttribute("height", height);
         clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
 
-        // give padding of 5 to viewbox
+        // give padding of 5 to view box
         clone.setAttribute(
             "viewBox",
             `${x - 5} ${y - 5} ${width + 10} ${height + 10}`,
