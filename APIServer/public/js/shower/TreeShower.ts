@@ -269,9 +269,7 @@ export default class TreeShower<
 
     public show(data: InputData, update: boolean = true) {
         super.show(data, false);
-        if (this.selectedNode === null) {
-            this.selectedNode = this.nodeMap.get(this.config.rootId);
-        }
+        this.selectedNode = this.nodeMap.get(this.config.rootId);
         if (update) {
             this.update();
         }
