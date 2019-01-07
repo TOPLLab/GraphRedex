@@ -85,15 +85,26 @@
         <section id="debuggerSection" style="background:pink"> </section>
     </nav>
     <main>
+        <noscript>
+            <div style="height: 100%;width: 100%;background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);text-align: center;display: block;color: black;font-weight: bold;text-shadow: 0 0 5px white;padding-top: 40vh;">
+                <div style="line-height: 1rem;font-size: 1rem;"><strong>JavaScript is needed for animations</strong><br>
+                    <small style="font-size: 0.5rem;">Don't trust the D3 CDN? We have a fallback for you.</small>
+                </div>
+            </div>
+        </noscript>
         <form id="doReduction" action="#" class="closed">
-            <h1>Do reduction</h1>
-            <input type="file" accept="" name="" id="" multiple="false">
-            <textarea id="term" cols="30" rows="10"></textarea>
+            <input type="file" value="" autocomplete="false" id="term-file" accept="" name="" id="" multiple="false">
+            <div id="term-ace" style="display:none;height: 50vh;min-height: 10em;"></div>
+            <textarea name="term" id="term"></textarea>
             <select id="langselector" name="language">
                 <option disabled>No languages</option>
             </select>
             <input id="nameselector" placeholder="name" type="text" value="">
-            <input type="submit" value="Perform">
+            <button type="submit">
+                Execute <svg width="1em" height="1em">
+                    <use href="svg.svg#execute"></use>
+                </svg>
+            </button>
             <pre id="doReductionOutput"></pre>
         </form>
         <form id="createLanguage" action="#" class="closed">
@@ -103,20 +114,25 @@
             <input type="submit" value="Create">
         </form>
         <form id="createQry" action="#" class="closed">
-            <h1>Execute an arangoDB query on the example (result will be in developper console)</h1>
-            <textarea id="qry" cols="30" rows="10">            LET nodes = (
-                FOR v,e,p IN 0..300
+            <h1> <svg width="1em" height="1em">
+                    <use href="svg.svg#inspect"></use>
+                </svg> Execute an arangoDB query on the example (result will be in developper console)</h1>
+
+            <input type="file" id="qry-file" accept="" name="" id="" multiple="false">
+            <div id="qry-ace" style="height: 50vh;min-height: 10em;display: none;"></div>
+            <input type="submit" value="Find">
+            <textarea name="qry" id="qry"> LET nodes = (
+                    FOR v,e,p IN 0..300
                     OUTBOUND @start GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
                     FILTER p.edges[*]._real NONE == false
                     RETURN DISTINCT v)
-        LET edges = (
-            FOR a in nodes
-                FOR e IN @@edges
-                    FILTER  e._from == a._id OR e._to == a._id
-                        RETURN DISTINCT e)
-        RETURN {nodes,edges}</textarea>
-            <input type="submit" value="Find">
+                    LET edges = (
+                    FOR a in nodes
+                    FOR e IN @@edges
+                    FILTER e._from == a._id OR e._to == a._id
+                    RETURN DISTINCT e)
+                    RETURN {nodes,edges}</textarea>
             <pre>
 - @@nodes to the collection of nodes
 - @@edges to the collection of edges
@@ -125,30 +141,66 @@
             </pre>
             <pre id="doQryOutput"> </pre>
         </form>
-        <svg focusable=true tabindex="0" title="visulisation">
+        <svg focusable=true tabindex="0" id="visulisation" title="visulisation">
         </svg>
     </main>
 
-    <script src="require.js"></script>
+    <script src="deps/require.js"></script>
     <script>
 
         requirejs.config({
-            "baseUrl": "dist",
+            baseUrl: "dist",
+            enforceDefine: true,
             paths: {
-                "d3": ["https://d3js.org/d3.v5.min","/d3.v5.min"]
-            }
+                "ace": ["https://ajaxorg.github.io/ace-builds/src-min", "/deps/ace"],
+                "d3": ["https://d3js.org/d3.v5.min", "/deps/d3.v5.min"],
+            },
         });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            requirejs(["DebugRedex"], function (dbgr) {
-                console.log(dbgr);
-                //window.toggle = dbgr.toggle;
-                const d = new dbgr.default();
-                d.init();
 
+        document.addEventListener("DOMContentLoaded", () => {
+
+
+            // setup ace editor
+            const setupAce = (ace, d3, util) => {
+                for (const [name, syntax] of [["term", "scheme"], ["qry", "text"]]) {
+                    ace.config.set("packaged", true)
+                    ace.config.set("basePath", require.toUrl("ace"))
+                    const editor = ace.edit(name + "-ace");
+                    editor.setTheme("ace/theme/github");
+                    editor.getSession().setMode("ace/mode/" + syntax);
+                    const fileSelector = d3.select(`#${name}-file`);
+
+                    editor.setValue(d3.select("#" + name).property("value"));
+                    fileSelector.on("change", async () => {
+                        editor.setValue(await util.fileToText(fileSelector.property("files")[0]));
+                        d3.select("#nameselector").property("value", fileSelector.property("files")[0].name);
+                    });
+                    editor.getSession().on("change", () => {
+                        d3.select("#" + name).property("value", editor.getValue());
+                    })
+                    d3.select("#" + name + "-ace").style("display", null)
+                    d3.select("#" + name).style("display", "none");
+                }
+            }
+
+            // I need to open a pull request with requirejs for prefix fallback
+            requirejs(["ace/ace", "d3", "util"], setupAce, (err) => {
+                if (err.requireModules && err.requireModules[0] === "ace/ace") {
+                    requirejs.undef("ace/ace");
+                    requirejs.config({
+                        paths: { ace: "/deps/ace" }
+                    });
+                    requirejs(["ace/ace", "d3", "util"], setupAce);
+                } else {
+                    throw err;
+                }
             })
-        }
-        );
+
+            requirejs(["DebugRedex"], (dbgr) => {
+                new dbgr.default().init();
+            });
+        });
 
         window.toggle = (elID) => {
             document.querySelectorAll("main>form").forEach((e) => {
