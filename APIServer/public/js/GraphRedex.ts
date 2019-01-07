@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
-import { downloadFileLink, fileToText, getit } from "./util";
+import { downloadFileLink, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 import ForceShower from "./shower/ForceShower";
 
@@ -152,7 +152,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             },
         };
 
-        this.shower = new ForceShower("svg", config);
+        this.shower = new ForceShower("#visulisation", config);
         this.forceNow = true;
     }
 
@@ -359,19 +359,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected setupDoReductions() {
         const output = document.getElementById("doReductionOutput");
         const form = d3.select("#doReduction");
-        const fileSelector = form.select('input[type="file"]');
         const submitBtn = form.select('input[type="submit"]');
-        const termArea = form.select("textarea");
-        fileSelector.on("change", async () => {
-            termArea.property(
-                "value",
-                await fileToText(fileSelector.property("files")[0]),
-            );
-            form.select("#nameselector").property(
-                "value",
-                fileSelector.property("files")[0].name,
-            );
-        });
+        const termArea = form.select("#term");
+
         form.on("submit", () => {
             submitBtn.attr("disabled", "disabled");
 
