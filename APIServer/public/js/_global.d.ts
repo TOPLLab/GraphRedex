@@ -19,3 +19,12 @@ interface TermMeta {
     term: string;
     _expanded: boolean;
 }
+
+interface EventTarget {}
+interface NodeList {}
+interface HTMLCollection {}
+interface XMLHttpRequest {}
+interface Event {}
+interface MessageEvent {}
+interface CloseEvent {}
+interface WebSocket {}
