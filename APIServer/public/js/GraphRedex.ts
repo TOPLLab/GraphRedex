@@ -247,7 +247,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         if (!node._expanded) {
             this.expandNode(node);
         } else {
-            const nodes = (
+            const nodes: { _id: string; _key: string }[] = (
                 await getit("my/example/qry/" + this.curExample._key, {
                     method: "POST",
                     body: `FOR v IN 0..${depth}
