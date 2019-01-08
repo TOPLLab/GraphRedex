@@ -166,7 +166,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
             nodeUpdate: (nodes) => {
                 nodes
                     .classed("expandable", (d) => !d.data._expanded)
-                    .classed("expanding", (d) => d.data._expanding || false);
+                    .classed("expanding", (d) => this.expanding.has(d.id));
             },
         });
     }
