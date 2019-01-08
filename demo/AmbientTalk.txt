@@ -1,0 +1,28 @@
+        ((actor client  () () 
+                  (let (math (actor (field result 0)
+                                     (method square x
+                                            (set! (this $ result) (* x x)))
+
+                                      (method get-result y
+                                              (this $ result))
+
+                                     ))
+                    in
+                    (let
+                        (client1 (actor
+
+                                  (method start math
+                                            (let (a (send math square (12) id-c1-math-square))
+                                              in
+                                              (when (sendf (ref id_new id_o) get-result 0 id-c1-math-result) result result)))
+
+
+                                        ))
+                      
+                      in
+
+                      (let (a (send client1 start (math) id-c-to-c1))
+                        in
+                       (let  (b (send math square (5) id-c-math-square))
+                         in
+                         (when (sendf math get-result 0 id-c-math-result) result result)))))))
