@@ -141,13 +141,13 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
                     }
                 });
                 nodes.on("mouseover", (d) => {
-                    document.getElementsByTagName("section")[0].innerHTML = `
+                    document.getElementById("statusSection").innerHTML = `
                 <pre style="word-wrap: break-word;white-space: pre-wrap; ">${
                     d.data.term
                 }</pre>
                 <hr>
-                <table>
-                    <tr><th>Key</th><th>Value</th></tr>
+                <table class="pure-table pure-table-horizontal"><thead>
+                    <tr><th>Key</th><th>Value</th></tr></thead><tbody>
                     ${Object.keys(d.data)
                         .filter(
                             (x) =>
@@ -159,7 +159,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
                                 `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
                         )
                         .join("")}
-                    </table>
+                    </tbody></table>
                     `;
                 });
             },

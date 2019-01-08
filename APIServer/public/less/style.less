@@ -1,67 +1,106 @@
-body {
-    padding: 0;
-    margin: 0;
-    width: 100%;
+@import (less) "../../node_modules/purecss/build/pure-nr-min.css";
+@import (less) "../../node_modules/purecss/build/grids-responsive-min.css";
+
+@tint: #10aded;
+
+
+html, button, input, select,
+.pure-g [class *= "pure-u"] {
+    /* Set your content font stack here: */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+}
+
+textarea {
+    font-family: 'Courier New', Courier, monospace
+}
+
+
+.button-xsmall {
+    font-size: 70%;
+}
+
+nav {
+    >section {
+        padding: 0.3em;
+
+        &:empty{
+            display: none;
+        }
+    }
+    box-sizing: border-box;
+    background: lighten(@tint, 50%);
     height: 100%;
-    overflow: hidden;
-    font-family: Noto Sans;
+    box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2),
+    0 0 3px 3px rgba(0, 0, 0, .25),
+    0 0 3px rgba(0, 0, 0, 0.14);
 }
 
-nav,
-side nav {
-    background: #FEFEFE;
-    width: 400px;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2), 0 0 3px 3px rgba(0, 0, 0, .25), 0 0 3px rgba(0, 0, 0, 0.14);
-    display: block;
+body {
+    height: 100%;
 }
 
-nav>header {
-    text-align: center;
-    line-height: 4rem;
-    background: #DEAD62;
-    color: white;
-    font-size: 2rem;
+.small-head {
+    font-size: 1em;
+}
+
+pre:empty {
+    display: none;
 }
 
 main {
-    display: block;
-    width: calc(100% - 400px);
-    margin-left: 400px;
-    height: 100%;
-    padding: 0;
-
-    >svg {
-        width: 100%;
-        height: 100%;
-    }
-
-
-
-
->form {
-    display: block;
-    box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    max-height: 100vh;
+    padding: 1em;
     box-sizing: border-box;
-    transition: max-height 0.3s;
-    margin: 0;
-
-    &.closed {
-        max-height: 0vh;
+    height: 100%;
+    overflow: hidden;
+    >form {
+        &.closed {
+            display: none;
+        }
+        box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
+        margin: -1em -1em 1em -1em;
+        padding: 0.5em 1em;
+        border-bottom: 1px solid #EEE;
+        z-index: 1;
     }
-
-    >* {
-        display: block;
-        margin: .5rem auto;
-        width: calc( 100% - 2rem);
+    >svg {
+        margin: -1em;
+        width: calc( 100% + 2rem);
+        box-sizing: content-box;
     }
 }
+
+#visBtn {
+    position: absolute;
+    top: 0;
+    right: 0;
 }
+
+main>form:not(.closed)~#visBtn{
+    display: none;
+}
+
+header {
+    background: @tint;
+    height: 2em;
+    text-align: center;
+    line-height: 2em;
+    font-size: 2em;
+    color: white;
+
+    img {
+        height: 1.5em;
+        margin-top: .25em;
+        float: left;
+        margin-left: .25em;
+        margin-right: -1.5em;
+    }
+}
+
+main>form>h2 {
+    margin-top: 0;
+    font-size: 1em;
+}
+
 .previewExport {
     max-width: 100%;
 }
@@ -71,27 +110,22 @@ main {
         fill: url("../svg.svg#bubbleGradient");
         stroke: transparent;
     }
-
     >use {
         pointer-events: none;
     }
-
     >path {
         fill: #EEE;
         cursor: pointer;
         mix-blend-mode: darken;
         stroke: #AAA;
         stroke-width: 0.5;
-
-        &:hover{
+        &:hover {
             fill: #ff2d2d;
         }
     }
-
     >path+use {
         fill: black;
     }
-
     >path:hover+use {
         fill: white;
     }
