@@ -44,6 +44,8 @@ export default abstract class Shower<
     protected data: ShowerData<N, E>;
     /** Node map maps node names on the nodes in the tree to find them quickly */
     protected nodeMap: Map<string, N>;
+    /** edge map maps edge names on the edges in the tree to find them quickly */
+    protected edgeMap: Map<string, E>;
 
     /** Configuration o the visualisation */
     protected config: ShowerConfigFull<ND, ED, N, E>;
@@ -361,6 +363,7 @@ export default abstract class Shower<
     public reset() {
         this.data = { nodes: [], edges: [] };
         this.nodeMap = new Map();
+        this.edgeMap = new Map();
 
         this.parts.arrows.remove();
         this.parts.nodes.remove();
@@ -417,13 +420,13 @@ export default abstract class Shower<
         newNodes.forEach((n) => this.nodeMap.set(n.id, n));
 
         // only keep edges between nodes we have
-        this.data.edges.push(
-            ...data.edges
-                .filter(
-                    (e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to),
-                )
-                .map((e) => this.convertEdge(e as ED)),
-        );
+        const newEdges = data.edges
+            .filter((e) => this.nodeMap.has(e._from) && this.nodeMap.has(e._to))
+            .filter((e) => !this.edgeMap.has(e._id))
+            .map((e) => this.convertEdge(e as ED));
+        this.data.edges.push(...newEdges);
+
+        newEdges.forEach((e) => this.edgeMap.set(e.data._id, e));
 
         if (update) {
             this.update();
