@@ -110,6 +110,34 @@ main>form>h2 {
     max-width: 100%;
 }
 
+button#reheat:hover use {
+    fill: #FF5722;
+}
+
+button#getSVG:hover use {
+    fill: #3F51B5;
+}
+
+button#rezoom:hover svg {
+    transform: rotate(30Deg);
+}
+
+button[onclick="toggle('doReduction')"]:hover use {
+    fill: #3F51B5;
+}
+
+button[onclick="toggle('createQry')"]:hover use {
+    fill: #009688;
+}
+
+button[onclick="toggle('createLanguage')"]:hover use {
+    fill: #9C27B0;
+}
+
+.pure-button.pure-button-primary use{
+    fill: white;
+}
+
 .bubble {
     >circle {
         fill: url("../svg.svg#bubbleGradient") #EEE;
