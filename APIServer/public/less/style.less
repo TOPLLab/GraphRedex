@@ -55,15 +55,12 @@ main {
         &.closed {
             display: none;
         }
-
         &:not(.closed)~#visBtn {
             display: none;
         }
-    
         >*:not(:first-child) {
             margin-top: 0.5em;
         }
-
         box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
         margin: -1em -1em 1em -1em;
         padding: 0.5em 1em;
@@ -82,8 +79,6 @@ main {
     top: 0;
     right: 0;
 }
-
-
 
 header {
     background: @tint;
@@ -134,8 +129,28 @@ button[onclick="toggle('createLanguage')"]:hover use {
     fill: #9C27B0;
 }
 
-.pure-button.pure-button-primary use{
-    fill: white;
+.pure-button {
+    &.pure-button-primary use {
+        fill: white;
+    }
+    &.large-icon-button {
+        text-align: center;
+        font-size: 0.7em;
+        svg {
+            display: block;
+            margin: 0 auto;
+            width: 2em;
+            height: 2em;
+        }
+    }
+    svg {
+        display: inline-block;
+        margin-bottom: -0.2ex;
+        width: 1em;
+        height: 1em;
+    }
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .bubble {
