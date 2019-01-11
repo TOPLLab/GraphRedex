@@ -513,9 +513,24 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             linkEl.click();
         });
 
-        const toggleRenderBtn = d3.select("#toggleRender").on("click", () => {
+        const toggleRenderBtn = d3.select("#toggleRender");
+        const doRenderBtn = () => {
+            toggleRenderBtn.html("");
+            toggleRenderBtn
+                .attr(
+                    "title",
+                    `Switch to ${
+                        this.forceNow ? "tree" : "force"
+                    }-based rendering`,
+                )
+                .append("svg")
+                .append("use")
+                .attr("href", `svg.svg#${this.forceNow ? "physics" : "tree"}`);
+        };
+
+        toggleRenderBtn.on("click", () => {
             this.forceNow = !this.forceNow;
-            toggleRenderBtn.text(this.forceNow ? "use tree" : "use force");
+            doRenderBtn();
             this.shower.swapFor((el, conf, data) => {
                 this.shower = this.forceNow
                     ? new ForceShower(el, conf)
@@ -524,8 +539,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return this.shower;
             });
         });
-
-        toggleRenderBtn.text(this.forceNow ? "use tree" : "use force");
+        doRenderBtn();
     }
 
     protected get svgCSS() {
