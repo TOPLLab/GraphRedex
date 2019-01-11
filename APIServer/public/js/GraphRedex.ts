@@ -397,7 +397,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected setupDoQry() {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry").on("submit", () => {
-            const qry = form.select("textarea").property("value");
+            d3.event.preventDefault();
+            const qry = d3.select("#qry").property("value");
             console.log(qry, this.curExample);
 
             output.textContent = "Wait for it...";
