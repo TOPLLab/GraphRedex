@@ -4,6 +4,7 @@ import TreeShower from "./shower/TreeShower";
 import { downloadFileLink, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 import ForceShower from "./shower/ForceShower";
+import termDiff from "./termDiff";
 
 interface GRND extends NodeData {
     _id: string;
@@ -114,11 +115,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         }
                     }
                 });
+
+                let prevTerm = null;
                 nodes.on("mouseover", (d) => {
+                    const renderedTerm =
+                        prevTerm === null
+                            ? d.data.term
+                            : termDiff(d.data.term, prevTerm)[0];
+                    prevTerm = d.data.term;
                     d3.select("#statusSection").html(`
-                    <pre style="max-width: 100%;white-space: pre-wrap;">${
-                        d.data.term
-                    }</pre> <hl>
+                    <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre> <hl>
                 <table>
                     <tr><th>Key</th><th>Value</th></tr>
                     ${Object.keys(d.data)

@@ -1,1 +1,0 @@
-src/main.ts src/password.ts src/racketRun.ts src/Server.ts src/.baseDir.ts --sourcemap --removeComments --target ES5 --outDir dist
