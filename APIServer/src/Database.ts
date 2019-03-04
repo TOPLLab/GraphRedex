@@ -10,11 +10,11 @@ export default class MyDatabase {
     public static async bootstrap(): Promise<MyDatabase> {
         const dbRO = arangojs({});
         await dbRO.login("graphredex-qry", "graphredex-qry"); // read only acces
-        dbRO.useDatabase("graphredex-test");
+        dbRO.useDatabase("graphredex-data");
 
         const dbRW = arangojs({});
         await dbRW.login("graphredex", "graphredex"); // rw acces
-        dbRW.useDatabase("graphredex-test");
+        dbRW.useDatabase("graphredex-data");
         return new MyDatabase(dbRW, dbRO);
     }
 
