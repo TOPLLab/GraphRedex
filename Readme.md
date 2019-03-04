@@ -3,13 +3,21 @@
 GraphRedex is a tool for ...
 
 ## Running the server
-Clone the repository and run the following in the root dir
+Clone the repository and run the following in the root dir.
 
 ```bash
 ./run -c -b
 ```
 
 Try `./run -h` to see more options.
+
+A web server will be live at `http://localhost:3000`. 
+The default login is `demo:demo`.
+The default password for the `demo` user can be set in `~/graphredex-login.json` (as a hashed password). The contents of this file can be generated be executing the following in the root of this repo:
+
+```bash
+node <<<'require("./APIServer/dist/password.js").hashPassword("PASSWORD").then(x=>console.log(JSON.stringify(x)))'
+```
 
 ## Known issues when uploading a new language 
 
@@ -60,7 +68,7 @@ brew install arangodb
 start or enable the service using `systemctl start arangodb3.service`.
 
 #### Configuration of ArangoDB 
-Once the database is installed it needs to be initialised with an initial database and two users. 
+Once the database is installed it needs to be initialized with an initial database and two users. 
 Configuration of the database is browser based, the default address is http://127.0.0.1:8529.
 The default password for the `root` user is blank `""`.
 
@@ -82,17 +90,17 @@ Go to the tab "Databases" and make a database called `graphredex-data` make sure
 Now that the database is created we still need to make sure that the permissions of the users are correct:
 
 Go to the Users tab and select permissions tab: 
-- In Users/graphredex in de permissions tab (these should normally already be set):
+- In Users/graphredex in the permissions tab (these should normally already be set):
   * give `graphredex` administrative access to the database `graphredex-data`
   * give `graphredex` read/write access to all collections
     + Click on `graphredex-data`
-    + Select Read access on the line with `*`
+    + Select "Read/Write" access on the line with `*`
 
-- In Users/graphredex-qry in de permissions tab:
+- In Users/graphredex-qry in the permissions tab:
   * give `graphredex-qry` access access on the `graphredex-data` database
-  * give `graphredex-qry` read access to all collections in that databse
+  * give `graphredex-qry` read access to all collections in that database
     + Click on `graphredex-data`
-    + Select Read access on the line with `*`
+    + Select "Read only" access on the line with `*`
 
 
 ## Advanced options
