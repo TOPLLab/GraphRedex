@@ -5,7 +5,7 @@ import MyDatabase from "./Database";
 import { User } from "./Users";
 import Example, { ExampleMeta } from "./Example";
 import { Graph } from "arangojs";
-import { isReadableFile } from "./Utils";
+import { isReadableFile, makeEnv } from "./Utils";
 
 interface RacketResult {
     term: string | null;
@@ -124,8 +124,10 @@ export default class ReductionRunner {
         stdin: string = null,
     ): Promise<IOResult> {
         return new Promise<IOResult>((resolve, reject) => {
+            const env = makeEnv({ LC_ALL: "C" });
+            console.log(env);
             const child = spawn(this.runPath, params, {
-                env: { LC_ALL: "C" },
+                env: env,
                 stdio: ["pipe", "pipe", "pipe"],
             });
 

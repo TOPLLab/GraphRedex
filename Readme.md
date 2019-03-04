@@ -24,7 +24,9 @@ Should be replaced by
 ```
 
 All other GUI `require`s should be removed or replaced with a variant that does 
-not require a display.
+not require a display. 
+
+This step is not needed when using docker.
 
 ## Installation
 ### Dependencies
@@ -93,3 +95,15 @@ Go to the Users tab and select permissions tab:
     + Select Read access on the line with `*`
 
 
+## Advanced options
+
+### Running code samples with docker
+
+To run code we receive as input in a docker container, set the `GRAPHREDEX_DOCKER` 
+environment variable to `1`.
+
+```bash
+GRAPHREDEX_DOCKER=1 ./run  -c  
+```
+
+*Note*: read [RedexServer/README.md](RedexServer/README.md) for security guidelines.
