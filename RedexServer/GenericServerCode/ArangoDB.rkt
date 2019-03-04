@@ -4,7 +4,7 @@
 (require json)
 (provide createArango)
 
-; http://localhost:8529/_db/graphredex-test/
+; http://localhost:8529/_db/graphredex-data/
 (define (createArango dbname graphname)
   (define (sendArango method qryHead path qry)
     (define-values (status headers in)
@@ -113,7 +113,7 @@
 
 
 
-;(define-values (get post clearall lookup fr ed) (createArango "graphredex-test" "terms-test-1"))
+;(define-values (get post clearall lookup fr ed) (createArango "graphredex-data" "terms-test-1"))
 ;(lookup "Jugs 0 3")
 ;(lookup "Jugs 0 8")
 ;(fr #hash((term . "Jugs 0 3")) #t)

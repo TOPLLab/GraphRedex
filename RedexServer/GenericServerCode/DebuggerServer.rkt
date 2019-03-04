@@ -23,7 +23,7 @@
 
 (define (run-echo graphname redLimit relation trans)
 
-  (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-test" graphname))
+  (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-data" graphname))
 
   (define (trans->json t ts trans)
     (jsexpr->string

@@ -75,7 +75,7 @@ The user `graphredex` has read and write access while the user `graphredex-qry` 
 
 ##### Creating the database  
 
-Go to the tab "Databases" and make a database called `graphredex-test` make sure to select `graphredex` as the owner. 
+Go to the tab "Databases" and make a database called `graphredex-data` make sure to select `graphredex` as the owner. 
 
 ##### Setting the permissions 
 
@@ -83,15 +83,15 @@ Now that the database is created we still need to make sure that the permissions
 
 Go to the Users tab and select permissions tab: 
 - In Users/graphredex in de permissions tab (these should normally already be set):
-  * give `graphredex` administrative access to the database `graphredex-test`
+  * give `graphredex` administrative access to the database `graphredex-data`
   * give `graphredex` read/write access to all collections
-    + Click on `graphredex-test`
+    + Click on `graphredex-data`
     + Select Read access on the line with `*`
 
 - In Users/graphredex-qry in de permissions tab:
-  * give `graphredex-qry` access access on the `graphredex-test` database
+  * give `graphredex-qry` access access on the `graphredex-data` database
   * give `graphredex-qry` read access to all collections in that databse
-    + Click on `graphredex-test`
+    + Click on `graphredex-data`
     + Select Read access on the line with `*`
 
 
