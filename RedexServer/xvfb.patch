@@ -1,0 +1,17 @@
+This patch fixes a bug that is still in the ubuntu image at dockerhub.
+xvfb-run merged stdout and stderr.
+
+https://bugs.launchpad.net/ubuntu/+source/xorg-server/+bug/1059947
+This bug was fixed in the package xorg-server - 2:1.19.4-1ubuntu2
+
+--- xvfb-run   2019-02-28 06:18:21.000000000 +0000
++++ xvfb-run   2019-03-04 12:37:31.129377336 +0000
+@@ -178,7 +178,7 @@
+ 
+ # Start the command and save its exit status.
+ set +e
+-DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@" 2>&1
++DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@"
+ RETVAL=$?
+ set -e
+

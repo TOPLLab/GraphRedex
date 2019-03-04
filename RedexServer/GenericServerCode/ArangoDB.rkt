@@ -8,12 +8,12 @@
 (define (createArango dbname graphname)
   (define (sendArango method qryHead path qry)
     (define-values (status headers in)
-      (http-sendrecv "localhost"
+      (http-sendrecv (or (getenv "ARANGO_SERVER") "localhost")
                      (~a "/_db/" dbname "/" path)
                      #:ssl? #f
                      #:version "1.1"
                      #:method method
-                     #:port 8529
+                     #:port (string->number (or (getenv "ARANGO_PORT") "8529"))
                      #:headers qryHead
                      #:data qry))
     (parameterize ([current-output-port (current-error-port)])
