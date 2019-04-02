@@ -468,11 +468,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected setupExampleSelector() {
         d3.json("/my/examples").then((data: any[]) => {
             const select = d3.select("#exampleSelector").on("change", () => {
+                d3.event.preventDefault();
+
                 const si = select.property("value");
                 if (si) {
                     const s = options.filter((d) => d._key === si);
                     const data = s.datum();
-                    this.render(data);
+                    window.setTimeout(() => {
+                        this.render(data);
+                    }, 0);
                 }
             });
 
