@@ -23,7 +23,7 @@ interface GRED extends EdgeData {
 }
 
 export default class GraphRedex<N extends GRND, E extends GRED> {
-    protected curExample: ExampleMeta = null;
+    protected _curExample: ExampleMeta = null;
     protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
     forceNow: boolean;
@@ -171,6 +171,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.setUpShowerBtns();
     }
 
+    get curExample() {
+        return this._curExample;
+    }
+
+    set curExample(example: ExampleMeta | null) {
+        this._curExample = example;
+        this.setupExampleSelector();
+    }
+
     /**
      * Render or extend render of the example given
      * @param example the example the query
@@ -183,7 +192,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         startPos: string = null,
     ) {
         this.curExample = example;
-        this.setupExampleSelector();
         this.shower.setRoot(this.curExample.baseTerm);
         const steps = 300;
 
@@ -475,7 +483,13 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             options = optionsEnter.merge(options as any);
             options
                 .attr("disabled", null)
-                .text((d: any) => d.name + " - " + d._key)
+                .text(
+                    (d: any) =>
+                        d.name +
+                        " - " +
+                        d._key +
+                        (curKey === d._key ? " (current)" : ""),
+                )
                 .attr("selected", (d) =>
                     curKey === d._key ? "selected" : null,
                 )
@@ -517,6 +531,20 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 .attr("src", url)
                 .classed("previewExport", true);
             linkEl.click();
+        });
+
+        d3.select("#deleteCurExample").on("click", () => {
+            if (confirm("Do you want to delete\n" + this.curExample.name)) {
+                getit("my/example/" + this.curExample._key, {
+                    method: "DELETE",
+                })
+                    .then(() => {
+                        alert("removed");
+                    })
+                    .catch((e) => alert(e));
+                this.curExample = null;
+                this.shower.reset();
+            }
         });
 
         const toggleRenderBtn = d3.select("#toggleRender");

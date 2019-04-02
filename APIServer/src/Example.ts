@@ -46,6 +46,14 @@ export default class Example {
         )[0];
     }
 
+    delete(): any {
+        this.db.examples(true).removeByKeys([this.meta._key], {});
+        this.db.rw
+            .collection("users-examples")
+            .removeByExample({ _to: this.meta._key });
+        // do not drop graph, it may contain data for other examples
+    }
+
     /**
      * Execute a query on the graph database
      * Binding

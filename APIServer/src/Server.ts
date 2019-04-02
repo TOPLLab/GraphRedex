@@ -80,6 +80,23 @@ export default class Server {
             ),
         );
 
+        routeMy.delete(
+            "/example/:id([0-9,]+)",
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const example: Example = await this.users.exampleOf(user, {
+                        _key: req.params.id,
+                    });
+                    await example.delete();
+                    res.jsonp("removed");
+                },
+            ),
+        );
+
         routeMy.get(
             "/examples",
             this.requireLogin(
