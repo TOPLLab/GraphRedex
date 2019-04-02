@@ -125,8 +125,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     prevTerm = d.data.term;
                     d3.select("#statusSection").html(`
                     <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre> <hl>
-                <table>
-                    <tr><th>Key</th><th>Value</th></tr>
+                    <table class="pure-table pure-table-horizontal stretch"><thead>
+                    <tr><th>Key</th><th>Value</th></tr></thead><tbody>
                     ${Object.keys(d.data)
                         .filter((x) => !(x.startsWith("_") || x === "term"))
                         .map(
@@ -134,7 +134,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                 `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
                         )
                         .join("")}
-                    </table>
+                    </tbody></table>
                     ${
                         d.data._stuck
                             ? "<br>This term has no further reductions."
@@ -490,7 +490,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         d._key +
                         (curKey === d._key ? " (current)" : ""),
                 )
-                .attr("selected", (d) =>
+                .property("selected", (d) =>
                     curKey === d._key ? "selected" : null,
                 )
                 .property("value", (d: any) => d._key);
