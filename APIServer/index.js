@@ -13,6 +13,7 @@ const public = path.join(__dirname, "public");
 
 const datadir = process.argv[2];
 console.log(process.argv);
+console.log("Starting server");
 
 require("./dist/Server.js")
     .default.bootstrap(
@@ -20,6 +21,7 @@ require("./dist/Server.js")
         path.join(__dirname, "..", "RedexServer", "run.sh"),
     )
     .catch((e) => {
+        console.log("An error occured");
         console.log(e.code);
         switch (e.code) {
             case "ECONNREFUSED":
@@ -28,7 +30,7 @@ require("./dist/Server.js")
                 console.info("  systemctl start arangodb3.service");
                 break;
             default:
-                console.log(e.code);
+                console.log(e.code || e);
         }
         process.exit(1);
     })
@@ -57,4 +59,7 @@ require("./dist/Server.js")
                 }
             });
     })
-    .catch((x) => console.error(x));
+    .catch((x) => {
+        console.log("something went wrong");
+        console.error(x);
+    });

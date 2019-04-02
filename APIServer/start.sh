@@ -103,6 +103,7 @@ fi
 
 if [ $run -eq 1 ]
 then
+    echo "Starting server"
     node index.js "$DATADIR"
 else
     echo "Not running (due -n)"
