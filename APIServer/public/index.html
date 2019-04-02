@@ -30,8 +30,9 @@
         .graph-nodes .stuck {
             fill: red;
         }
+        
         .graph-nodes .start {
-            fill: greenyellow; 
+            fill: greenyellow;
         }
 
         .graph-nodes .expanding {
@@ -48,17 +49,19 @@
             pointer-events: none;
         }
 
-        .graph-arrows .selected, .graph-nodes .selected {
-            filter: drop-shadow( 0 0 5px rgba(255, 0, 0, 0.664) );
+        .graph-arrows .selected,
+        .graph-nodes .selected {
+            filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.664));
         }
 
         .graph-arrows .inaccessible.selected {
-            filter: saturate(0.3) opacity(0.3) drop-shadow( 0 0 5px rgba(255, 0, 0, 0.664) );
+            filter: saturate(0.3) opacity(0.3) drop-shadow(0 0 5px rgba(255, 0, 0, 0.664));
         }
 
         .graph-arrows .inaccessible {
             filter: saturate(0.3) opacity(0.3);
         }
+
         .graph-nodes .inaccessible {
             filter: saturate(0.5);
         }
@@ -74,6 +77,12 @@
             <select id="exampleSelector" name="example" class="pure-input-1">
                 <option disabled="" value="fiat">Examples</option>
             </select>
+
+            <button class="pure-button button-xsmall" id="deleteCurExample">
+                <svg width="1em" height="1em">
+                    <use fill="#e74c3c" href="svg.svg#remove"></use>
+                </svg>
+            </button>
         </section>
 
         <section>
@@ -107,7 +116,8 @@
     </nav>
     <main class="pure-u-1-2 pure-u-md-2-3 pure-u-lg-4-5">
         <noscript>
-            <div style="height: 100%;width: 100%;background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);text-align: center;display: block;color: black;font-weight: bold;text-shadow: 0 0 5px white;padding-top: 40vh;">
+            <div
+                style="height: 100%;width: 100%;background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);text-align: center;display: block;color: black;font-weight: bold;text-shadow: 0 0 5px white;padding-top: 40vh;">
                 <div style="line-height: 1rem;font-size: 1rem;"><strong>JavaScript is needed for animations</strong><br>
                     <small style="font-size: 0.5rem;">Don't trust the D3 CDN? We have a fallback for you.</small>
                 </div>

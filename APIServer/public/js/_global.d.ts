@@ -11,6 +11,7 @@ export interface ExampleMeta {
     _id: string;
     baseTerm: string;
     baseTermString: string;
+    name: string;
 }
 
 interface TermMeta {
