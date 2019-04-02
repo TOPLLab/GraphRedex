@@ -32,8 +32,12 @@ export default class Users {
         if (dbdata && (await isPasswordCorrect(dbdata.password, auth.pass))) {
             return dbdata;
         }
-        throw "Invalid credentials or user not found. " +
-            (dbdata === null ? "null" : "found");
+        console.log(
+            `Failed login attempt for ${encodeURIComponent(auth.name)} (${
+                dbdata === null ? "not found" : "found"
+            })`,
+        );
+        throw "Invalid credentials or user not found. ";
     }
 
     public async exmplesOf(user: User | { _key: string }): Promise<Example[]> {
