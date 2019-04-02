@@ -115,3 +115,16 @@ GRAPHREDEX_DOCKER=1 ./run  -c
 ```
 
 *Note*: read [RedexServer/README.md](RedexServer/README.md) for security guidelines.
+
+### Allow the use `(require redex)`
+
+This allows you to use [xvfb](https://www.x.org/releases/X11R7.7/doc/man/man1/Xvfb.1.xhtml).
+To emulate having a screen. This is enabled by default in de docker version and comes
+with a performance hit. 
+
+```bash
+GRAPHREDEX_XVFB=1 ./run  -c
+```
+
+For the moment, you will need to pach xvfb-run with [this path](RedexServer/xvfb.patch)
+to get it to work.
