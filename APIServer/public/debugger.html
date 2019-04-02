@@ -73,9 +73,11 @@
         <header><img src="svg.svg" alt="Logo" style="">Voyager</header>
 
         <section>
-            <h2 class="small-head">Select program</h2>
+            <h2 class="small-head"><svg width="1em" height="1em">
+                    <use href="svg.svg#source-code"></use>
+                </svg> Select program</h2>
             <select id="exampleSelector" name="example" class="pure-input-1">
-                <option disabled="" value="fiat">Examples</option>
+                <option disabled="" value="">Example</option>
             </select>
 
             <button class="pure-button button-xsmall" id="deleteCurExample">
@@ -87,7 +89,9 @@
         </section>
 
         <section>
-            <h2 class="small-head">Create new</h2>
+            <h2 class="small-head"> <svg width="1em" height="1em">
+                    <use href="svg.svg#add"></use>
+                </svg> Create new</h2>
             <div class="pure-form-stacked">
                 <div class="pure-button-group">
                     <button onclick="toggle('doReduction')" class="pure-button pure-input-1-3 large-icon-button">
@@ -170,8 +174,6 @@
             </div>
         </form>
         <form id="createQry" action="#" class="closed pure-form pure-form-stacked">
-
-
             <h2> <svg width="1em" height="1em">
                     <use href="svg.svg#inspect"></use>
                 </svg> Execute an ArangoDB query on the example</h2>
@@ -202,6 +204,9 @@
                     </pre>
             <pre id="doQryOutput"> </pre>
         </form>
+        <button id="pannelCloseBtn" onclick="toggle(null)"><svg>
+                <use href="svg.svg#delete"></use>
+            </svg></button>
 
 
         <svg focusable="true" tabindex="0" id="visulisation" title="visulisation">
