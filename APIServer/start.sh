@@ -70,7 +70,7 @@ if [ $needsBuild -eq 1 ]; then
 fi
 
 if [ $needsClean -eq 1 ]; then
-    echo "Strating clean"
+    echo "Starting clean"
     node setup.js || \
         ( echo "Could not clean database" ; exit 1)
 fi
