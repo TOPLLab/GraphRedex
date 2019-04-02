@@ -1,6 +1,7 @@
 @import (less) "../../node_modules/purecss/build/pure-nr-min.css";
 @import (less) "../../node_modules/purecss/build/grids-responsive-min.css";
 @tint: #10aded;
+
 html,
 button,
 input,
@@ -21,10 +22,12 @@ textarea {
 nav {
     >section {
         padding: 0.3em;
+
         &:empty {
             display: none;
         }
     }
+
     overflow: auto;
     box-sizing: border-box;
     background: lighten(@tint, 50%);
@@ -52,26 +55,31 @@ main {
     box-sizing: border-box;
     height: 100%;
     overflow: hidden;
+
     >form {
         &.closed {
             display: none;
         }
+
         &:not(.closed)~#visBtn {
             display: none;
         }
+
         >*:not(:first-child) {
             margin-top: 0.5em;
         }
+
         box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
         margin: -1em -1em 1em -1em;
         padding: 0.5em 1em;
         border-bottom: 1px solid #EEE;
         z-index: 1;
     }
+
     >svg {
         margin: -1em;
-        width: calc( 100% + 2rem);
-        height: calc( 100% + 2rem);
+        width: calc(100% + 2rem);
+        height: calc(100% + 2rem);
         box-sizing: content-box;
     }
 }
@@ -89,6 +97,7 @@ header {
     line-height: 2em;
     font-size: 2em;
     color: white;
+
     img {
         height: 1.5em;
         margin-top: .25em;
@@ -135,9 +144,11 @@ button[onclick="toggle('createLanguage')"]:hover use {
     &.pure-button-primary use {
         fill: white;
     }
+
     &.large-icon-button {
         text-align: center;
         font-size: 0.7em;
+
         svg {
             display: block;
             margin: 0 auto;
@@ -145,12 +156,14 @@ button[onclick="toggle('createLanguage')"]:hover use {
             height: 2em;
         }
     }
+
     svg {
         display: inline-block;
         margin-bottom: -0.2ex;
         width: 1em;
         height: 1em;
     }
+
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -160,22 +173,27 @@ button[onclick="toggle('createLanguage')"]:hover use {
         fill: url("../svg.svg#bubbleGradient") #EEE;
         stroke: transparent;
     }
+
     >use {
         pointer-events: none;
     }
+
     >path {
         fill: #EEE;
         cursor: pointer;
         mix-blend-mode: darken;
         stroke: #AAA;
         stroke-width: 0.5;
+
         &:hover {
             fill: #ff2d2d;
         }
     }
+
     >path+use {
         fill: black;
     }
+
     >path:hover+use {
         fill: white;
     }
