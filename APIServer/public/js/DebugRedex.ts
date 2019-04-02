@@ -146,7 +146,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
                     d.data.term
                 }</pre>
                 <hr>
-                <table class="pure-table pure-table-horizontal"><thead>
+                <table class="pure-table pure-table-horizontal stretch"><thead>
                     <tr><th>Key</th><th>Value</th></tr></thead><tbody>
                     ${Object.keys(d.data)
                         .filter(
