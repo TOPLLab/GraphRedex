@@ -65,6 +65,10 @@ main {
             display: none;
         }
 
+        &:not(.closed)~#pannelCloseBtn {
+            display: block;
+        }
+
         >*:not(:first-child) {
             margin-top: 0.5em;
         }
@@ -75,13 +79,36 @@ main {
         border-bottom: 1px solid #EEE;
         z-index: 1;
     }
+}
+
+#pannelCloseBtn {
+    display: none;
+    position: absolute;
+    top: .4rem;
+    right: .5rem;
+    background: transparent;
+    border: none;
+
+    &:hover,
+    &:active {
+        >svg {
+            fill: black;
+        }
+    }
 
     >svg {
-        margin: -1em;
-        width: calc(100% + 2rem);
-        height: calc(100% + 2rem);
-        box-sizing: content-box;
+        width: 1.5rem;
+        height: 1.5rem;
+        fill: #999;
+        cursor: pointer;
     }
+}
+
+#visulisation {
+    margin: -1em;
+    width: calc(100% + 2rem);
+    height: calc(100% + 2rem);
+    box-sizing: content-box;
 }
 
 #visBtn {
@@ -213,4 +240,19 @@ button[onclick="toggle('createLanguage')"]:hover use {
 
 .stretch {
     width: 100%;
+}
+
+
+
+// position icon in headers
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+
+    svg {
+        margin-bottom: -.3ex;
+    }
 }
