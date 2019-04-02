@@ -130,4 +130,4 @@ async function getPass(): Promise<[boolean, Object]> {
     }
 }
 
-prepare().then(console.log);
+//prepare().then(console.log);
