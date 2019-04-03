@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@types/d3": "^5.0.1",
+    "@types/request": "^2.48.1",
     "arangojs": "^6.7.0",
     "basic-auth": "^2.0.1",
     "body-parser": "^1.18.3",

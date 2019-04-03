@@ -1,5 +1,5 @@
 #!/bin/sh
-# Name: Create a temp racket file with te absolute path to the language definition
+# Name: Create a temp racket file with the absolute path to the language definition
 # By Robbert Gurdeep Singh
 # Args
 # 1: DebuggerServer | EchoServer
@@ -8,6 +8,8 @@
 # 4: language._key
 # 5: limit
 ################################################################################
+# Just to be sure we overwrite potentially sensitive env vars.
+export ARANGO_ROOT_PASSWORD=""
 
 TMPFILE=$(mktemp)
 trap "rm -f $TMPFILE" EXIT

@@ -55,7 +55,7 @@ This step is not needed when using docker.
 ### AragnoDB setup (database)
 
 GraphRedex uses a graph database called [ArangoDB](https://www.arangodb.com/). 
-We use version `3.3.19` but I higher version should also be fine.
+We use version `3.4.4` but any version above `3` should be ok.
 
 
 **OSX** users can install it with brew:
@@ -128,3 +128,11 @@ GRAPHREDEX_XVFB=1 ./run  -c
 
 For the moment, you will need to pach xvfb-run with [this path](RedexServer/xvfb.patch)
 to get it to work.
+
+### Settign the root password of arango for auto setup
+
+GraphRedex has an auto-setup feature. This proccess creates the required 
+database and users. For this to work the root password of arangoDB is needed.
+You will be prompted for this if needed. For usage in scripts, you can also set
+the environment varaiable `ARANGO_ROOT_PASSWORD` to the passsword of the root 
+user of the DB. This varaiable not be passed to ran code.
