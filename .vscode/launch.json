@@ -4,17 +4,18 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "node",
             "request": "launch",
-            "preLaunchTask": "grunt",
-            "name": "Start server",
-            "program": "${workspaceFolder}/APIServer/index.js",
+            "preLaunchTask": "grunt backend",
+            "name": "run setup",
+            "program": "${workspaceFolder}/APIServer/setup.js",
             "args": ["/tmp/graphredex"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
-        }
+        },
         {
             "type": "node",
             "request": "launch",
