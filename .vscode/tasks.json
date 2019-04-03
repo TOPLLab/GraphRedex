@@ -39,6 +39,23 @@
             "problemMatcher":"$tsc"
         },
         {
+            "label": "grunt backend",
+            "type": "shell",
+            "command": "yarn run grunt ts:app",
+            "options": {
+                "cwd": "APIServer"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher":"$tsc"
+        },
+        {
             "label": "grunt frontend",
             "type": "shell",
             "command": "yarn run grunt watch:frontend",

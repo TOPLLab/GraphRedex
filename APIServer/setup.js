@@ -23,5 +23,8 @@ require("./dist/SetupAndClear.js")
                     console.log(e.code);
             }
         }
+        process.exit(1);
     })
-    .then(() => console.log("done"));
+    .then(() => {
+        console.log("Database has been set up");
+    });

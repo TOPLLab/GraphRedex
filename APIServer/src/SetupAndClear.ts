@@ -2,6 +2,11 @@ import MyDatabase from "./Database";
 import * as os from "os";
 import * as path from "path";
 import { isReadableFile } from "./Utils";
+import * as readline from "readline";
+import * as request from "request";
+import arangojs, { Database } from "arangojs";
+
+//import arangojs, { Database, DocumentCollection, Graph } from "arangojs";
 
 function logLn(text: string) {
     const minWidth = 50;
@@ -13,11 +18,22 @@ function logLn(text: string) {
     console.log("┗" + "━".repeat(text.length + 2) + "┛");
 }
 
-export async function prepare() {
+export async function prepare(): Promise<void> {
+    return await prepareReal().catch(async (e) => {
+        console.log("\nSomething went wrong, checking db\n");
+        await dbCheck(e); // check db
+        console.log("\nTry again with new data\n");
+        await prepareReal(); // and try again
+        console.log("Success after retry");
+        return;
+    });
+}
+
+async function prepareReal(): Promise<void> {
     const db = await MyDatabase.bootstrap();
 
     logLn(`Removing all documents form DB...`);
-    await db.rw.truncate();
+    await db.rw.truncate().catch(async (e) => await dbCheck(e));
     console.log("done");
 
     logLn(`Renewing collections and graph...`);
@@ -71,27 +87,31 @@ export async function prepare() {
     if (!(await usersCollection.documentExists("1"))) {
         logLn("Create demo user");
         const [isDemo, passwd] = await getPass();
-        console.log(passwd);
         await usersCollection.save({
             _key: "1",
             name: "demo",
             password: passwd,
         });
-        console.log("Demo user added (_key = 1, demo:????)");
+
+        console.log(" - Demo user added (_key = 1, demo:????)");
 
         if (isDemo) {
-            console.warn("WARNING: password for demo is demo!");
-            console.warn("DO NOT USE IN PRODUCTION");
+            console.warn(" WARNING: password for demo is demo!");
+            console.warn(" DO NOT USE IN PRODUCTION");
+            console.log(" To set demo password, place a hash in:");
+        } else {
+            console.log(" Password taken from:");
         }
+        console.log(" " + path.join(os.homedir(), "graphredex-login.json"));
     }
 
-    logLn("renew examples graph");
+    logLn("Examples graph");
     if (await examplesGraph.exists()) {
-        console.log("Deleting");
+        console.log(" - Deleting existing graph");
         await examplesGraph.drop();
     }
 
-    console.log("Creating");
+    console.log(" - Creating: Examples per user graph created");
     await examplesGraph.create({
         edgeDefinitions: [
             {
@@ -107,7 +127,7 @@ export async function prepare() {
         ],
     });
 
-    console.log("Examples per user graph created");
+    console.log("done");
     return;
 }
 
@@ -130,4 +150,133 @@ async function getPass(): Promise<[boolean, Object]> {
     }
 }
 
-//prepare().then(console.log);
+async function dbCheck(e: any): Promise<void> {
+    if (!("isArangoError" in e && e.isArangoError)) {
+        throw e;
+    }
+
+    switch (e.code) {
+        case 401: // Unauthorized
+            console.error("Could not login as graphredex");
+            const api = await getRootDbAPIConnection();
+
+            const dbName = "graphredex-data";
+            const graphredexUsers = [
+                { name: "graphredex", access: "rw" },
+                { name: "graphredex-qry", access: "ro" },
+            ];
+
+            console.log("Getting users");
+            const users: Map<string, any> = new Map(
+                (await api("/_db/_system/_api/user/")).map((u) => [u.user, u]),
+            );
+
+            for (const { name: userName } of graphredexUsers) {
+                console.log(`Checking ${userName}`);
+                // Check if graphredex user exists
+                if (users.has(userName)) {
+                    // graphredex user exists
+                    await api(`/_api/user/${userName}`, {
+                        method: "PATCH",
+                        body: {
+                            active: true,
+                            passwd: userName,
+                        },
+                    });
+                    console.log(`  - activated and password is reset`);
+                } else {
+                    // create the user
+                    await api("/_api/user", {
+                        method: "POST",
+                        body: {
+                            user: userName,
+                            active: true,
+                            passwd: userName,
+                        },
+                    });
+                    console.log(`  - created`);
+                }
+            }
+
+            const databases: string[] = await api("/_api/database/");
+            if (!databases.includes(dbName)) {
+                // database does not exist, create
+                await api("/_api/database", {
+                    method: "POST",
+                    body: {
+                        name: dbName,
+                        users: graphredexUsers.map((u) => ({
+                            username: u.name,
+                        })),
+                    },
+                });
+            }
+
+            console.log("Ensure proper permissions");
+            for (const user of graphredexUsers) {
+                console.log(`  - DB access for ${user.name}`);
+                await api(`/_api/user/${user.name}/database/${dbName}`, {
+                    method: "PUT",
+                    body: { grant: user.access },
+                });
+
+                console.log(`  - collection access for ${user.name}`);
+                await api(
+                    `/_db/_system/_api/user/${user.name}/database/${dbName}/*`,
+                    {
+                        method: "PUT",
+                        body: { grant: user.access },
+                    },
+                );
+            }
+
+            return;
+            break;
+
+        default:
+            console.error("Could not fix error");
+            throw e;
+    }
+}
+
+async function getRootDbAPIConnection(): Promise<
+    (path: string, options?: request.CoreOptions) => Promise<any>
+> {
+    const db: Database = arangojs({});
+    const token = await db.login("root", await getRootPass());
+
+    return (path: string, options: request.CoreOptions = {}) =>
+        new Promise((resolve, reject) => {
+            request(
+                "http://localhost:8529" + path,
+                Object.assign({ auth: { bearer: token }, json: true }, options),
+                (_err, _res, body) => {
+                    if (!body.error) {
+                        resolve(body.result);
+                    } else {
+                        reject(body);
+                    }
+                },
+            );
+        });
+}
+
+function getRootPass(): Promise<string> {
+    return new Promise((resolve) => {
+        if ("ARANGO_ROOT_PASSWORD" in process.env) {
+            resolve(process.env.ARANGO_ROOT_PASSWORD);
+        } else {
+            console.log("Type root password:");
+            const passInput = readline.createInterface({
+                input: process.stdin,
+                output: null,
+                terminal: true,
+            });
+
+            passInput.question("Root pass", (pass) => {
+                passInput.close();
+                resolve(pass);
+            });
+        }
+    });
+}
