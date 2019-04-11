@@ -38,7 +38,7 @@ export function deleteDir(
             child.on("error", reject);
 
             child.on("close", (code) => {
-                console.log(`unzip exited with code ${code}`);
+                console.log(`rm exited with code ${code}`);
                 if (code === 0) {
                     resolve(true);
                 } else {
