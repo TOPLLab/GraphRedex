@@ -23,7 +23,7 @@ echo "$0 [options]"
 cat <<HELP
   -b         to build
   -c         to clean db (implies -b)
-             if -n 
+             if -n
   -d PATH    set directory
              if -c is set, the directory will be emptied
   -m         Make directory form -d if not exists
@@ -91,9 +91,9 @@ if [ $dirSet -eq 1 ]; then
     fi
     if [ $needsClean -eq 1 ]; then
         echo "Emptying directory $DATADIR"
-        rm -r "$DATADIR/*"
+        rm -r "$DATADIR"/*
     fi
-else 
+else
         echo "Making tmp dir"
         DATADIR=$(mktemp -d)
         trap "echo STOP;rm -rf '$DATADIR'" EXIT
