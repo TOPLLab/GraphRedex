@@ -118,19 +118,17 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     }
                 });
 
-                let prevTerm = null;
                 let prevURL = null;
                 nodes.on("mouseover", (d) => {
-                    let renderedTerm = "";
-                    if ("_formatted" in d.data) {
-                        renderedTerm = d.data._formatted;
-                    } else {
-                        renderedTerm =
-                            prevTerm === null
-                                ? d.data.term
-                                : termDiff(d.data.term, prevTerm)[0];
-                        prevTerm = d.data.term;
-                    }
+                    // Get the diffed term
+                    let renderedTerm =
+                        this.shower.bubbleNode === null
+                            ? this.getRepr(d.data)
+                            : termDiff(
+                                  this.getRepr(d.data),
+                                  this.getRepr(this.shower.bubbleNode.data),
+                              );
+
                     if ("_pict" in d.data) {
                         if (prevURL) URL.revokeObjectURL(prevURL);
                         prevURL = URL.createObjectURL(
@@ -141,7 +139,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         img.alt = d.data.term;
                         img.style.maxWidth = "100%";
                         img.style.userSelect = "all";
-                        renderedTerm = img.outerHTML;
+                        renderedTerm = img.outerHTML + "<hr/>" + renderedTerm;
                     }
 
                     d3.select("#statusSection").html(`
@@ -190,6 +188,13 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.setupDoQry();
         this.updateLangs();
         this.setUpShowerBtns();
+    }
+
+    private getRepr(nd: GRND) {
+        if ("_formatted" in nd) {
+            return nd._formatted;
+        }
+        return nd.term;
     }
 
     get curExample() {
