@@ -25,7 +25,7 @@ export default class ReductionRunner {
     /**
      *
      * @param db         Database connection for creating graphs
-     * @param datadir    Directory in which the datafiles live
+     * @param datadir    Directory in which the data files live
      */
     constructor(db: MyDatabase, datadir: string, runPath: string) {
         this.db = db;

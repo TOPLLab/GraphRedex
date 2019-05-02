@@ -290,7 +290,7 @@ export default class TreeShower<
         }
     }
 
-    // no draging
+    // no dragging
     protected drag(): d3.DragBehavior<any, any, any> {
         return (() => {
             return null;

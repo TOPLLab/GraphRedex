@@ -207,7 +207,7 @@ export default class Server {
                                 lang: lang,
                                 term: term,
                                 output: null,
-                                e: "somthing went wrong",
+                                e: "something went wrong",
                                 errors: e.toString(),
                             });
                         });
@@ -240,7 +240,7 @@ export default class Server {
                             res.status(500).jsonp({
                                 term: req.params.termKey,
                                 output: null,
-                                e: "somthing went wrong",
+                                e: "something went wrong",
                                 errors: e.toString(),
                             });
                         });

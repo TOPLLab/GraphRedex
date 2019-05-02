@@ -1,12 +1,12 @@
 /// <reference path="./ShowerTypes.d.ts"/>
 
 /**
- * D3 force that calculates the Depth of all the nodes accorging to the links
+ * D3 force that calculates the Depth of all the nodes according to the links
  * and pulls the nodes to x pos `intervalLen` * depth.
  *
  * @param intervalLen      Distance between nodes of subsequent depths
- * @param startNodeGetter  function that returns the current startnode id
- * @todo  Maybe we need a deph getter here...
+ * @param startNodeGetter  function that returns the current start node id
+ * @todo  Maybe we need a depth getter here...
  */
 export default function(
     intervalLen: number = 80,
@@ -37,8 +37,8 @@ export default function(
     };
 
     /**
-     * Setter and getter for the force (deault 0.1)
-     * @param strength optional new strenght
+     * Setter and getter for the force (default 0.1)
+     * @param strength optional new strength
      */
     force.strength = function(newStrength: number) {
         return arguments.length ? (strength = newStrength) : strength;
