@@ -79,7 +79,7 @@ export class Languages {
     /**
      *
      * @param user User this language belongs to
-     * @param name Name of lannguage
+     * @param name Name of language
      * @param location of the stored tmp file (will be moved)
      */
     async createFormSingleFile(
@@ -102,7 +102,7 @@ export class Languages {
     /**
      *
      * @param user User this language belongs to
-     * @param name Name of lannguage
+     * @param name Name of language
      * @param location of the stored tmp file (will be moved)
      */
     async createFormZip(
@@ -126,7 +126,7 @@ export class Languages {
                 [
                     "-aa", // treat ALL files as text
                     "-n", // never overwrite existing files
-                    location, // zipfile
+                    location, // zip-file
                     "-d",
                     absDir, // destination
                 ],

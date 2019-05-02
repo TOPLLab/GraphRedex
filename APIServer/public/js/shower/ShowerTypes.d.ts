@@ -74,7 +74,7 @@ interface ShowerConfigFull<
     ) => ShowerOptionData[] | Promise<ShowerOptionData[]> | null;
     /** function called when a node is selected (e.g. by clicking or traversal) */
     edgeSelected?: (edge: E) => void;
-    /** the root node of the visualisation that will be used to find out the
+    /** the root node of the visualization that will be used to find out the
      * depth of other nodes.
      */
     rootId?: string;

@@ -29,7 +29,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     forceNow: boolean;
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
-        console.log("Booting graph visualiser");
+        console.log("Booting graph visualizer");
         const config: ShowerConfig<N, E> = showerConfig || {
             nodeOptions: (node) => {
                 let ret = [] as Array<ShowerOptionData>;

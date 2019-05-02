@@ -29,7 +29,7 @@ export default abstract class Shower<
     /** A <defs> element in the svg used for defining arrows and shapes */
     protected defs: d3.Selection<any, any, any, any>;
 
-    /** Parts of the visualisation that is rendered */
+    /** Parts of the visualization that is rendered */
     protected parts: {
         nodes: d3.Selection<any, N, any, any>;
         arrows: d3.Selection<any, E, any, any>;
@@ -47,7 +47,7 @@ export default abstract class Shower<
     /** edge map maps edge names on the edges in the tree to find them quickly */
     protected edgeMap: Map<string, E>;
 
-    /** Configuration o the visualisation */
+    /** Configuration o the visualization */
     protected config: ShowerConfigFull<ND, ED, N, E>;
     protected bubble: d3.Selection<any, any, any, any>;
 
@@ -398,7 +398,7 @@ export default abstract class Shower<
     }
 
     /**
-     * Keeps the screen and add nodes to the visualisation
+     * Keeps the screen and add nodes to the visualization
      * @param data New data to be added to the graph
      * @param startPos node id of the initial position of the new nodes
      */
@@ -444,7 +444,7 @@ export default abstract class Shower<
     }
 
     /**
-     * Heat the visualisation,
+     * Heat the visualization,
      * Whatever that may mean
      */
     public heatFor(_time: number = null) {
@@ -456,7 +456,7 @@ export default abstract class Shower<
      * @param css CSS to inject
      */
     public getSVG(css: string = "") {
-        // set isClose to true, clone the visualisation and add get the size
+        // set isClose to true, clone the visualization and add get the size
         const oldIsClose = this.isClose;
         this.isClose = true;
         this.ticked();
@@ -497,19 +497,19 @@ export default abstract class Shower<
         return clone.outerHTML;
     }
 
-    // Private map for storing colours that have an arrow definition
+    // Private map for storing colors that have an arrow definition
     private existingColors = new Map<
         string,
         { hex: string; hexFull: string; d3: d3.Color }
     >();
     /**
-     * Get a random colour for a name and create an arrow definition for it.
+     * Get a random color for a name and create an arrow definition for it.
      *
      * example arrow usage
      * arrow.attr("marker-end", d => this.getRandCol(t, true));
      *
-     * @param t name to make a colour for
-     * @param arrow return marker id if true (else hex colour with #)
+     * @param t name to make a color for
+     * @param arrow return marker id if true (else hex color with #)
      */
     private getRandCol(t: string, arrow: boolean = false): string {
         if (!this.existingColors.has(t)) {
