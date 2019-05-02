@@ -56,6 +56,10 @@
 (define (term->kv exp)
   (match exp
     [`((store (x ,x) (y ,y)) (threads ,t1 ,t2))
-       (list (cons 'x x) (cons 'y y))]))
+       (list 
+          (cons 'x x) 
+          (cons 'y y)
+          (cons 'repr (pretty-format exp 30))
+        )]))
 
 

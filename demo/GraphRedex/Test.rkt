@@ -373,4 +373,4 @@
 ; Extraction function to expose certain information of the redex model as attributes for the nodes
 ;
 (define (term->kv exp)
-  (list (cons 'x 5) ))
+  (list (cons 'repr (pretty-format exp 35)) ))
