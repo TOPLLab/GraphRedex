@@ -193,6 +193,10 @@ export default abstract class Shower<
         }
     }
 
+    public get bubbleNode(): N | null {
+        return (this.bubble.datum() as N) || null;
+    }
+
     /**
      * @param id id of the node whose data needs to be updated
      * @param f function that gets the new data (will not be called if node not found)
