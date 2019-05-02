@@ -25,6 +25,8 @@ interface ForceShowerNode<ND extends GRND> extends ShowerNode<ND> {
     y?: any;
     fx?: number;
     fy?: number;
+    ix?: number;
+    iy?: number;
 }
 interface ForceShowerEdge<ND extends GRND, ED extends GRED>
     extends ShowerEdge<ND, ED> {
@@ -164,12 +166,22 @@ export default class ForceShower<
                 if (!d3.event.active) {
                     this.simulation.alphaTarget(0.3).restart();
                 }
-                d.fx = d.x;
-                d.fy = d.y;
+                d.ix = d.ix || d.x;
+                d.iy = d.iy || d.y;
             })
             .on("drag", (d: ForceShowerNode<ND>) => {
-                d.fx = d3.event.x;
-                d.fy = d3.event.y;
+                if (
+                    d.fy !== null ||
+                    d.fy !== null ||
+                    Math.abs(d.ix - d3.event.x) + Math.abs(d.iy - d3.event.y) >
+                        7.5
+                ) {
+                    d.fx = d3.event.x;
+                    d.fy = d3.event.y;
+                } else {
+                    d.fx = null;
+                    d.fy = null;
+                }
             })
             .on("end", () => {
                 if (!d3.event.active) {
