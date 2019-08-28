@@ -18,8 +18,8 @@ export default class MyDatabase {
         return new MyDatabase(dbRW, dbRO);
     }
 
-    private dbRO: Database;
-    private dbRW: Database;
+    private readonly dbRO: Database;
+    private readonly dbRW: Database;
 
     get ro() {
         return this.dbRO;
