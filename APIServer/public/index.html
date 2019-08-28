@@ -25,6 +25,9 @@
         .graph-nodes .limited {
             stroke: pink;
         }
+        .graph-nodes .highlighted {
+            stroke: red !important;
+        }
 
 
         .graph-nodes .stuck {
@@ -191,7 +194,7 @@
                             FILTER p.edges[*]._real NONE == false
                             RETURN DISTINCT v)
                             LET edges = (
-                            FOR a in nodes
+                FOR a in nodes
                             FOR e IN @@edges
                             FILTER e._from == a._id OR e._to == a._id
                             RETURN DISTINCT e)

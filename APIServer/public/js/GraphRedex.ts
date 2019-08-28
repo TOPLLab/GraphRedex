@@ -7,15 +7,16 @@ import ForceShower from "./shower/ForceShower";
 import termDiff from "./termDiff";
 
 interface GRND extends NodeData {
-    _pict?: string;
-    _formatted?: string;
     _id: string;
     _key: string;
     term: string;
     _stuck: boolean;
     _limited?: boolean;
     _expanded: boolean;
+    _pict?: string;
+    _formatted?: string;
 }
+
 interface GRED extends EdgeData {
     _id: string;
     _from: string;
@@ -25,10 +26,10 @@ interface GRED extends EdgeData {
 }
 
 export default class GraphRedex<N extends GRND, E extends GRED> {
-    protected _curExample: ExampleMeta = null;
+    forceNow: boolean;
     protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
-    forceNow: boolean;
+    private highlighted: Set<string> = new Set();
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualizer");
@@ -160,7 +161,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         )
                         .join("")}
                     </tbody></table>
-                    <hl>
+                    <hr>
                     <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre>
                     ${
                         d.data._stuck
@@ -179,6 +180,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             },
             nodeUpdate: (nodes) => {
                 nodes
+                    .classed("highlighted", (d) =>
+                        this.highlighted.has(d.data._id),
+                    )
                     .classed("expandable", (d) => !d.data._expanded)
                     .classed("expanding", (d) => this.expanding.has(d.data._id))
                     .classed("limited", (d) => d.data._limited);
@@ -189,21 +193,14 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.forceNow = true;
     }
 
-    init() {
-        this.setUpCreateLang();
-        this.setupDoReductions();
-        this.setupExampleSelector();
-        this.setupDoQry();
-        this.updateLangs();
-        this.setUpShowerBtns();
-    }
-
     private getRepr(nd: GRND) {
         if ("_formatted" in nd) {
             return nd._formatted;
         }
         return nd.term;
     }
+
+    protected _curExample: ExampleMeta = null;
 
     get curExample() {
         return this._curExample;
@@ -212,6 +209,65 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     set curExample(example: ExampleMeta | null) {
         this._curExample = example;
         this.setupExampleSelector();
+    }
+
+    protected get svgCSS() {
+        return `.graph-arrows {
+    stroke-width: 2;
+    fill: transparent;
+}
+
+.graph-nodes {
+    cursor: move;
+    fill: rgb(86, 198, 212);
+    stroke: #ffffff;
+    stroke-width: 2;
+}
+
+.graph-nodes .expandable {
+    stroke: grey;
+}
+
+.graph-nodes .limited {
+    stroke: pink;
+}
+
+
+
+.graph-nodes .stuck {
+    fill: red;
+}
+.graph-nodes .start {
+    fill: greenyellow;
+}
+
+.graph-nodes .highlighted {
+    stroke: red !important;
+}
+
+
+.graph-nodes .expanding {
+    fill: orange;
+}
+
+.graph-nodes .start.stuck {
+    fill: greenyellow;
+    stroke: red;
+}
+
+.graph-texts {
+    font-size: 5px;
+    font-family: "Noto Sans","Courier New",monospace;
+}`;
+    }
+
+    init() {
+        this.setUpCreateLang();
+        this.setupDoReductions();
+        this.setupExampleSelector();
+        this.setupDoQry();
+        this.updateLangs();
+        this.setUpShowerBtns();
     }
 
     /**
@@ -249,6 +305,42 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         } else {
             this.shower.show(data);
         }
+    }
+
+    /**
+     * Render a graph of the argument if it is an array of length 1
+     * whose only element has a nodes and edges key
+     */
+    renderIfGraph(data: any) {
+        // TODO change to promise
+        if (data.length === 1) {
+            const renderData = data[0];
+            const renderKeys = Object.keys(renderData);
+            if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
+                if (
+                    renderData.nodes
+                        .map((x) => x._id)
+                        .includes(this.curExample.baseTerm)
+                ) {
+                    this.shower.setRoot(this.curExample.baseTerm);
+                } else {
+                    // start not included, don't use BFS TODO: use bfs
+                    this.shower.setRoot(null);
+                }
+                this.shower.show(renderData);
+                return true;
+            }
+        } else {
+            if (Array.isArray(data)) {
+                if (data.every((x) => typeof x == "object" && "_id" in x)) {
+                    data = data.map((x) => x._id);
+                }
+                data.forEach((d) => this.highlighted.add(d));
+                this.shower.update();
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -334,50 +426,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         }
     }
 
-    /**
-     * Render a graph of the argument if it is an array of length 1
-     * whose only element has a nodes and edges key
-     */
-    renderIfGraph(data: any) {
-        // TODO change to promise
-        if (data.length === 1) {
-            const renderData = data[0];
-            const renderKeys = Object.keys(renderData);
-            if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
-                if (
-                    renderData.nodes
-                        .map((x) => x._id)
-                        .includes(this.curExample.baseTerm)
-                ) {
-                    this.shower.setRoot(this.curExample.baseTerm);
-                } else {
-                    // start not included, don't use BFS TODO: use bfs
-                    this.shower.setRoot(null);
-                }
-                this.shower.show(renderData);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private async doTerm(
-        lang: string,
-        name: string,
-        term: string,
-    ): Promise<APIDoTermResult> {
-        if (name.length === 0) {
-            throw "Please supply a name";
-        }
-        if (lang.length === 0) {
-            throw "Please choose a language";
-        }
-        return await getit(`/doTerm/${lang}/${name}`, {
-            method: "POST",
-            body: term,
-        });
-    }
-
     protected setUpCreateLang() {
         const form = d3.select("#createLanguage").on("submit", () => {
             d3.event.preventDefault();
@@ -444,7 +492,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     protected setupDoQry() {
         const output = document.getElementById("doQryOutput");
-        const form = d3.select("#createQry").on("submit", () => {
+        const form = d3.select("#createQry");
+        form.on("submit", () => {
             d3.event.preventDefault();
             const qry = d3.select("#qry").property("value");
             console.log(qry, this.curExample);
@@ -542,6 +591,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         });
     }
 
+    private reset() {
+        this.shower.reset();
+        this.highlighted.clear();
+    }
+
     protected setUpShowerBtns() {
         d3.select("#reheat").on("click", () => {
             this.shower.heatFor(5000);
@@ -581,7 +635,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     })
                     .catch((e) => alert(e));
                 this.curExample = null;
-                this.shower.reset();
+                this.reset();
             }
         });
 
@@ -614,48 +668,20 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         doRenderBtn();
     }
 
-    protected get svgCSS() {
-        return `.graph-arrows {
-            stroke-width: 2;
-            fill: transparent;
+    private async doTerm(
+        lang: string,
+        name: string,
+        term: string,
+    ): Promise<APIDoTermResult> {
+        if (name.length === 0) {
+            throw "Please supply a name";
         }
-
-        .graph-nodes {
-            cursor: move;
-            fill: rgb(86, 198, 212);
-            stroke: #ffffff;
-            stroke-width: 2;
+        if (lang.length === 0) {
+            throw "Please choose a language";
         }
-
-        .graph-nodes .expandable {
-            stroke: grey;
-        }
-
-        .graph-nodes .limited {
-            stroke: pink;
-        }
-
-
-
-        .graph-nodes .stuck {
-            fill: red;
-        }
-        .graph-nodes .start {
-            fill: greenyellow;
-        }
-
-        .graph-nodes .expanding {
-            fill: orange;
-        }
-
-        .graph-nodes .start.stuck {
-            fill: greenyellow;
-            stroke: red;
-        }
-
-        .graph-texts {
-            font-size: 5px;
-            font-family: "Noto Sans","Courier New",monospace;
-        }`;
+        return await getit(`/doTerm/${lang}/${name}`, {
+            method: "POST",
+            body: term,
+        });
     }
 }
