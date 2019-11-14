@@ -37,6 +37,8 @@ docker build -t graphredex/racket -f=racket.DockerFile .
   - Default: `127.0.0.1` 
 - `ARANGO_PORT` port aranogoDB is running on
   - Default: `8529`
+- `GRAPHREDEX_UNSAFE` set to `YES` to automaticly log in with `demo:demo`
+  - Default: ``
 
 ## security
 
