@@ -41,7 +41,7 @@
          (newHeaders `(
                        "Content-Type: application/json"
                        "Accept: application/json; charset=UTF-8"
-                       (unquote (~a "Authorization: bearer " token))
+                       ,(~a "Authorization: bearer " token)
                        )))
 
     (values
@@ -60,8 +60,8 @@
             )
         (sendArango "POST" newHeaders  "_api/cursor"   (jsexpr->string
                       `#hash(
-                             (query . (unquote query))
-                             (bindVars . (unquote newbinds)))))
+                             (query . ,query)
+                             (bindVars . ,newbinds))))
 
         )
       )
@@ -74,7 +74,7 @@
                     (jsexpr->string
                       `#hash(
                              (query . "FOR doc IN @@tcol FILTER doc.term == @term LIMIT 1 RETURN doc._id")
-                             (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname))  ))))) 'result))
+                             (bindVars . #hash((term . ,term ) (@tcol . ,graphname)  ))))) 'result))
       ; Create term if not exists and always return id
       ; Marks as expanded if expanded is #t else leaves it
       ; Marks as stuck if stuck is #t else leaves it
@@ -86,10 +86,10 @@
           (jsexpr->string
             `#hash(
                    (query .
-                          (unquote (if expanded
+                          ,(if expanded
                                        (~a "LET updatedTerm = MERGE(@term,{\"_expanded\": true, \"_stuck\": " (if stuck "true" "false") "})  UPSERT {term:@term.term} INSERT updatedTerm UPDATE updatedTerm IN @@tcol RETURN NEW._id")
-                                       "LET updatedTerm = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT updatedTerm UPDATE OLD IN @@tcol RETURN NEW._id")))
-                   (bindVars . #hash((term . (unquote term )) (@tcol . (unquote graphname)) ))))))
+                                       "LET updatedTerm = MERGE(@term,{\"_expanded\": false}) UPSERT {term:@term.term} INSERT updatedTerm UPDATE OLD IN @@tcol RETURN NEW._id"))
+                   (bindVars . #hash((term . ,term) (@tcol .  ,graphname) ))))))
 
       (lambda (from to reduction [real #t])
         (sendArango
@@ -100,12 +100,12 @@
             `#hash(
                    (query . "FOR f IN @@tcol  FILTER f.term == @from FOR t IN @@tcol  FILTER t.term == @to UPSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction, \"_real\":@real} INSERT {\"_from\":f._id,\"_to\":t._id,\"reduction\":@reduction,\"_real\":@real} UPDATE  OLD IN @@rcol")
                    (bindVars . #hash(
-                                     (from . (unquote from ))
-                                     (to . (unquote to ))
-                                     (reduction . (unquote reduction ))
-                                     (real . (unquote real ))
-                                     (@tcol . (unquote graphname ))
-                                     (@rcol . (unquote (~a graphname "-reductions") ))
+                                     (from . ,from )
+                                     (to . ,to)
+                                     (reduction . ,reduction)
+                                     (real . ,real )
+                                     (@tcol . ,graphname )
+                                     (@rcol . ,(~a graphname "-reductions") )
                                      ))))))
       )
     )

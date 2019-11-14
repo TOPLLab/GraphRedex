@@ -40,7 +40,7 @@
   (define (node-done? term)
     (let ([res (hash-ref (qry
                            "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id"
-                           `#hash((term . (unquote (expr->string term) ))   )
+                           `#hash((term . ,(expr->string term) )   )
                            #t
                            )
                          'result)])
