@@ -15,7 +15,9 @@ const datadir = process.argv[2];
 console.log(process.argv);
 console.log("Starting server");
 
-require("./dist/Server.js")
+require(process.env.ENV === "DEVELOP" || process.env.GRAPHREDEX_UNSAFE === "YES"
+    ? "./dist/ServerNoLogin.js"
+    : "./dist/Server.js")
     .default.bootstrap(
         datadir,
         path.join(__dirname, "..", "RedexServer", "run.sh"),

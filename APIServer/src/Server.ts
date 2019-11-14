@@ -19,7 +19,7 @@ import Example from "./Example";
 export default class Server {
     public app: express.Application;
     private database: MyDatabase;
-    private users: Users;
+    protected users: Users;
     private runner: ReductionRunner;
     private uploader;
     private languages: Languages;
@@ -40,7 +40,7 @@ export default class Server {
      * @class Server
      * @constructor
      */
-    private constructor(
+    protected constructor(
         database: MyDatabase,
         datadir: string,
         runPath: string,
@@ -251,7 +251,7 @@ export default class Server {
 
     /* Helper functions allowing async */
 
-    private requireLogin(
+    protected requireLogin(
         fn: (
             user: User,
             req: express.Request,
