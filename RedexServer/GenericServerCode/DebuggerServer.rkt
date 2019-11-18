@@ -23,7 +23,7 @@
 
 (define (run-echo graphname redLimit relation trans)
 
-  (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-data" graphname))
+  (define db (arango-new "graphredex-data" graphname))
 
   (define (trans->json t ts trans)
     (jsexpr->string
@@ -38,7 +38,7 @@
 
 
   (define (node-done? term)
-    (let ([res (hash-ref (qry
+    (let ([res (hash-ref (arango-qry db
                            "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id"
                            `#hash((term . ,(expr->string term) )   )
                            #t
@@ -89,7 +89,7 @@
           (betterTrans (lambda (x) (make-hash (cons (cons 'term (expr->string x)) (trans x)))))
           (next-terms (doApl relation term))
           )
-         (makenode (betterTrans term) #t (zero? (length next-terms)))
+         (arango-make-node db (betterTrans term) #t (zero? (length next-terms)))
 
 
 
@@ -98,8 +98,8 @@
            (match x [
                      (list real rel term2)
                      ;(fprintf (current-error-port) "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
-                     (makenode (betterTrans term2) #f #f)
-                     (makeedge (expr->string term) (expr->string term2) rel real)
+                     (arango-make-node db (betterTrans term2) #f #f)
+                     (arango-make-edge db (expr->string term) (expr->string term2) rel real)
 
                      ])
            )
@@ -122,13 +122,13 @@
     (
      (term (read))
      )
-    (makenode (hash-set* (make-immutable-hash (trans term))
+    (arango-make-node db (hash-set* (make-immutable-hash (trans term))
                          'term (expr->string term)
                          'base #t)
               #f
               #f
               )
-    (display (car (lookup (expr->string term))))
+    (display (car (arango-lookup db (expr->string term))))
     (run-echo2 (stream term) redLimit relation trans)
     ;TODO set at base
     )
