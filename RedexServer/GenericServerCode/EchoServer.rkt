@@ -22,7 +22,7 @@
 
 (define (run-echo graphname redLimit relation trans)
 
-  (define-values (arangoGET arangoPOST clearall qry lookup makenode makeedge) (createArango "graphredex-data" graphname))
+  (define db (arango-new "graphredex-data" graphname))
 
   (define (trans->json t ts trans)
     (jsexpr->string
@@ -37,11 +37,11 @@
 
 
   (define (node-done? term)
-    (let ([res (hash-ref (qry
-                          "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id"
-                          `#hash((term . ,(expr->string term) )   )
-                          #t
-                          )
+    (let ([res (hash-ref (arango-qry db
+                                     "FOR doc IN @@tcol FILTER doc.term == @term AND doc._expanded==true LIMIT 1 RETURN doc._id"
+                                     `#hash((term . ,(expr->string term) )   )
+                                     #t
+                                     )
                          'result)])
       (> (length res) 0)
       )
@@ -80,7 +80,7 @@
 
       ; Skip is tern us already processed
       [(node-done? (stream-first term-stream))
-       (fprintf (current-error-port) "\nSKIPPED\n")
+       ;(fprintf (current-error-port) "\nSKIPPED\n")
        (process (stream-rest term-stream) reductions-left relation trans)
        ]
 
@@ -92,15 +92,13 @@
             (term (stream-first  term-stream))
             (next-terms (apply-reduction-relation/tag-with-names relation term))
             )
-         (fprintf (current-error-port) "\nMakenode")
-         (makenode (make-node-data term trans) #t (zero? (length next-terms)))
-         (fprintf (current-error-port) "\nMakenodeDONE")
+         (arango-make-node db (make-node-data term trans) #t (zero? (length next-terms)))
 
          (for ([x next-terms])
            (match x [`(,rel ,term2)
                      ;(fprintf (current-error-port) "\nAdded: ~a -[reduces:~a]-> ~a\n" term rel term2)
-                     (makenode (make-node-data term2 trans) #f #f)
-                     (makeedge (expr->string term) (expr->string term2) rel)
+                     (arango-make-node db (make-node-data term2 trans) #f #f)
+                     (arango-make-edge db (expr->string term) (expr->string term2) rel)
                      ])
            )
          (process (stream-append (stream-rest term-stream) (map (lambda (x) (car (cdr x))) next-terms)) (- reductions-left 1) relation trans)
@@ -118,11 +116,8 @@
       (
        (term (read))
        )
-    (makenode (make-node-data term trans)
-              #f
-              #f
-              )
-    (display (car (lookup (expr->string term))))
+    (arango-make-node db (make-node-data term trans) #f #f )
+    (display (car (arango-lookup db (expr->string term))))
     (process (stream term) redLimit relation trans)
     )
 
