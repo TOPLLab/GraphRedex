@@ -1,5 +1,6 @@
 #lang racket
 (require redex/reduction-semantics)
+(require redex/pict)
 (provide reductions term->kv)
 ; A simple nodeterministic model for showcasing non-deterministic debugging. 
 ; Christophe.Scholliers@UGent.be
@@ -13,11 +14,14 @@
 
 
 (define (term->kv exp)
-  (match exp
-    [(list 'amb e ...) (list (cons 'type "ambigous") (cons 'fixed (= 1 (length e))) )]
-    [(list '+ e ...) (list (cons 'type "addition") )]
-    [_ (list (cons 'type "final") (cons 'fixed #t) )]
-  ))
+  `((_pict . ,(render-term/pretty-write Amb exp)) 
+    . 
+    ,(match exp
+       [(list 'amb e ...) (list (cons 'type "ambigous") (cons 'fixed (= 1 (length e))) )]
+       [(list '+ e ...) (list (cons 'type "addition") )]
+       [_ (list (cons 'type "final") (cons 'fixed #t) )]
+       ))
+  )
  
 
 (define reductions

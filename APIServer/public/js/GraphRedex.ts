@@ -7,6 +7,7 @@ import ForceShower from "./shower/ForceShower";
 import termDiff from "./termDiff";
 
 interface GRND extends NodeData {
+    _pict?: string;
     _id: string;
     _key: string;
     term: string;
@@ -118,11 +119,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
                 let prevTerm = null;
                 nodes.on("mouseover", (d) => {
-                    const renderedTerm =
+                    let renderedTerm =
                         prevTerm === null
                             ? d.data.term
                             : termDiff(d.data.term, prevTerm)[0];
                     prevTerm = d.data.term;
+                    if ("_pict" in d.data) {
+                        renderedTerm = d.data._pict;
+                    }
+
                     d3.select("#statusSection").html(`
                     <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre> <hl>
                     <table class="pure-table pure-table-horizontal stretch"><thead>
