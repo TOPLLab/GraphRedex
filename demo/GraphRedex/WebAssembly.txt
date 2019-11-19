@@ -1,0 +1,30 @@
+(((inst
+    ((func
+      ((inst 0) (code (func () (-> (i32 i64) ()) local () ((get-local 0) ((get-local 1) ((store i64 6 0) (return ϵ)))))))
+      ((inst 1)
+       (code
+        (func
+         ()
+         (-> (i32 i64) ())
+         local
+         (i64)
+         ((get-local 0) ((load i64 6 0) ((tee-local 2) ((get-local 1) ((mul i64) ((set-local 2) ((get-local 0) ((get-local 2) ((store i64 6 0) (return ϵ)))))))))))))
+      ((inst 0) (code (func () (-> (i32) (i64)) local () ((get-local 0) ((load i64 6 0) (return ϵ)))))))
+     (glob)
+     (mem 0))
+    ((func
+      ((inst 1)
+       (code
+        (func
+         ()
+         (-> (i32 i64) ())
+         local
+         (i64)
+         ((get-local 0) ((load i64 6 0) ((tee-local 2) ((get-local 1) ((mul i64) ((set-local 2) ((get-local 0) ((get-local 2) ((store i64 6 0) (return ϵ))))))))))))))
+     (glob)
+     (mem 0)))
+   (tab () ())
+   (mem (0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
+  ()
+  ((const i32 0) ((const i64 42) ((call 0) ((const i32 0) ((const i64 5) ((call 1) ((const i32 0) ((call 2) ϵ))))))))
+  0)
