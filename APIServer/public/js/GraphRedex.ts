@@ -8,6 +8,7 @@ import termDiff from "./termDiff";
 
 interface GRND extends NodeData {
     _pict?: string;
+    _formatted?: string;
     _id: string;
     _key: string;
     term: string;
@@ -118,14 +119,29 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 });
 
                 let prevTerm = null;
+                let prevURL = null;
                 nodes.on("mouseover", (d) => {
-                    let renderedTerm =
-                        prevTerm === null
-                            ? d.data.term
-                            : termDiff(d.data.term, prevTerm)[0];
-                    prevTerm = d.data.term;
+                    let renderedTerm = "";
+                    if ("_formatted" in d.data) {
+                        renderedTerm = d.data._formatted;
+                    } else {
+                        renderedTerm =
+                            prevTerm === null
+                                ? d.data.term
+                                : termDiff(d.data.term, prevTerm)[0];
+                        prevTerm = d.data.term;
+                    }
                     if ("_pict" in d.data) {
-                        renderedTerm = d.data._pict;
+                        if (prevURL) URL.revokeObjectURL(prevURL);
+                        prevURL = URL.createObjectURL(
+                            new Blob([d.data._pict], { type: "image/svg+xml" }),
+                        );
+                        const img = document.createElement("img");
+                        img.src = prevURL;
+                        img.alt = d.data.term;
+                        img.style.maxWidth = "100%";
+                        img.style.userSelect = "all";
+                        renderedTerm = img.outerHTML;
                     }
 
                     d3.select("#statusSection").html(`
