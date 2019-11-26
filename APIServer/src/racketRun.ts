@@ -116,7 +116,10 @@ export default class ReductionRunner {
                 "50",
             ],
             term,
-        ).then(({ output, errors }) => ({ term: output, errors: errors }));
+        ).then(({ output, errors }) => ({
+            term: output.split(/\n|\r/).pop(),
+            errors: errors,
+        }));
     }
 
     private async startRun(
