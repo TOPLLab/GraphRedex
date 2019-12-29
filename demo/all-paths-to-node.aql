@@ -1,0 +1,17 @@
+// find all stuck nodes
+LET stuckNodes = (FOR n in @@nodes FILTER n._stuck && n.term == "2" RETURN n)
+LET target = stuckNodes[0]
+
+// find path to each of them and join the results
+LET path = FLATTEN(
+        FOR p IN OUTBOUND K_SHORTEST_PATHS
+            @start TO target GRAPH @graph
+                RETURN {v: p.vertices, e: p.edges})
+
+// convert to needed format
+//RETURN (FLATTEN(FOR d in path FILTER d.e != null RETURN DISTINCT d.e))
+
+RETURN {
+    edges: UNIQUE(FLATTEN(FOR d in path FILTER d.e != null RETURN DISTINCT d.e)),
+    nodes: UNIQUE(FLATTEN(FOR d in path FILTER d.v != null RETURN DISTINCT d.v))
+}
