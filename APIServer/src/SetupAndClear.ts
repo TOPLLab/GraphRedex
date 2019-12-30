@@ -1,10 +1,10 @@
-import MyDatabase from "./Database";
+import arangojs, { Database } from "arangojs";
 import * as os from "os";
 import * as path from "path";
-import { isReadableFile } from "./Utils";
 import * as readline from "readline";
 import * as request from "request";
-import arangojs, { Database } from "arangojs";
+import MyDatabase from "./Database";
+import { isReadableFile } from "./Utils";
 
 //import arangojs, { Database, DocumentCollection, Graph } from "arangojs";
 

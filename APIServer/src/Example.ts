@@ -1,9 +1,9 @@
-import MyDatabase from "./Database";
 import { Graph } from "arangojs";
 import {
     GraphEdgeCollection,
     GraphVertexCollection,
 } from "arangojs/lib/cjs/graph";
+import MyDatabase from "./Database";
 
 export interface ExampleMeta {
     lang: any;

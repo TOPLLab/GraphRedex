@@ -1,6 +1,6 @@
+import * as d3 from "d3";
 import Shower from "./Shower";
 import treeForce from "./treeForce";
-import * as d3 from "d3";
 
 interface GRND extends NodeData {
     _id: string;

@@ -1,7 +1,7 @@
+import { DocumentCollection, Graph } from "arangojs";
 import MyDatabase from "./Database";
-import { HashedPass, isPasswordCorrect } from "./password";
-import { Graph, DocumentCollection } from "arangojs";
 import Example from "./Example";
+import { HashedPass, isPasswordCorrect } from "./password";
 
 export interface User {
     _key: string;

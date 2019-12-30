@@ -1,10 +1,10 @@
-import { spawn } from "child_process";
-import { Readable } from "stream";
-import * as path from "path";
-import MyDatabase from "./Database";
-import { User } from "./Users";
-import Example, { ExampleMeta } from "./Example";
 import { Graph } from "arangojs";
+import { spawn } from "child_process";
+import * as path from "path";
+import { Readable } from "stream";
+import MyDatabase from "./Database";
+import Example, { ExampleMeta } from "./Example";
+import { User } from "./Users";
 import { isReadableFile, makeEnv } from "./Utils";
 
 interface RacketResult {

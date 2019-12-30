@@ -1,5 +1,5 @@
-import { randomColor, fracToRad, awaitBoolean, awaitArray } from "../util";
 import * as d3 from "d3";
+import { awaitArray, awaitBoolean, fracToRad, randomColor } from "../util";
 
 /// <reference path="./ShowerTypes.d.ts"/>
 

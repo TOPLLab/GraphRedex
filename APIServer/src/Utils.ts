@@ -1,6 +1,6 @@
+import { spawn } from "child_process";
 import * as fs from "fs";
 import express = require("express");
-import { spawn } from "child_process";
 
 export function isReadableFile(absPath: string): Promise<boolean> {
     return new Promise((resolve) => {

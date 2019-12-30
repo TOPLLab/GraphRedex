@@ -5,11 +5,11 @@ import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as multer from "multer";
 import MyDatabase from "./Database";
+import Example from "./Example";
 import { Languages } from "./Languages";
 import ReductionRunner from "./racketRun";
 import Users, { User } from "./Users";
 import { asyncMiddleware } from "./Utils";
-import Example from "./Example";
 
 /**
  * The server.

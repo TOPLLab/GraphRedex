@@ -1,9 +1,9 @@
-import MyDatabase from "./Database";
+import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import MyDatabase from "./Database";
 import { User } from "./Users";
-import { spawn } from "child_process";
-import { isReadableFile, deleteDir, dirListing } from "./Utils";
+import { deleteDir, dirListing, isReadableFile } from "./Utils";
 const { promisify } = require("util");
 
 const BASE_FILENAME = "PLTGraphRedex.rkt";
