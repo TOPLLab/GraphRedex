@@ -180,9 +180,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
         this.shower.setRoot(this.curExample.baseTerm);
         const steps = 3000;
 
-        const [data] = await getit("my/example/qry/" + example._key, {
-            method: "POST",
-            body: `LET nodes = (
+        const [data] = await this.doQry(`LET nodes = (
                 FOR v,e,p IN 0..${steps}
                     OUTBOUND ${start ? `"${start}"` : "@start"} GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
@@ -193,8 +191,7 @@ export default class DebugRedex extends GraphRedex<GRND, GRED> {
                 FOR e IN @@edges
                     FILTER  e._from == a._id OR e._to == a._id
                         RETURN DISTINCT e)
-        RETURN {nodes,edges}`,
-        });
+        RETURN {nodes,edges}`);
 
         if (start) {
             this.shower.push(data, startPos);
