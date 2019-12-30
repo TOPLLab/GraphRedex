@@ -213,6 +213,23 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.setupExampleSelector();
     }
 
+    protected async doQry(
+        qry: string,
+        example: ExampleMeta = null,
+        focused: NodeData = null,
+    ): Promise<any[]> {
+        const ex = example ?? this.curExample;
+        const focus = focused ?? this.shower.bubbleNode;
+        if (typeof ex?._key !== "string") {
+            throw "No example selected!";
+        }
+        console.log(focus);
+        return await getit(`my/example/qry/${ex._key}`, {
+            method: "POST",
+            body: qry,
+        });
+    }
+
     protected get svgCSS() {
         return `.graph-arrows {
     stroke-width: 2;
@@ -287,9 +304,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.shower.setRoot(this.curExample.baseTerm);
         const steps = 300;
 
-        const [data] = await getit("my/example/qry/" + example._key, {
-            method: "POST",
-            body: `LET nodes = (
+        const [data] = await this.doQry(`LET nodes = (
                 FOR v,e,p IN 0..${steps}
                     OUTBOUND ${start ? `"${start}"` : "@start"} GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
@@ -299,8 +314,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 FOR e IN @@edges
                     FILTER  e._from == a._id OR e._to == a._id
                         RETURN DISTINCT e)
-        RETURN {nodes,edges}`,
-        });
+        RETURN {nodes,edges}`);
 
         if (start) {
             this.shower.push(data, startPos);
@@ -353,14 +367,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected async getNonRealSteps(
         term: TermMeta,
     ): Promise<{ name: string; _to: string; _id: string }[]> {
-        return await getit("my/example/qry/" + this.curExample._key, {
-            method: "POST",
-            body: `
+        return await this.doQry(`
             FOR e IN @@edges
                 FILTER  e._from == "${term._id}"
                 FILTER  e._real == false
-                RETURN DISTINCT {name:e.reduction,_to:e._to,_id:e._id}`,
-        });
+                RETURN DISTINCT {name:e.reduction,_to:e._to,_id:e._id}`);
     }
 
     /**
@@ -390,14 +401,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             this.expandNode(node);
         } else {
             const nodes: { _id: string; _key: string }[] = (
-                await getit("my/example/qry/" + this.curExample._key, {
-                    method: "POST",
-                    body: `FOR v IN 0..${depth}
+                await this.doQry(`FOR v IN 0..${depth}
                     OUTBOUND "${node._id}" GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
                     FILTER v._expanded == false
-                    RETURN DISTINCT {_key:v._key,_id:v._id}`,
-                })
+                    RETURN DISTINCT {_key:v._key,_id:v._id}`)
             ).filter((e) => !this.expanding.has(e._id));
 
             // Mark all selected nodes as expanding
@@ -501,10 +509,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             console.log(qry, this.curExample);
 
             output.textContent = "Wait for it...";
-            getit("my/example/qry/" + this.curExample._key, {
-                method: "POST",
-                body: qry,
-            })
+            this.doQry(qry)
                 .then((data) => {
                     output.textContent =
                         "Done: See developer console for output\n";
