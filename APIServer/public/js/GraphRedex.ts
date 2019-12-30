@@ -1,10 +1,10 @@
 import * as d3 from "d3";
+import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
+import termDiff from "./termDiff";
 import { downloadFileLink, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
-import ForceShower from "./shower/ForceShower";
-import termDiff from "./termDiff";
 
 interface GRND extends NodeData {
     _id: string;
@@ -131,7 +131,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                               );
 
                     if ("_pict" in d.data) {
-                        if (prevURL) URL.revokeObjectURL(prevURL);
+                        if (prevURL) {
+                            URL.revokeObjectURL(prevURL);
+                        }
                         prevURL = URL.createObjectURL(
                             new Blob([d.data._pict], { type: "image/svg+xml" }),
                         );

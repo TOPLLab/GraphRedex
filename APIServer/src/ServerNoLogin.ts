@@ -1,10 +1,10 @@
 "use strict";
 
-import Server from "./Server";
-import { asyncMiddleware } from "./Utils";
-import { User } from "./Users";
 import * as express from "express";
 import MyDatabase from "./Database";
+import Server from "./Server";
+import { User } from "./Users";
+import { asyncMiddleware } from "./Utils";
 
 /**
  * The server logged in with demo:demo

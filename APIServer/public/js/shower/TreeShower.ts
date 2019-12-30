@@ -1,6 +1,6 @@
-import Shower from "./Shower";
 import * as d3 from "d3";
 import { mLast } from "../util";
+import Shower from "./Shower";
 
 const enum Direction {
     Forward,
