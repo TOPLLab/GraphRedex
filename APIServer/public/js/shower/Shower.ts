@@ -245,7 +245,11 @@ export default abstract class Shower<
             .append("text")
             .attr("text-anchor", "middle")
             .attr("fill", (d) => this.getRandCol(d.data.reduction))
-            .html((d) => "<tspan dy='-5'>" + d.data.reduction + "</tspan>");
+            .html((d) =>
+                d.data.reduction === false
+                    ? ""
+                    : "<tspan dy='-5'>" + d.data.reduction + "</tspan>",
+            );
         if ("edgeSelected" in this.config && this.config.edgeSelected) {
             textEnter.on("click", (d) => {
                 this.config.edgeSelected(d);
