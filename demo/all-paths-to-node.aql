@@ -1,17 +1,16 @@
-// find all stuck nodes
-LET stuckNodes = (FOR n in @@nodes FILTER n._stuck && n.term == "2" RETURN n)
-LET target = stuckNodes[0]
+LET backReachable = FLATTEN(FOR v IN 0..1000 INBOUND @focus GRAPH @graph 
+      OPTIONS {bfs:true,uniqueVertices: 'global'}
+      RETURN DISTINCT v._key)
 
-// find path to each of them and join the results
-LET path = FLATTEN(
-        FOR p IN OUTBOUND K_SHORTEST_PATHS
-            @start TO target GRAPH @graph
-                RETURN {v: p.vertices, e: p.edges})
+LET nodes = FLATTEN(FOR v IN 0..1000 OUTBOUND @start GRAPH @graph
+      OPTIONS {bfs:true,uniqueVertices: 'global'}
+      FILTER (v._key IN backReachable)
+      RETURN DISTINCT v)
+      
+LET nodesKeys = nodes[*]._id
 
-// convert to needed format
-//RETURN (FLATTEN(FOR d in path FILTER d.e != null RETURN DISTINCT d.e))
+LET edges = (FOR e IN @@edges
+            FILTER e._from IN nodesKeys OR e._to IN nodesKeys
+            RETURN DISTINCT e)
 
-RETURN {
-    edges: UNIQUE(FLATTEN(FOR d in path FILTER d.e != null RETURN DISTINCT d.e)),
-    nodes: UNIQUE(FLATTEN(FOR d in path FILTER d.v != null RETURN DISTINCT d.v))
-}
+RETURN {nodes,edges}
