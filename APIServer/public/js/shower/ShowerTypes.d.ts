@@ -7,7 +7,7 @@ interface EdgeData {
     _id: string;
     _from: string;
     _to: string;
-    reduction: string;
+    reduction: string | false;
     _real: boolean;
 }
 

@@ -1,7 +1,7 @@
+/// <reference path="./ShowerTypes.d.ts"/>
+
 import * as d3 from "d3";
 import { awaitArray, awaitBoolean, fracToRad, randomColor } from "../util";
-
-/// <reference path="./ShowerTypes.d.ts"/>
 
 export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
     ND,
@@ -519,7 +519,10 @@ export default abstract class Shower<
      * @param t name to make a color for
      * @param arrow return marker id if true (else hex color with #)
      */
-    private getRandCol(t: string, arrow: boolean = false): string {
+    private getRandCol(t: string | false, arrow: boolean = false): string {
+        if (t === false) {
+            return null;
+        }
         if (!this.existingColors.has(t)) {
             const randColor = randomColor();
 
