@@ -64,18 +64,22 @@ export default class Example {
      *
      * @param qry
      */
-    public async qry(qry: string): Promise<any[]> {
+    public async qry(qry: string, focus: string | null): Promise<any[]> {
         const binds = {};
         const availibleBind = {
             "@nodes": this.vertexCollection.name,
             "@edges": this.edgeCollection.name,
             "graph": this.graph.name,
             "start": this.baseTerm,
+            "focus": focus,
         };
 
-        for (const [key, value] of Object.entries(availibleBind)) {
-            if (qry.includes("@" + key)) {
-                binds[key] = value;
+        const usedBinds = (await this.db.parse(qry)).bindVars;
+        for (const bind of usedBinds) {
+            if (availibleBind[bind] ?? null !== null) {
+                binds[bind] = availibleBind[bind];
+            } else {
+                throw `Bind @${bind} not availible!`;
             }
         }
 

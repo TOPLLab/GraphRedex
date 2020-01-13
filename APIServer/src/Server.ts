@@ -64,18 +64,30 @@ export default class Server {
 
         routeMy.post(
             "/example/qry/:id([0-9,]+)",
-            bodyParser.text({ type: "*/*" }),
+            express.json({ strict: true }),
             this.requireLogin(
                 async (
                     user: User,
                     req: express.Request,
                     res: express.Response,
                 ) => {
-                    const qry = req.body.toString();
-                    const example: Example = await this.users.exampleOf(user, {
-                        _key: req.params.id,
-                    });
-                    res.jsonp(await example.qry(qry));
+                    if (
+                        typeof req.body?.qry === "string" &&
+                        (typeof req.body?.focus === "string" ||
+                            req.body?.focus === null)
+                    ) {
+                        const example: Example = await this.users.exampleOf(
+                            user,
+                            {
+                                _key: req.params.id,
+                            },
+                        );
+                        res.jsonp(
+                            await example.qry(req.body.qry, req.body.focus),
+                        );
+                    } else {
+                        res.jsonp({ succes: false, err: "not all fields" });
+                    }
                 },
             ),
         );
