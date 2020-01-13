@@ -6,13 +6,14 @@ html,
 button,
 input,
 select,
-.pure-g [class *="pure-u"] {
+.pure-g [class*="pure-u"] {
     /* Set your content font stack here: */
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 textarea {
-    font-family: 'Fira Code', 'Courier New', Courier, monospace
+    font-family: "Fira Code", "Courier New", Courier, monospace;
 }
 
 .button-xsmall {
@@ -20,7 +21,7 @@ textarea {
 }
 
 nav {
-    >section {
+    > section {
         padding: 0.3em;
 
         &:empty {
@@ -33,8 +34,7 @@ nav {
     background: lighten(@tint, 50%);
     height: 100%;
     box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2),
-    0 0 3px 3px rgba(0, 0, 0, .25),
-    0 0 3px rgba(0, 0, 0, 0.14);
+        0 0 3px 3px rgba(0, 0, 0, 0.25), 0 0 3px rgba(0, 0, 0, 0.14);
 }
 
 body {
@@ -56,27 +56,27 @@ main {
     height: 100%;
     overflow: hidden;
 
-    >form {
+    > form {
         &.closed {
             display: none;
         }
 
-        &:not(.closed)~#visBtn {
+        &:not(.closed) ~ #visBtn {
             display: none;
         }
 
-        &:not(.closed)~#pannelCloseBtn {
+        &:not(.closed) ~ #pannelCloseBtn {
             display: block;
         }
 
-        >*:not(:first-child) {
+        > *:not(:first-child) {
             margin-top: 0.5em;
         }
 
         box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
         margin: -1em -1em 1em -1em;
         padding: 0.5em 1em;
-        border-bottom: 1px solid #EEE;
+        border-bottom: 1px solid #eee;
         z-index: 1;
     }
 }
@@ -84,19 +84,19 @@ main {
 #pannelCloseBtn {
     display: none;
     position: absolute;
-    top: .4rem;
-    right: .5rem;
+    top: 0.4rem;
+    right: 0.5rem;
     background: transparent;
     border: none;
 
     &:hover,
     &:active {
-        >svg {
+        > svg {
             fill: black;
         }
     }
 
-    >svg {
+    > svg {
         width: 1.5rem;
         height: 1.5rem;
         fill: #999;
@@ -127,14 +127,14 @@ header {
 
     img {
         height: 1.5em;
-        margin-top: .25em;
+        margin-top: 0.25em;
         float: left;
-        margin-left: .25em;
+        margin-left: 0.25em;
         margin-right: -1.5em;
     }
 }
 
-main>form>h2 {
+main > form > h2 {
     margin-top: 0;
     font-size: 1em;
 }
@@ -144,19 +144,19 @@ main>form>h2 {
 }
 
 button#reheat:hover use {
-    fill: #FF5722;
+    fill: #ff5722;
 }
 
 button#getSVG:hover use {
-    fill: #3F51B5;
+    fill: #3f51b5;
 }
 
 button#rezoom:hover svg {
-    transform: rotate(30Deg);
+    transform: rotate(30deg);
 }
 
 button[onclick="toggle('doReduction')"]:hover use {
-    fill: #3F51B5;
+    fill: #3f51b5;
 }
 
 button[onclick="toggle('createQry')"]:hover use {
@@ -164,7 +164,7 @@ button[onclick="toggle('createQry')"]:hover use {
 }
 
 button[onclick="toggle('createLanguage')"]:hover use {
-    fill: #9C27B0;
+    fill: #9c27b0;
 }
 
 .pure-button {
@@ -196,20 +196,20 @@ button[onclick="toggle('createLanguage')"]:hover use {
 }
 
 .bubble {
-    >circle {
-        fill: url("../svg.svg#bubbleGradient") #EEE;
+    > circle {
+        fill: url("../svg.svg#bubbleGradient") #eee;
         stroke: transparent;
     }
 
-    >use {
+    > use {
         pointer-events: none;
     }
 
-    >path {
-        fill: #EEE;
+    > path {
+        fill: #eee;
         cursor: pointer;
         mix-blend-mode: darken;
-        stroke: #AAA;
+        stroke: #aaa;
         stroke-width: 0.5;
 
         &:hover {
@@ -217,11 +217,11 @@ button[onclick="toggle('createLanguage')"]:hover use {
         }
     }
 
-    >path+use {
+    > path + use {
         fill: black;
     }
 
-    >path:hover+use {
+    > path:hover + use {
         fill: white;
     }
 }
@@ -229,7 +229,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
 #statusSection span {
     &.diff {
         color: red;
-        background: #FFF0BA;
+        background: #fff0ba;
     }
 
     &.same {
@@ -237,12 +237,9 @@ button[onclick="toggle('createLanguage')"]:hover use {
     }
 }
 
-
 .stretch {
     width: 100%;
 }
-
-
 
 // position icon in headers
 h1,
@@ -251,8 +248,7 @@ h3,
 h4,
 h5,
 h6 {
-
     svg {
-        margin-bottom: -.3ex;
+        margin-bottom: -0.3ex;
     }
 }
