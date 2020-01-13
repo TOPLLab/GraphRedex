@@ -1,4 +1,6 @@
+/// <reference path="../node_modules/arangojs/lib/cjs/database.d.ts">
 import arangojs, { Database, DocumentCollection, Graph } from "arangojs";
+import { ParseResult } from "arangojs/lib/cjs/database";
 import { User } from "./Users";
 
 export default class MyDatabase {
@@ -27,6 +29,10 @@ export default class MyDatabase {
 
     get rw() {
         return this.dbRW;
+    }
+
+    public parse(query: string): Promise<ParseResult> {
+        return this.ro.parse(query);
     }
 
     public users(write: boolean = false): DocumentCollection {

@@ -219,14 +219,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         focused: NodeData = null,
     ): Promise<any[]> {
         const ex = example ?? this.curExample;
-        const focus = focused ?? this.shower.bubbleNode;
+        const focus = focused ?? this.shower.bubbleNode?.data ?? null;
         if (typeof ex?._key !== "string") {
             throw "No example selected!";
         }
         console.log(focus);
         return await getit(`my/example/qry/${ex._key}`, {
             method: "POST",
-            body: qry,
+            headers: new Headers([["Content-Type", "application/json"]]),
+            body: JSON.stringify({ qry, focus: focus?._id ?? null }),
         });
     }
 
