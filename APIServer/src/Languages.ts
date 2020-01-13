@@ -29,7 +29,7 @@ export class Languages {
             onDisk: false,
             debugging: debugging,
         };
-        const metaData = await this.db.languages(true).save([langData]);
+        const [metaData] = await this.db.languages(true).save([langData]);
         langData._key = metaData._key;
 
         langData.dir = path.join(user._key, "lang", metaData._key);
