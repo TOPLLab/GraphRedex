@@ -3,6 +3,7 @@
 GraphRedex is a tool for ...
 
 ## Running the server
+
 Clone the repository and run the following in the root dir.
 
 ```bash
@@ -37,28 +38,29 @@ not require a display.
 This step is not needed when using docker.
 
 ## Installation
+
 ### Dependencies
 
-- [node](https://nodejs.org/en/)
-   * OSX: `brew install node`
-   * Arch: `pacman -S nodejs` (community/nodejs)
-- [yarn](https://yarnpkg.com/en/)
-   * OSX `brew install yarn`
-   * Arch: `pacman -S yarn` (community/yarn)
-- [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
-   * OSX: `brew install coreutils`
-   * Arch: `pacman -S coreutils` (core/coreutils)
-- [ArangoDB](https://www.arangodb.com/) (see below for setting it up)
-   * OSX: `brew install arangodb`
-   * Arch: install `aur/arangodb` from the AUR
+-   [node](https://nodejs.org/en/)
+    -   OSX: `brew install node`
+    -   Arch: `pacman -S nodejs` (community/nodejs)
+-   [yarn](https://yarnpkg.com/en/)
+    -   OSX `brew install yarn`
+    -   Arch: `pacman -S yarn` (community/yarn)
+-   [coreutils](https://www.gnu.org/software/coreutils/coreutils.html)
+    -   OSX: `brew install coreutils`
+    -   Arch: `pacman -S coreutils` (core/coreutils)
+-   [ArangoDB](https://www.arangodb.com/) (see below for setting it up)
+    -   OSX: `brew install arangodb`
+    -   Arch: install `aur/arangodb` from the AUR
 
 ### AragnoDB setup (database)
 
 GraphRedex uses a graph database called [ArangoDB](https://www.arangodb.com/).
 We use version `3.5.2` but any version above `3.5` should be ok.
 
-
 **OSX** users can install it with brew:
+
 ```
 brew install arangodb
 /usr/local/opt/arangodb/sbin/arangod &
@@ -68,40 +70,41 @@ brew install arangodb
 start or enable the service using `systemctl start arangodb3.service`.
 
 #### Configuration of ArangoDB
+
 Once the database is installed it needs to be initialized with an initial database and two users.
 Configuration of the database is browser based, the default address is http://127.0.0.1:8529.
 The default password for the `root` user is blank `""`.
-
 
 #### Creating users
 
 In order for GraphRedex to work it needs to have two users in the system called `graphredex-qry` and `graphredex`.
 The user `graphredex` has read and write access while the user `graphredex-qry` only has read access.
 
-- In the browser, go to the tab "Users", and create a user called `graphredex-qry` with password `graphredex-qry`.
-- In the browser, go to the tab "Users", and create a user called `graphredex` with password `graphredex`.
+-   In the browser, go to the tab "Users", and create a user called `graphredex-qry` with password `graphredex-qry`.
+-   In the browser, go to the tab "Users", and create a user called `graphredex` with password `graphredex`.
 
 ##### Creating the database
 
-Go to the tab "Databases" and make a database called `graphredex-data` make sure to select `graphredex` as the owner. 
+Go to the tab "Databases" and make a database called `graphredex-data` make sure to select `graphredex` as the owner.
 
 ##### Setting the permissions
 
 Now that the database is created we still need to make sure that the permissions of the users are correct:
 
 Go to the Users tab and select permissions tab:
-- In Users/graphredex in the permissions tab (these should normally already be set):
-  * give `graphredex` administrative access to the database `graphredex-data`
-  * give `graphredex` read/write access to all collections
-    + Click on `graphredex-data`
-    + Select "Read/Write" access on the line with `*`
 
-- In Users/graphredex-qry in the permissions tab:
-  * give `graphredex-qry` access access on the `graphredex-data` database
-  * give `graphredex-qry` read access to all collections in that database
-    + Click on `graphredex-data`
-    + Select "Read only" access on the line with `*`
+-   In Users/graphredex in the permissions tab (these should normally already be set):
 
+    -   give `graphredex` administrative access to the database `graphredex-data`
+    -   give `graphredex` read/write access to all collections
+        -   Click on `graphredex-data`
+        -   Select "Read/Write" access on the line with `*`
+
+-   In Users/graphredex-qry in the permissions tab:
+    -   give `graphredex-qry` access access on the `graphredex-data` database
+    -   give `graphredex-qry` read access to all collections in that database
+        -   Click on `graphredex-data`
+        -   Select "Read only" access on the line with `*`
 
 ## Advanced options
 
@@ -114,7 +117,7 @@ environment variable to `1`.
 GRAPHREDEX_DOCKER=1 ./run  -c
 ```
 
-*Note*: read [RedexServer/README.md](RedexServer/README.md) for security guidelines.
+_Note_: read [RedexServer/README.md](RedexServer/README.md) for security guidelines.
 
 ### Allow the use `(require redex)`
 
