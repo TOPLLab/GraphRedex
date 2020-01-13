@@ -1,6 +1,8 @@
 {
     "dependencies": {
-        "@types/d3": "^5.0.1",
+        "@types/body-parser": "^1.17.1",
+        "@types/d3": "^5.7.2",
+        "@types/express": "^4.17.2",
         "@types/request": "^2.48.1",
         "arangojs": "^6.7.0",
         "basic-auth": "^2.0.1",
