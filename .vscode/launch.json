@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "type": "node",
             "request": "launch",
@@ -12,9 +11,7 @@
             "name": "run setup",
             "program": "${workspaceFolder}/APIServer/setup.js",
             "args": ["/tmp/graphredex"],
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "outFiles": ["${workspaceFolder}/**/*.js"]
         },
         {
             "type": "node",
@@ -23,9 +20,24 @@
             "name": "Start server + clr",
             "program": "${workspaceFolder}/APIServer/index.js",
             "args": ["/tmp/graphredex"],
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "outFiles": ["${workspaceFolder}/**/*.js"],
+            "env": {
+                "ENV": "DEVELOP",
+                "GRAPHREDEX_XVFB": "1"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "grunt",
+            "name": "Start server - clr",
+            "program": "${workspaceFolder}/APIServer/index.js",
+            "args": ["/tmp/graphredex"],
+            "outFiles": ["${workspaceFolder}/**/*.js"],
+            "env": {
+                "ENV": "DEVELOP",
+                "GRAPHREDEX_XVFB": "1"
+            }
         }
     ]
 }
