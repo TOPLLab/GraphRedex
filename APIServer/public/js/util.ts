@@ -147,3 +147,8 @@ export function* mLast<U>(array: U[]): IterableIterator<[U, number]> {
         yield [element, balancedi];
     }
 }
+
+let highlightId = 0;
+export function genHighlightId() {
+    return `${++highlightId}`;
+}
