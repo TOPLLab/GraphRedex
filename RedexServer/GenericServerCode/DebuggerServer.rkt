@@ -21,7 +21,7 @@
 
 
 
-(define (run-echo graphname redLimit relation trans)
+(define (run-echo graphname redLimit relation trans read-term)
 
   (define db (arango-new "graphredex-data" graphname))
 
@@ -120,7 +120,7 @@
 
   (let*
     (
-     (term (read))
+     (term (read-term))
      )
     (arango-make-node db (hash-set* (make-immutable-hash (trans term))
                          'term (expr->string term)
