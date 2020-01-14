@@ -8,4 +8,13 @@ module.exports = {
     quoteProps: "consistent",
     arrowParens: "always",
     endOfLine: "lf",
+    htmlWhitespaceSensitivity: "ignore",
+    overrides: [
+        {
+            files: "**/*.html",
+            options: {
+                tabWidth: 2,
+            },
+        },
+    ],
 };
