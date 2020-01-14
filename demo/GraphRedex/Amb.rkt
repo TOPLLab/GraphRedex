@@ -14,13 +14,10 @@
 
 
 (define (term->kv exp)
-  `((_pict . ,(render-term/pretty-write Amb exp)) 
-    . 
-    ,(match exp
-       [(list 'amb e ...) (list (cons 'type "ambigous") (cons 'fixed (= 1 (length e))) )]
-       [(list '+ e ...) (list (cons 'type "addition") )]
-       [_ (list (cons 'type "final") (cons 'fixed #t) )]
-       ))
+  `(
+    (_pict . ,(render-term/pretty-write Amb exp))
+    (type . ,(match exp [`(amb ,e ...) "ambigous"] [`(+ ,e ...) "addition"] [_ "final"]) )
+    )
   )
  
 
