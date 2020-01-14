@@ -5,7 +5,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "target": "es6",
-        "lib": ["es2017", "dom"],
+        "lib": ["es2017", "dom", "dom.iterable"],
         "rootDir": "public/js",
         "outDir": "public/dist/",
         "module": "amd",

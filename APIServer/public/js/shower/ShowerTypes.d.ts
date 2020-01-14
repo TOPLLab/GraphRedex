@@ -78,4 +78,8 @@ interface ShowerConfigFull<
      * depth of other nodes.
      */
     rootId?: string;
+    /**
+     *  Css that needs to be added to the svg
+     */
+    css?: () => string;
 }

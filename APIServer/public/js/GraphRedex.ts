@@ -3,7 +3,7 @@ import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
 import termDiff from "./termDiff";
-import { downloadFileLink, getit } from "./util";
+import { downloadFileLink, genHighlightId, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 
 interface GRND extends NodeData {
@@ -25,15 +25,25 @@ interface GRED extends EdgeData {
     _real: boolean;
 }
 
+interface Hightlights {
+    nodes: Set<string>; // _id of node
+    edges: Set<string>; // _id of edge
+    name: string;
+    id: string; // string that can be used as a classname
+}
+
 export default class GraphRedex<N extends GRND, E extends GRED> {
     forceNow: boolean;
     protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
-    private highlighted: Set<string> = new Set();
+    private highlighted: Set<Hightlights> = new Set();
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualizer");
         const config: ShowerConfig<N, E> = showerConfig || {
+            css: () => {
+                return this.svgCSS;
+            },
             nodeOptions: (node) => {
                 let ret = [] as Array<ShowerOptionData>;
 
@@ -162,6 +172,10 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                 `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
                         )
                         .join("")}
+                    ${[...this.highlighted]
+                        .filter((h) => h.nodes.has(d.data._id))
+                        .map((h) => `<tr><td>in</td><td>${h.name}</td></tr>`)
+                        .join("")}
                     </tbody></table>
                     <hr>
                     <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre>
@@ -182,12 +196,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             },
             nodeUpdate: (nodes) => {
                 nodes
-                    .classed("highlighted", (d) =>
-                        this.highlighted.has(d.data._id),
-                    )
                     .classed("expandable", (d) => !d.data._expanded)
                     .classed("expanding", (d) => this.expanding.has(d.data._id))
                     .classed("limited", (d) => d.data._limited);
+
+                for (const highlight of this.highlighted) {
+                    nodes.classed(`highlight-${highlight.id}`, (d) =>
+                        highlight.nodes.has(d.data._id),
+                    );
+                }
             },
         };
 
@@ -232,7 +249,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected get svgCSS() {
-        return `.graph-arrows {
+        return (
+            `.graph-arrows {
     stroke-width: 2;
     fill: transparent;
 }
@@ -278,7 +296,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 .graph-texts {
     font-size: 5px;
     font-family: "Noto Sans","Courier New",monospace;
-}`;
+}` +
+            [...this.highlighted]
+                .map(
+                    (h, i) =>
+                        // TODO: better
+                        `.highlight-${h.id}{stroke:hsl(${17 +
+                            i * 37}, 100%, 50%);}`,
+                )
+                .join("\n")
+        );
     }
 
     init() {
@@ -348,11 +375,55 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return true;
             }
         } else {
+            throw "Rendering nodes is not implemented yet";
+        }
+        return false;
+    }
+
+    /**
+     * Render a graph of the argument if it is an array of length 1
+     * whose only element has a nodes and edges key
+     */
+    highlightIfGraph(data: any) {
+        // TODO change to promise
+        if (data.length === 1) {
+            const renderData = data[0];
+            const renderKeys = Object.keys(renderData);
+            if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
+                this.highlighted.add({
+                    edges: new Set(
+                        renderData.edges.map((x: EdgeData) => x._id),
+                    ),
+                    nodes: new Set(
+                        renderData.nodes.map((x: NodeData) => x._id),
+                    ),
+                    name: "lol",
+                    id: genHighlightId(),
+                });
+                this.updateHighlightList();
+                this.shower.update();
+                return true;
+            }
+        } else {
             if (Array.isArray(data)) {
-                if (data.every((x) => typeof x == "object" && "_id" in x)) {
+                if (data.every((x) => typeof x === "object" && "_id" in x)) {
                     data = data.map((x) => x._id);
                 }
-                data.forEach((d) => this.highlighted.add(d));
+
+                const d = data as Array<string>;
+
+                // TODO add prefix to exampledata
+                const prefix = this.curExample.baseTerm.split("/")[0];
+                this.highlighted.add({
+                    edges: new Set(
+                        d.filter((n) => n.startsWith(`${prefix}-reductions/`)),
+                    ),
+                    nodes: new Set(d.filter((n) => n.startsWith(`${prefix}/`))),
+                    name: "lol",
+                    id: genHighlightId(),
+                });
+
+                this.updateHighlightList();
                 this.shower.update();
                 return true;
             }
@@ -437,6 +508,27 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         }
     }
 
+    protected updateHighlightList() {
+        const arr = d3.select("#activeHighlights > ul");
+        let hls = arr.selectAll("li").data([...this.highlighted]);
+        const highlightsEnter = hls.enter().append("li");
+        hls.exit().remove();
+        hls = highlightsEnter.merge(hls as any);
+        hls.text(
+            (d: Hightlights) =>
+                d.name + " - " + d.id + `(${d.nodes.size},${d.edges.size})`,
+        );
+
+        //TODO: add colour changing
+        hls.on("dblclick", (d) => {
+            let newName = window.prompt("Name", d.name);
+            if (newName) {
+                d.name = newName;
+            }
+            this.updateHighlightList();
+        });
+    }
+
     protected setUpCreateLang() {
         const form = d3.select("#createLanguage").on("submit", () => {
             d3.event.preventDefault();
@@ -504,10 +596,13 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected setupDoQry() {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry");
-        form.on("submit", () => {
+        const submitBtn = form.selectAll('input[type="submit"]');
+        console.log("yay", submitBtn);
+        submitBtn.on("click", () => {
             d3.event.preventDefault();
+            d3.event.stopPropagation();
+            const qryType: string = d3.event.target.dataset.type;
             const qry = d3.select("#qry").property("value");
-            console.log(qry, this.curExample);
 
             output.textContent = "Wait for it...";
             this.doQry(qry)
@@ -517,6 +612,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     console.log("\n\nQuery:\n" + qry);
                     console.log("\n\nResult:");
                     console.log(data);
+
+                    ({
+                        highlight: (d) => {
+                            this.highlightIfGraph(d);
+                        },
+                        find: (d) => {
+                            this.renderIfGraph(d);
+                        },
+                    }[qryType](data));
+
                     const wasGraph = this.renderIfGraph(data);
 
                     if (wasGraph) {
@@ -602,6 +707,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     private reset() {
         this.shower.reset();
         this.highlighted.clear();
+        this.updateHighlightList();
     }
 
     protected setUpShowerBtns() {
@@ -620,7 +726,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             statusSection.html("Preparing your export");
             const { linkEl, url } = downloadFileLink(
                 "export.svg",
-                this.shower.getSVG(this.svgCSS),
+                this.shower.getSVG(),
                 "image/svg+xml",
             );
 
