@@ -384,7 +384,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * Render a graph of the argument if it is an array of length 1
      * whose only element has a nodes and edges key
      */
-    highlightIfGraph(data: any) {
+    highlightIfGraph(data: any[]) {
         // TODO change to promise
         if (data.length === 1) {
             const renderData = data[0];
@@ -405,30 +405,27 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return true;
             }
         } else {
-            if (Array.isArray(data)) {
-                if (data.every((x) => typeof x === "object" && "_id" in x)) {
-                    data = data.map((x) => x._id);
-                }
-
-                const d = data as Array<string>;
-
-                // TODO add prefix to exampledata
-                const prefix = this.curExample.baseTerm.split("/")[0];
-                this.highlighted.add({
-                    edges: new Set(
-                        d.filter((n) => n.startsWith(`${prefix}-reductions/`)),
-                    ),
-                    nodes: new Set(d.filter((n) => n.startsWith(`${prefix}/`))),
-                    name: "lol",
-                    id: genHighlightId(),
-                });
-
-                this.updateHighlightList();
-                this.shower.update();
-                return true;
+            if (data.every((x) => typeof x === "object" && "_id" in x)) {
+                data = data.map((x) => x._id);
             }
+
+            const d = data as Array<string>;
+
+            // TODO add prefix to exampledata
+            const prefix = this.curExample.baseTerm.split("/")[0];
+            this.highlighted.add({
+                edges: new Set(
+                    d.filter((n) => n.startsWith(`${prefix}-reductions/`)),
+                ),
+                nodes: new Set(d.filter((n) => n.startsWith(`${prefix}/`))),
+                name: "lol",
+                id: genHighlightId(),
+            });
+
+            this.updateHighlightList();
+            this.shower.update();
+            return true;
         }
-        return false;
     }
 
     /**
@@ -613,18 +610,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     console.log("\n\nResult:");
                     console.log(data);
 
-                    ({
-                        highlight: (d) => {
+                    const succesfullGraphAction = {
+                        highlight: (d: any[]) => {
                             this.highlightIfGraph(d);
                         },
-                        find: (d) => {
+                        find: (d: any[]) => {
                             this.renderIfGraph(d);
                         },
-                    }[qryType](data));
+                    }[qryType](data);
 
-                    const wasGraph = this.renderIfGraph(data);
-
-                    if (wasGraph) {
+                    if (succesfullGraphAction) {
                         form.classed("closed", true);
                     } else {
                         output.textContent += JSON.stringify(
