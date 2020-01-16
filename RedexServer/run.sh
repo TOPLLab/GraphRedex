@@ -42,8 +42,9 @@ cat >>$TMPFILE <<HERE
 (fallback-func user:term->kv (lambda (term) '()))
 (fallback-func user:read-term read)
 
-($2 "$4" $5 user:reductions user:term->kv user:read-term)
+($2 "$4" "$5" $6 user:reductions user:term->kv user:read-term)
 HERE
+
 
 if [ "1" = "$GRAPHREDEX_DOCKER" ]; then
     docker run \

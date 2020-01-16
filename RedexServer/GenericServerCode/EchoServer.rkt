@@ -7,19 +7,43 @@
 
 
 
-(define (run-echo graphname redLimit relation trans read-term)
+(define (run-echo graphname langname redLimit relation trans read-term)
 
   (define db (arango-new "graphredex-data" graphname))
 
   (define (expr->string e) (format "~s" e))
 
-  (define (lolz reductions)
-    (define (f name)
+  (define (set-pictures) 
+    ; TODO only run when not exists
+
+    ; TODO: see if this can be made cleaner
+    (define (safe-render name)
       (render-reduction-relation-rules `(,name))
-      `(,(format "~s" name) . ,(render-reduction-relation reductions))
+      (call/cc 
+       (λ (cont) 
+         (call-with-exception-handler 
+          (λ x (cont #f))
+          (λ () (pict->svg (render-reduction-relation relation))))))
+      )
+    (define (name-render-pair name)
+      `(,name . ,(safe-render name))
       )
 
-    (map f (reduction-relation->rule-names reductions))
+    (define (make-hash-of-rule-render)
+      (make-hash 
+       (map 
+        name-render-pair
+        (reduction-relation->rule-names relation)))
+      )
+
+    (arango-qry
+     db
+     "UPDATE DOCUMENT(CONCAT('languages/',@langkey)) WITH { rules: @rules } IN languages"
+     `#hash(
+            (langkey . ,langname)
+            (rules . ,(make-hash-of-rule-render))
+            ))
+      
     )
 
 
@@ -114,6 +138,7 @@
 
   ; "main"
   (let ([term (read-term)])
+    (set-pictures)
     (arango-make-node db (make-node-data term) #f #f )
     (display (car (arango-lookup db (expr->string term))))
     (process (stream term) redLimit)
