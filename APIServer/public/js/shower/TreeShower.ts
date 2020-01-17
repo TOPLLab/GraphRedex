@@ -68,9 +68,8 @@ export default class TreeShower<
     private selectedNode: ShowerNodeTree<ND, ED> = null;
     private selectedDirection: Direction = Direction.Forward;
 
-    protected zoomAdapt(t: any) {
-        // TODO x is read only
-        t.x = d3.max([d3.min([t.x, -(1 - t.k) * 500]), (1 - t.k) * 500]);
+    protected zoomAdapt(t: d3.ZoomTransform) {
+        return d3.zoomIdentity.scale(Math.max(t.k, 2));
     }
 
     private get selectedArrow() {
