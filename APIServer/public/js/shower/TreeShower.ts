@@ -203,18 +203,20 @@ export default class TreeShower<
             this.selectedIndex = 0;
         }
         this.data.nodes.forEach((e) => (e.shown = false));
-        const accessibleSet = this.expand(
+        const accessibleSets = {};
+        accessibleSets[Direction.Forward] = this.expand(
             7,
             100,
             (n) => n.forwardArrows,
             (e) => e.target,
         );
-        this.expand(
+        accessibleSets[Direction.Backward] = this.expand(
             7,
             -100,
             (n) => n.backArrows,
             (e) => e.source,
         );
+        const accessibleSet = accessibleSets[this.selectedDirection];
         this.selectedNode.x = 0;
         this.selectedNode.y = 0;
         this.selectedNode.shown = true;
@@ -223,12 +225,7 @@ export default class TreeShower<
         super.update();
         this.parts.arrows
             .classed("accessible", (d) => accessibleSet.has(d.data._id))
-            .classed(
-                "inaccessible",
-                (d) =>
-                    this.selectedDirection === Direction.Forward &&
-                    !accessibleSet.has(d.data._id),
-            );
+            .classed("inaccessible", (d) => !accessibleSet.has(d.data._id));
 
         const selArrId = this.selectedArrow
             ? this.selectedArrow.data._id
@@ -241,12 +238,7 @@ export default class TreeShower<
                 (d) => d.data._id === this.selectedNode.data._id,
             )
             .classed("accessible", (d) => accessibleSet.has(d.data._id))
-            .classed(
-                "inaccessible",
-                (d) =>
-                    this.selectedDirection === Direction.Forward &&
-                    !accessibleSet.has(d.data._id),
-            );
+            .classed("inaccessible", (d) => !accessibleSet.has(d.data._id));
     }
 
     protected convertNode(
