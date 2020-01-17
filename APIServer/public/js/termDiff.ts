@@ -58,8 +58,16 @@ function structureDiff(d1: Decoded, d2: Decoded) {
             }
             return false;
         } else {
-            d1.isDifferent = true;
-            d2.isDifferent = true;
+            const maxIndex = Math.min(d1.content.length, d2.content.length);
+            for (let index = 0; index < maxIndex; index++) {
+                structureDiff(d1.content[index], d2.content[index]);
+            }
+            for (let index = maxIndex; index < d1.content.length; index++) {
+                d1.content[index].isDifferent = true;
+            }
+            for (let index = maxIndex; index < d2.content.length; index++) {
+                d2.content[index].isDifferent = true;
+            }
             return true;
         }
     } else {
