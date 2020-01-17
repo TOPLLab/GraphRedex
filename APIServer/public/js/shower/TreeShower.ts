@@ -74,6 +74,9 @@ export default class TreeShower<
 
     private get selectedArrow() {
         const selectedSet = this.selectedNode.arrows(this.selectedDirection);
+        if (selectedSet.size === 0) {
+            throw "Could not get selected arrow";
+        }
         return [...selectedSet.values()][this.selectedIndex % selectedSet.size];
     }
 
@@ -115,15 +118,24 @@ export default class TreeShower<
             default:
                 return; // no further action
         }
-        while (this.selectedIndex < 0) {
-            const numPossibilities = this.selectedNode.arrows(
-                this.selectedDirection,
-            ).size;
-            if (numPossibilities === 0) {
-                break;
+
+        // validate if new state is possible
+        let possible = this.selectedNode.arrows(this.selectedDirection).size;
+
+        if (possible === 0) {
+            // bad direction, should ignore
+            if (this.selectedDirection === Direction.Forward) {
+                this.selectedDirection = Direction.Backward;
+            } else {
+                this.selectedDirection = Direction.Forward;
             }
-            this.selectedIndex += numPossibilities;
+            possible = this.selectedNode.arrows(this.selectedDirection).size;
         }
+
+        if (possible === 0) {
+            throw "No arrows";
+        }
+        this.selectedIndex = (2 * possible + this.selectedIndex) % possible;
         console.log(this.config.rootId);
         this.update();
     }
