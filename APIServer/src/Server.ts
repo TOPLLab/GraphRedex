@@ -117,7 +117,14 @@ export default class Server {
                     _req: express.Request,
                     res: express.Response,
                 ) => {
-                    res.jsonp(await this.users.exmplesOf(user));
+                    res.jsonp(
+                        (await this.users.exmplesOf(user)).map((x) => ({
+                            _key: x._key,
+                            name: x.name,
+                            baseTerm: x.baseTerm,
+                            lang: x.lang,
+                        })),
+                    );
                 },
             ),
         );
@@ -130,7 +137,30 @@ export default class Server {
                     _req: express.Request,
                     res: express.Response,
                 ) => {
-                    res.jsonp(await this.users.languagesOf(user));
+                    res.jsonp(
+                        (await this.users.languagesOf(user)).map((x) => ({
+                            _key: x._key,
+                            name: x.name,
+                            url: `/my/language/${x._key}`,
+                        })),
+                    );
+                },
+            ),
+        );
+
+        routeMy.get(
+            "/language/:id([0-9,]+)",
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    res.jsonp(
+                        await this.users.languageOf(user, {
+                            _key: req.params.id,
+                        }),
+                    );
                 },
             ),
         );
