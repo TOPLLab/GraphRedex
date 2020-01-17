@@ -7,6 +7,7 @@ import MyDatabase from "./Database";
 
 export interface ExampleMeta {
     lang: any;
+    name: string;
     _key: string;
     _id: string;
     baseTerm: string;

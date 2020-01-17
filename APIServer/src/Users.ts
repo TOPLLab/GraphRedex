@@ -1,6 +1,6 @@
 import { DocumentCollection, Graph } from "arangojs";
 import MyDatabase from "./Database";
-import Example from "./Example";
+import Example, { ExampleMeta } from "./Example";
 import { HashedPass, isPasswordCorrect } from "./password";
 
 export interface User {
@@ -40,7 +40,9 @@ export default class Users {
         throw "Invalid credentials or user not found. ";
     }
 
-    public async exmplesOf(user: User | { _key: string }): Promise<Example[]> {
+    public async exmplesOf(
+        user: User | { _key: string },
+    ): Promise<ExampleMeta[]> {
         const key: String = "users/" + user._key;
         const exIds: { _to: string }[] = await this.datagraph
             .edgeCollection("users-examples")
