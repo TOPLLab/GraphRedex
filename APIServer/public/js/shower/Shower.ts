@@ -74,10 +74,9 @@ export default abstract class Shower<
             ] as any)
             .call(
                 (this.zoomHandler = d3.zoom().on("zoom", () => {
-                    const t = d3.event.transform;
-                    this.zoomAdapt(t);
+                    const t = this.zoomAdapt(d3.event.transform);
                     this.isClose = t.k > 1;
-                    this.scene.attr("transform", t);
+                    this.scene.attr("transform", (t as unknown) as string);
                     this.ticked();
                 })),
             );
@@ -134,8 +133,8 @@ export default abstract class Shower<
         this.config.rootId = rootId;
     }
 
-    protected zoomAdapt(_: d3.ZoomTransform) {
-        return;
+    protected zoomAdapt(t: d3.ZoomTransform): d3.ZoomTransform {
+        return t;
     }
 
     protected async showBubble(node: N) {
