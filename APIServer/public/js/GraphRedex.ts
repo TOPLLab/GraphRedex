@@ -41,6 +41,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualizer");
         const config: ShowerConfig<N, E> = showerConfig || {
+            nodeSelected: (_n) => {
+                return true;
+            },
             css: () => {
                 return this.svgCSS;
             },
