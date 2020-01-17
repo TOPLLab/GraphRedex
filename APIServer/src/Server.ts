@@ -118,7 +118,7 @@ export default class Server {
                     res: express.Response,
                 ) => {
                     res.jsonp(
-                        (await this.users.exmplesOf(user)).map((x) => ({
+                        (await this.users.examplesOf(user)).map((x) => ({
                             _key: x._key,
                             name: x.name,
                             baseTerm: x.baseTerm,
