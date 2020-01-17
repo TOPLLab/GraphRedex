@@ -40,7 +40,7 @@ export default class Users {
         throw "Invalid credentials or user not found. ";
     }
 
-    public async exmplesOf(
+    public async examplesOf(
         user: User | { _key: string },
     ): Promise<ExampleMeta[]> {
         const key: String = "users/" + user._key;
