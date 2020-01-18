@@ -14,6 +14,17 @@ export default function termDiff(
     return visualise(d1, t1, markup).text;
 }
 
+export function doubleTermDiff(
+    t1: string,
+    t2: string,
+    markup: TermDiffMarkup = f,
+) {
+    const d1 = destructureTerm(t1);
+    const d2 = destructureTerm(t2);
+    structureDiff(d1, d2);
+    return [visualise(d1, t1, markup).text, visualise(d2, t2, markup).text];
+}
+
 function visualise(d1: Decoded, t1: string, f: TermDiffMarkup): TextPiece {
     if (isArray(d1.content)) {
         if (d1.content.length > 0) {

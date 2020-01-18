@@ -152,3 +152,10 @@ let highlightId = 0;
 export function genHighlightId() {
     return `${++highlightId}`;
 }
+
+export function strToSVGElement(svg: string): SVGElement {
+    const el = document.createElement("div");
+    el.innerHTML = svg;
+    const svgEl: SVGElement = el.children.item(0) as SVGElement;
+    return svgEl;
+}

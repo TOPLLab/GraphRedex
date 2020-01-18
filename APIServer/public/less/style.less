@@ -51,7 +51,7 @@ pre:empty {
 }
 
 main {
-    padding: 1em;
+    padding: 1rem;
     box-sizing: border-box;
     height: 100%;
     overflow: hidden;
@@ -230,7 +230,9 @@ button[onclick="toggle('createLanguage')"]:hover use {
     }
 }
 
-#statusSection span {
+#statusSection span,
+#treeInfoBar > pre span,
+#treeInfoBar > pre div {
     &.diff {
         color: red;
         background: #fff0ba;
@@ -238,6 +240,34 @@ button[onclick="toggle('createLanguage')"]:hover use {
 
     &.same {
         color: black;
+    }
+}
+
+#treeInfoBar {
+    margin: calc(-15vh - 1rem) -1rem -1rem -1rem;
+    padding: 0.5rem 1rem;
+    height: calc(15vh + 1rem);
+    background: rgba(231, 209, 253, 0.281);
+
+    & > pre {
+        white-space: pre-line;
+        overflow-y: auto;
+        margin: 0;
+
+        & div {
+            padding-left: 0.5em;
+        }
+    }
+    & > * {
+        display: inline-block;
+        box-sizing: border-box;
+        width: 30%;
+        position: relative;
+        height: 100%;
+        vertical-align: top;
+    }
+    #ruleInfo > svg {
+        width: 100%;
     }
 }
 
