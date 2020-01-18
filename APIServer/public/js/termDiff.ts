@@ -92,9 +92,6 @@ function structureDiff(d1: Decoded, d2: Decoded) {
             const different = d1.content.text !== d2.content.text;
             d1.isDifferent = different;
             d2.isDifferent = different;
-            if (different) {
-                console.log(d1.content.text, d2.content.text);
-            }
             return different;
         }
     }
