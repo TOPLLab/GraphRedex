@@ -68,6 +68,10 @@ interface ShowerConfigFull<
      * @return true if nodeOptions should be shown
      */
     nodeSelected?: (node: N) => boolean;
+    /** function called when an edge is selected (e.g. by clicking or traversal)
+     * @return true if nodeOptions should be shown
+     */
+    edgeelected?: (edge: E) => void;
     /** function that returns the options for a node */
     nodeOptions?: (
         node: N,

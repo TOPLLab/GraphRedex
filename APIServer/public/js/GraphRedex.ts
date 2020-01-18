@@ -2,9 +2,13 @@ import * as d3 from "d3";
 import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
-import termDiff from "./termDiff";
+import termDiff, { doubleTermDiff, TermDiffMarkup } from "./termDiff";
 import { downloadFileLink, genHighlightId, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
+
+interface RulesDef {
+    [key: string]: string;
+}
 
 interface GRND extends NodeData {
     _id: string;
@@ -43,6 +47,41 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         const config: ShowerConfig<N, E> = showerConfig || {
             nodeSelected: (_n) => {
                 return true;
+            },
+            edgeSelected: (e) => {
+                d3.select("#ruleInfo").text(e.data.reduction);
+
+                const f: TermDiffMarkup = (x, d) => {
+                    let el = "span";
+                    let a = document.createElement("a");
+                    a.innerHTML = x;
+                    if (a.textContent.length > 20) {
+                        el = "div";
+                    }
+                    return `<${el} class="${d ? "diff" : "same"}">${x}</${el}>`;
+                };
+                const diff = doubleTermDiff(
+                    e.source.data.term,
+                    e.target.data.term,
+                    f,
+                );
+
+                ["#diffFrom", "#diffTo"]
+                    .map((x) => d3.select(x))
+                    .forEach((el, index) => {
+                        el.html(diff[index]);
+
+                        el.select<HTMLElement>(".diff")
+                            .node()
+                            .scrollIntoView({ block: "center" });
+                    });
+
+                this.curLang.then((cl) => {
+                    const svg = cl.rules[e.data.reduction];
+                    if (svg) {
+                        d3.select("#ruleInfo").html(svg);
+                    }
+                });
             },
             css: () => {
                 return this.svgCSS;
@@ -223,13 +262,23 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected _curExample: ExampleMeta = null;
+    protected _curLang: Promise<{ rules: RulesDef }> = null;
 
     get curExample() {
         return this._curExample;
     }
 
+    get curLang() {
+        return this._curLang;
+    }
+
     set curExample(example: ExampleMeta | null) {
         this._curExample = example;
+
+        this._curLang = getit("/my/language/" + example.lang, {
+            method: "GET",
+        });
+
         this.setupExampleSelector();
     }
 

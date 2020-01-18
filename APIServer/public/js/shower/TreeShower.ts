@@ -69,7 +69,9 @@ export default class TreeShower<
     private selectedDirection: Direction = Direction.Forward;
 
     protected zoomAdapt(t: d3.ZoomTransform) {
-        return d3.zoomIdentity.scale(Math.max(t.k, 2));
+        return d3.zoomIdentity
+            .scale(Math.max(t.k, 2)) //Limit zoom
+            .translate(0, -50); // move up to accomodate infobar
     }
 
     private get selectedArrow() {
@@ -91,6 +93,7 @@ export default class TreeShower<
     }
 
     private handleArrow(direction: string) {
+        const oldSelecteArrow = this.selectedArrow;
         switch (direction) {
             case "Left":
                 if (this.selectedDirection === Direction.Backward) {
@@ -137,6 +140,12 @@ export default class TreeShower<
         }
         this.selectedIndex = (2 * possible + this.selectedIndex) % possible;
         console.log(this.config.rootId);
+        if (
+            this.selectedArrow !== oldSelecteArrow &&
+            this.config.edgeSelected
+        ) {
+            this.config.edgeSelected(this.selectedArrow);
+        }
         this.update();
     }
 
@@ -193,7 +202,7 @@ export default class TreeShower<
                 }
             }
         };
-        doExpand(this.selectedNode, false, /* depth */ 1, -250, 250, xDelta);
+        doExpand(this.selectedNode, false, /* depth */ 1, -200, 200, xDelta);
         return accessibleSet;
     }
 
