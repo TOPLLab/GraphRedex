@@ -275,7 +275,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
             }
         }
 
-        button.close > svg {
+        & > button > svg {
             fill: black;
         }
     }
@@ -296,6 +296,33 @@ button[onclick="toggle('createLanguage')"]:hover use {
 
     &.closed {
         display: none;
+    }
+
+    &.max {
+        height: calc(100vh - 3rem);
+        bottom: 0;
+        box-shadow: none;
+        margin-top: calc(-100vh + 3rem);
+        background: white;
+
+        #ruleInfo {
+            width: 100%;
+            display: block;
+            height: max-content;
+            padding: 1rem;
+            background: #eee;
+            border-radius: 1rem;
+            margin-bottom: 1em;
+        }
+
+        & > pre {
+            width: 45%;
+            border: 1px dashed #999;
+
+            &:first-of-type {
+                margin-right: 2rem;
+            }
+        }
     }
 
     & > pre {
@@ -320,7 +347,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
         width: 100%;
     }
 
-    button.close {
+    > button {
         position: relative;
         float: right;
         width: 1em;
@@ -329,7 +356,13 @@ button[onclick="toggle('createLanguage')"]:hover use {
         background: transparent;
         border: none;
         padding: 0;
+        margin-right: 0.5em;
 
+        &.close {
+            &:hover > svg {
+                fill: red;
+            }
+        }
         &:hover > svg {
             fill: red;
         }
@@ -340,6 +373,10 @@ button[onclick="toggle('createLanguage')"]:hover use {
             width: 1em;
         }
     }
+}
+
+#treeInfoExpandBtn &:hover > svg {
+    fill: blue;
 }
 
 .stretch {
