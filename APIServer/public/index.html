@@ -7,9 +7,10 @@
     <style>
       .graph-nodes {
         cursor: move;
-        fill: rgb(86, 198, 212);
-        stroke: #ffffff;
-        stroke-width: 2;
+      }
+
+      .graph-arrows {
+        cursor: help;
       }
 
       .graph-arrows .selected,
@@ -23,11 +24,13 @@
       }
 
       .graph-arrows .inaccessible {
-        filter: saturate(0.3) opacity(0.3);
+        filter: saturate(0.3);
+        opacity: 0.3;
       }
 
-      .graph-nodes .inaccessible {
+      .graph-nodes .inaccessible:not(.selected) {
         filter: saturate(0.5);
+        opacity: 0.8;
       }
     </style>
   </head>
