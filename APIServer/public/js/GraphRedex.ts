@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
-import termDiff, { doubleTermDiff, TermDiffMarkup } from "./termDiff";
+import { doubleTermDiff, TermDiffMarkup } from "./termDiff";
 import { downloadFileLink, genHighlightId, getit } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 
@@ -49,6 +49,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return true;
             },
             edgeSelected: (e) => {
+                d3.select("#treeInfoBar").classed("closed", false);
                 d3.select("#ruleInfo").text(e.data.reduction);
 
                 const f: TermDiffMarkup = (x, d) => {
@@ -174,13 +175,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 let prevURL = null;
                 nodes.on("mouseover", (d) => {
                     // Get the diffed term
-                    let renderedTerm =
-                        this.shower.bubbleNode === null
-                            ? this.getRepr(d.data)
-                            : termDiff(
-                                  this.getRepr(d.data),
-                                  this.getRepr(this.shower.bubbleNode.data),
-                              );
+                    let renderedTerm = this.getRepr(d.data);
 
                     if ("_pict" in d.data) {
                         if (prevURL) {
@@ -288,7 +283,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         focused: NodeData = null,
     ): Promise<any[]> {
         const ex = example ?? this.curExample;
-        const focus = focused ?? this.shower.bubbleNode?.data ?? null;
+        const focus = focused ?? this.shower.selectedNode?.data ?? null;
         if (typeof ex?._key !== "string") {
             throw "No example selected!";
         }
@@ -348,6 +343,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 .graph-texts {
     font-size: 5px;
     font-family: "Noto Sans","Courier New",monospace;
+    font-variant: small-caps;
 }` +
             [...this.highlighted]
                 .map(
@@ -758,6 +754,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected setUpShowerBtns() {
+        d3.select("#treeInfoCloseBtn").on("click", () => {
+            d3.select("#treeInfoBar").classed("closed", true);
+        });
         d3.select("#reheat").on("click", () => {
             this.shower.heatFor(5000);
         });

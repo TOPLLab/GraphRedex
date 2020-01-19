@@ -49,6 +49,8 @@ export default abstract class Shower<
 
     /** Configuration o the visualization */
     protected config: ShowerConfigFull<ND, ED, N, E>;
+
+    private _selectedNode: N = null;
     protected bubble: d3.Selection<any, any, any, any>;
 
     /**
@@ -87,6 +89,9 @@ export default abstract class Shower<
 
         this.data = { nodes: [], edges: [] };
 
+        // defaults
+        showerConfig.edgeSelected = showerConfig.edgeSelected ?? ((_) => {});
+        showerConfig.nodeSelected = showerConfig.nodeSelected ?? ((_) => true);
         this.config = showerConfig;
 
         this.parts = {
@@ -137,7 +142,25 @@ export default abstract class Shower<
         return t;
     }
 
+    protected selectNode(node: N) {
+        this._selectedNode = node;
+        if (this.config.nodeSelected && node !== null) {
+            if (this.config.nodeSelected(node)) {
+                this.showBubble(node);
+            }
+        }
+        this.update();
+    }
+
+    public get selectedNode(): N {
+        return this._selectedNode;
+    }
+
     protected async showBubble(node: N) {
+        if (node === null) {
+            this.bubble.datum(null);
+            this.ticked();
+        }
         if ("nodeOptions" in this.config && this.config.nodeOptions) {
             this.bubble.html('<circle r="20" cx="0" cy="0"></circle>');
             const options = await awaitArray(this.config.nodeOptions(node));
@@ -191,10 +214,6 @@ export default abstract class Shower<
             this.bubble.datum(node);
             this.ticked();
         }
-    }
-
-    public get bubbleNode(): N | null {
-        return (this.bubble.datum() as N) || null;
     }
 
     /**
@@ -274,13 +293,7 @@ export default abstract class Shower<
             nodeEnter.on("click", (d) => {
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
-                if ("nodeSelected" in this.config && this.config.nodeSelected) {
-                    if (this.config.nodeSelected(d)) {
-                        this.showBubble(d);
-                    }
-                } else {
-                    this.showBubble(d);
-                }
+                this.selectNode(d);
             });
         } else {
             if ("nodeSelected" in this.config && this.config.nodeSelected) {
@@ -395,7 +408,7 @@ export default abstract class Shower<
 
         this.resetZoom();
 
-        this.bubble.datum(null); // hide bubble
+        this.selectNode(null); // hide bubble
         // Note that defs are kept
     }
 

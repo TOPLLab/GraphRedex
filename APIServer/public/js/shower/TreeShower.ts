@@ -65,7 +65,6 @@ export default class TreeShower<
     }
 
     private selectedIndex = 0;
-    private selectedNode: ShowerNodeTree<ND, ED> = null;
     private selectedDirection: Direction = Direction.Forward;
 
     protected zoomAdapt(t: d3.ZoomTransform) {
@@ -82,14 +81,17 @@ export default class TreeShower<
         return [...selectedSet.values()][this.selectedIndex % selectedSet.size];
     }
 
-    private selectNode(node: ShowerNodeTree<ND, ED>) {
-        this.selectedNode = node;
+    protected selectNode(node: ShowerNodeTree<ND, ED>) {
         this.selectedIndex = 0;
-        if (this.config.nodeSelected) {
-            if (this.config.nodeSelected(this.selectedNode)) {
-                this.showBubble(this.selectedNode);
-            }
+        if (node?.arrows(this.selectedDirection).size === 0) {
+            // clicked on node has no arrows in te
+            // TODO check duplication
+            this.selectedDirection =
+                this.selectedDirection === Direction.Backward
+                    ? Direction.Forward
+                    : Direction.Backward;
         }
+        super.selectNode(node);
     }
 
     private handleArrow(direction: string) {
@@ -106,11 +108,10 @@ export default class TreeShower<
             case "Right":
                 if (this.selectedDirection === Direction.Forward) {
                     this.selectNode(this.selectedArrow.target);
-                    this.selectedIndex = 0;
                 } else {
                     this.selectedDirection = Direction.Forward;
+                    this.selectedIndex = 0;
                 }
-                this.selectedIndex = 0;
                 break;
             case "Up":
                 this.selectedIndex--;
@@ -127,11 +128,11 @@ export default class TreeShower<
 
         if (possible === 0) {
             // bad direction, should ignore
-            if (this.selectedDirection === Direction.Forward) {
-                this.selectedDirection = Direction.Backward;
-            } else {
-                this.selectedDirection = Direction.Forward;
-            }
+            this.selectedDirection =
+                this.selectedDirection === Direction.Forward
+                    ? Direction.Backward
+                    : Direction.Forward;
+
             possible = this.selectedNode.arrows(this.selectedDirection).size;
         }
 
@@ -140,10 +141,7 @@ export default class TreeShower<
         }
         this.selectedIndex = (2 * possible + this.selectedIndex) % possible;
         console.log(this.config.rootId);
-        if (
-            this.selectedArrow !== oldSelecteArrow &&
-            this.config.edgeSelected
-        ) {
+        if (this.selectedArrow !== oldSelecteArrow) {
             this.config.edgeSelected(this.selectedArrow);
         }
         this.update();
@@ -202,15 +200,25 @@ export default class TreeShower<
                 }
             }
         };
-        doExpand(this.selectedNode, false, /* depth */ 1, -200, 200, xDelta);
+
+        if (this.selectedNode !== null) {
+            doExpand(
+                this.selectedNode,
+                false,
+                /* depth */ 1,
+                -200,
+                200,
+                xDelta,
+            );
+        }
         return accessibleSet;
     }
 
     public update() {
         if (this.selectedNode === null) {
-            this.selectedNode = this.nodeMap.get(this.config.rootId);
-            this.selectedIndex = 0;
+            return; // We cannot make a view without selected node
         }
+
         this.data.nodes.forEach((e) => (e.shown = false));
         const accessibleSets = {};
         accessibleSets[Direction.Forward] = this.expand(
@@ -280,11 +288,9 @@ export default class TreeShower<
     }
 
     public show(data: InputData<ND, ED>, update: boolean = true) {
-        super.show(data, false);
-        this.selectedNode = this.nodeMap.get(this.config.rootId);
-        if (update) {
-            this.update();
-        }
+        super.show(data, update);
+        this.selectNode(this.nodeMap.get(this.config.rootId));
+        this.config.edgeSelected(this.selectedArrow);
     }
 
     public push(
