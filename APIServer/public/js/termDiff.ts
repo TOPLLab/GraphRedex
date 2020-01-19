@@ -1,4 +1,8 @@
 export type TermDiffMarkup = (content: string, different: boolean) => string;
+export type TermDiffElem<A> = {
+    join: (content: A[], different: boolean, depth?: number) => A;
+    convert: (content: string, different: boolean, depth?: number) => A;
+};
 
 const f: TermDiffMarkup = (x, d) =>
     `<span class="${d ? "diff" : "same"}">${x}</span>`;
@@ -14,15 +18,27 @@ export default function termDiff(
     return visualise(d1, t1, markup).text;
 }
 
-export function doubleTermDiff(
+export function doubleTermDiff<A>(
     t1: string,
     t2: string,
-    markup: TermDiffMarkup = f,
-) {
+    markup: TermDiffElem<A>,
+): A[] {
     const d1 = destructureTerm(t1);
     const d2 = destructureTerm(t2);
     structureDiff(d1, d2);
-    return [visualise(d1, t1, markup).text, visualise(d2, t2, markup).text];
+    return [visualise2(d1, markup), visualise2(d2, markup)];
+}
+
+function visualise2<A>(d1: Decoded, f: TermDiffElem<A>, depth: number = 0): A {
+    if (isArray(d1.content)) {
+        return f.join(
+            d1.content.map((e) => visualise2<A>(e, f, depth + 1)),
+            d1.isDifferent,
+            depth,
+        );
+    } else {
+        return f.convert(d1.content.text, d1.isDifferent, depth);
+    }
 }
 
 function visualise(d1: Decoded, t1: string, f: TermDiffMarkup): TextPiece {
@@ -31,12 +47,18 @@ function visualise(d1: Decoded, t1: string, f: TermDiffMarkup): TextPiece {
             let result = visualise(d1.content[0], t1, f);
             for (let i = 1; i < d1.content.length; i++) {
                 const cur = visualise(d1.content[i], t1, f);
+
+                // add spaces between content[i-1] and content[i] in first
                 while (result.to + 1 < cur.from) {
                     result.to++;
-                    result.text += t1[result.to];
+                    result.text += t1[result.to]; // in [ \n\t]
+                    if (!t1[result.to].match(/^[\n\t ]$/)) {
+                        throw `expeced space got '${t1[result.to]}'`;
+                    }
                 } // result.to + 1 == cur.from
+
                 result.text += cur.text;
-                result.to = cur.to;
+                result.to = cur.to; // == result.to + 1
             }
             result.text = f(result.text, d1.isDifferent);
             return result;
