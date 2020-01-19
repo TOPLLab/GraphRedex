@@ -1,6 +1,7 @@
 @import (less) "../../node_modules/purecss/build/pure-nr-min.css";
 @import (less) "../../node_modules/purecss/build/grids-responsive-min.css";
 @tint: #10aded;
+@infobarColor: tint(@tint, 70);
 
 html,
 button,
@@ -20,6 +21,13 @@ textarea {
     font-size: 70%;
 }
 
+.shadow(@hh) {
+    @h: max(1%, min(100%, 1% * @hh)); // sea blue
+    box-shadow: 0 0 10px 1px fadeout(rgba(0, 0, 0, 0.2), @h),
+        0 0 (3px * @hh) 3px fadeout(rgba(0, 0, 0, 0.25), @h),
+        0 0 (3px * @hh) fadeout(rgba(0, 0, 0, 0.14), @h);
+}
+
 nav {
     > section {
         padding: 0.3em;
@@ -33,8 +41,8 @@ nav {
     box-sizing: border-box;
     background: lighten(@tint, 50%);
     height: 100%;
-    box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2),
-        0 0 3px 3px rgba(0, 0, 0, 0.25), 0 0 3px rgba(0, 0, 0, 0.14);
+    .shadow(9);
+    z-index: 2;
 }
 
 body {
@@ -56,6 +64,9 @@ main {
     height: 100%;
     overflow: hidden;
 
+    > * {
+        position: relative;
+    }
     > form {
         &.closed {
             display: none;
@@ -73,11 +84,16 @@ main {
             margin-top: 0.5em;
         }
 
-        box-shadow: 2px 0 10px 1px rgba(0, 0, 0, 0.2);
+        .shadow(2);
         margin: -1em -1em 1em -1em;
         padding: 0.5em 1em;
         border-bottom: 1px solid #eee;
         z-index: 1;
+
+        & > h2 {
+            margin-top: 0;
+            font-size: 1em;
+        }
     }
 }
 
@@ -132,11 +148,6 @@ header {
         margin-left: 0.25em;
         margin-right: -1.5em;
     }
-}
-
-main > form > h2 {
-    margin-top: 0;
-    font-size: 1em;
 }
 
 .previewExport {
@@ -230,9 +241,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
     }
 }
 
-#statusSection span,
-#treeInfoBar > pre span,
-#treeInfoBar > pre div {
+#statusSection span {
     &.diff {
         color: red;
         background: #fff0ba;
@@ -247,7 +256,47 @@ button[onclick="toggle('createLanguage')"]:hover use {
     margin: calc(-15vh - 1rem) -1rem -1rem -1rem;
     padding: 0.5rem 1rem;
     height: calc(15vh + 1rem);
-    background: rgba(231, 209, 253, 0.281);
+    background-color: fade(@infobarColor, 70%);
+
+    transition: background-color 300ms;
+    transition: box-shadow 300ms;
+    .shadow(4);
+
+    &:hover {
+        .shadow(2);
+        background-color: tint(@infobarColor, 30%);
+        & > pre {
+            span,
+            div {
+                &.diff {
+                    color: red;
+                    background: #fff0ba;
+                }
+            }
+        }
+
+        button.close > svg {
+            fill: black;
+        }
+    }
+
+    & > pre {
+        span,
+        div {
+            &.diff {
+                color: rgb(255, 79, 79);
+                background: #fff0ba88;
+            }
+
+            &.same {
+                color: black;
+            }
+        }
+    }
+
+    &.closed {
+        display: none;
+    }
 
     & > pre {
         white-space: pre-line;
@@ -258,7 +307,8 @@ button[onclick="toggle('createLanguage')"]:hover use {
             padding-left: 0.5em;
         }
     }
-    & > * {
+    & > pre,
+    & > div {
         display: inline-block;
         box-sizing: border-box;
         width: 30%;
@@ -268,6 +318,27 @@ button[onclick="toggle('createLanguage')"]:hover use {
     }
     #ruleInfo > svg {
         width: 100%;
+    }
+
+    button.close {
+        position: relative;
+        float: right;
+        width: 1em;
+        height: 1em;
+        display: block;
+        background: transparent;
+        border: none;
+        padding: 0;
+
+        &:hover > svg {
+            fill: red;
+        }
+        & > svg {
+            fill: lightgray;
+            display: block;
+            height: 1em;
+            width: 1em;
+        }
     }
 }
 

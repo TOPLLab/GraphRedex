@@ -305,10 +305,15 @@
         title="visulisation"
       ></svg>
 
-      <div id="treeInfoBar">
+      <div id="treeInfoBar" class="closed">
         <div id="ruleInfo"></div>
         <pre id="diffFrom"></pre>
         <pre id="diffTo"></pre>
+        <button id="treeInfoCloseBtn" class="close">
+          <svg>
+            <use href="svg.svg#delete"></use>
+          </svg>
+        </button>
       </div>
 
       <div class="pure-button-group" id="visBtn">
