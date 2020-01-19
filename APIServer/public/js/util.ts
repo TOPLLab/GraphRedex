@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { TermDiffElem } from "./termDiff";
 
 /**
  * Wrapper around window.fetch that returns JSON
@@ -159,3 +160,30 @@ export function strToSVGElement(svg: string): SVGElement {
     const svgEl: SVGElement = el.children.item(0) as SVGElement;
     return svgEl;
 }
+
+const termDiffMaker: TermDiffElem<HTMLElement> = {
+    join: (content: HTMLElement[], different: boolean, depth: number) => {
+        // Join elements as child of a tagName element.
+        const joinedAs = (tagName: "DIV" | "SPAN") => {
+            const e = document.createElement(tagName);
+            e.classList.add(different ? "diff" : "same");
+
+            // Add some extra spaces arround elements
+            e.append(...[].concat(...content.map((x) => [" ", x, " "])));
+            return e;
+        };
+
+        return content.every((x) => x.tagName === "SPAN") &&
+            content.map((x) => x.textContent).join(" ").length < 25 - depth * 2
+            ? joinedAs("SPAN") // as span if shorter than 25 char
+            : joinedAs("DIV"); // otherwise as div
+    },
+    convert: (content: string, different: boolean) => {
+        const e = document.createElement("SPAN");
+        e.classList.add(different ? "diff" : "same");
+        e.textContent = content;
+        return e;
+    },
+};
+
+export { termDiffMaker };

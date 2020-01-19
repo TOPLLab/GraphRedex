@@ -2,8 +2,8 @@ import * as d3 from "d3";
 import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
-import { doubleTermDiff, TermDiffMarkup } from "./termDiff";
-import { downloadFileLink, genHighlightId, getit } from "./util";
+import { doubleTermDiff } from "./termDiff";
+import { downloadFileLink, genHighlightId, getit, termDiffMaker } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 
 interface RulesDef {
@@ -52,25 +52,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 d3.select("#treeInfoBar").classed("closed", false);
                 d3.select("#ruleInfo").text(e.data.reduction);
 
-                const f: TermDiffMarkup = (x, d) => {
-                    let el = "span";
-                    let a = document.createElement("a");
-                    a.innerHTML = x;
-                    if (a.textContent.length > 20) {
-                        el = "div";
-                    }
-                    return `<${el} class="${d ? "diff" : "same"}">${x}</${el}>`;
-                };
                 const diff = doubleTermDiff(
                     e.source.data.term,
                     e.target.data.term,
-                    f,
+                    termDiffMaker,
                 );
 
                 ["#diffFrom", "#diffTo"]
                     .map((x) => d3.select(x))
                     .forEach((el, index) => {
-                        el.html(diff[index]);
+                        el.html(diff[index].innerHTML);
 
                         el.select<HTMLElement>(".diff")
                             .node()
@@ -755,8 +746,17 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     protected setUpShowerBtns() {
         d3.select("#treeInfoCloseBtn").on("click", () => {
-            d3.select("#treeInfoBar").classed("closed", true);
+            d3.select("#treeInfoBar")
+                .classed("closed", true)
+                .classed("max", false);
         });
+
+        d3.select("#treeInfoExpandBtn").on("click", () => {
+            d3.select<HTMLElement, any>("#treeInfoBar")
+                .node()
+                .classList.toggle("max");
+        });
+
         d3.select("#reheat").on("click", () => {
             this.shower.heatFor(5000);
         });
