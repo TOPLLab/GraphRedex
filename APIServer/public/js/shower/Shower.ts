@@ -308,7 +308,7 @@ export default abstract class Shower<
             this.config.nodeUpdate(p.nodes);
         }
 
-        this.defs.select("style").html(this.config.css());
+        this.defs.select("style").text(this.config.css());
 
         // render updated positions
         this.ticked();
