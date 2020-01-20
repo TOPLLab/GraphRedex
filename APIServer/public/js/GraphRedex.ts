@@ -34,6 +34,7 @@ interface Hightlights {
     edges: Set<string>; // _id of edge
     name: string;
     id: string; // string that can be used as a classname
+    colour: string;
 }
 
 export default class GraphRedex<N extends GRND, E extends GRED> {
@@ -278,7 +279,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         if (typeof ex?._key !== "string") {
             throw "No example selected!";
         }
-        console.log(focus);
+
         return await getit(`my/example/qry/${ex._key}`, {
             method: "POST",
             headers: new Headers([["Content-Type", "application/json"]]),
@@ -337,12 +338,18 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     font-variant: small-caps;
 }` +
             [...this.highlighted]
-                .map(
-                    (h, i) =>
-                        // TODO: better
-                        `.highlight-${h.id}{stroke:hsl(${17 +
-                            i * 37}, 100%, 50%);}`,
-                )
+                .map((h) => {
+                    let style = `.highlight-${h.id}{fill: ${h.colour};}`;
+                    style += [...this.highlighted]
+                        .filter((x) => x.id < h.id)
+                        .map((x) =>
+                            `.highlight-${h.id}.highlight-${x.id}{
+                                    fill: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><linearGradient id='grad'><stop offset='50%' stop-color='${h.colour}'/><stop offset='50%' stop-color='${x.colour}'/></linearGradient></svg>#grad");
+                                  } `.replace(/\s\s*/, " "),
+                        );
+
+                    return style;
+                })
                 .join("\n")
         );
     }
@@ -423,12 +430,13 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * Render a graph of the argument if it is an array of length 1
      * whose only element has a nodes and edges key
      */
-    highlightIfGraph(data: any[]) {
+    highlightIfGraph(data: any[]): boolean {
         // TODO change to promise
         if (data.length === 1) {
             const renderData = data[0];
             const renderKeys = Object.keys(renderData);
             if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
+                const id = genHighlightId();
                 this.highlighted.add({
                     edges: new Set(
                         renderData.edges.map((x: EdgeData) => x._id),
@@ -436,8 +444,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     nodes: new Set(
                         renderData.nodes.map((x: NodeData) => x._id),
                     ),
-                    name: "lol",
-                    id: genHighlightId(),
+                    name: "highlight " + id,
+                    id: id,
+                    colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
                 });
                 this.updateHighlightList();
                 this.shower.update();
@@ -452,13 +461,15 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
             // TODO add prefix to exampledata
             const prefix = this.curExample.baseTerm.split("/")[0];
+            const id = genHighlightId();
             this.highlighted.add({
                 edges: new Set(
                     d.filter((n) => n.startsWith(`${prefix}-reductions/`)),
                 ),
                 nodes: new Set(d.filter((n) => n.startsWith(`${prefix}/`))),
-                name: "lol",
-                id: genHighlightId(),
+                name: "highlight " + id,
+                id: id,
+                colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
             });
 
             this.updateHighlightList();
@@ -544,16 +555,31 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         }
     }
 
+    hlsInited = false;
     protected updateHighlightList() {
         const arr = d3.select("#activeHighlights > ul");
+        if (this.highlighted.size > 0 && !this.hlsInited) {
+            arr.html("");
+        }
         let hls = arr.selectAll("li").data([...this.highlighted]);
         const highlightsEnter = hls.enter().append("li");
         hls.exit().remove();
+
+        highlightsEnter
+            .append("span")
+            .classed("colourpicker", true)
+            .on("click", (d) => {
+                d.colour = window.prompt("Colour", d.colour) ?? d.colour;
+                this.updateHighlightList();
+                this.shower.update();
+            });
+        highlightsEnter.append("span").classed("name", true);
+
         hls = highlightsEnter.merge(hls as any);
-        hls.text(
-            (d: Hightlights) =>
-                d.name + " - " + d.id + `(${d.nodes.size},${d.edges.size})`,
+        hls.select(".name").text(
+            (d) => d.name + `(${d.nodes.size},${d.edges.size})`,
         );
+        hls.select(".colourpicker").style("background", (d) => d.colour);
 
         //TODO: add colour changing
         hls.on("dblclick", (d) => {
@@ -633,7 +659,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry");
         const submitBtn = form.selectAll('input[type="submit"]');
-        console.log("yay", submitBtn);
         submitBtn.on("click", () => {
             d3.event.preventDefault();
             d3.event.stopPropagation();
@@ -651,13 +676,12 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
                     const succesfullGraphAction = {
                         highlight: (d: any[]) => {
-                            this.highlightIfGraph(d);
+                            return this.highlightIfGraph(d);
                         },
                         find: (d: any[]) => {
-                            this.renderIfGraph(d);
+                            return this.renderIfGraph(d);
                         },
                     }[qryType](data);
-
                     if (succesfullGraphAction) {
                         form.classed("closed", true);
                     } else {
