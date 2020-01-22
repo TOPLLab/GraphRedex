@@ -58,7 +58,7 @@ export default class ForceShower<
                 "link",
                 d3
                     .forceLink<ForceShowerNode<ND>, ForceShowerEdge<ND, ED>>()
-                    .distance((d) => (d.data._real ? 60 : 90))
+                    .distance((d) => (d.data._real ? 80 : 90))
                     .strength(1.5)
                     .id((d: ForceShowerNode<ND>) => d.id),
             )
@@ -153,8 +153,11 @@ export default class ForceShower<
      */
     public heatFor(timeout: number = 5000) {
         window.clearTimeout(this.heatTimeout);
-        this.simulation.alphaTarget(0.3).restart();
+        this.simulation
+            .alphaTarget(this.heatTimeout === null ? 0.3 : 0.9)
+            .restart();
         this.heatTimeout = window.setTimeout(() => {
+            this.heatTimeout = null;
             this.simulation.alphaTarget(0);
         }, timeout);
     }
