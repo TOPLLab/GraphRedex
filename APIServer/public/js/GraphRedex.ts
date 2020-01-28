@@ -592,12 +592,27 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected setUpCreateLang() {
-        const form = d3.select("#createLanguage").on("submit", () => {
+        const form = d3.select("#createLanguage");
+        const fileInput = form.select<HTMLInputElement>('input[type="file"]');
+
+        const fileInputName = form.select<HTMLInputElement>(
+            'input[type="text"]',
+        );
+        fileInput.on("change", () => {
+            if (fileInput.node().files.length === 1) {
+                const nameWithouExt = fileInput
+                    .node()
+                    .files[0].name.replace(/\.[^.]*$/, "");
+                fileInputName.property("value", nameWithouExt);
+            }
+        });
+
+        form.on("submit", () => {
             d3.event.preventDefault();
 
             const formData = new FormData();
-            const a: any = form.select('input[type="file"]').node();
-            formData.append("specification", a.files[0]);
+            formData.append("specification", fileInput.node().files[0]);
+            formData.append("name", fileInputName.property("value"));
 
             getit("/my/languages/regular", {
                 method: "POST",

@@ -180,7 +180,7 @@ export default class Server {
                         case "zip":
                             await this.languages.createFormZip(
                                 user,
-                                fileName,
+                                req.body.name ?? fileName,
                                 file.path,
                                 debugging,
                             );
