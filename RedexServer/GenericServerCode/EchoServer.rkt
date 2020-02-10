@@ -9,6 +9,8 @@
 
 (define (run-echo graphname langname redLimit relation trans read-term)
 
+  (define endtime (+ (current-seconds) 45))
+
   (define db (arango-new "graphredex-data" graphname))
 
   (define (expr->string e) (format "~s" e))
@@ -94,6 +96,10 @@
       ; Stop if out of runs
       [(= 0 reductions-left) 
        (fprintf (current-error-port) "\nOUT OF REDUCTIONS\n")]
+
+      ; Stop if out of time
+      [(> (current-seconds) endtime)
+       (fprintf (current-error-port) "\nOUT OF TIME ~a s over time ~a left\n" (- (current-seconds) endtime) reductions-left)]
 
       ; Stop if no more terms to proccess
       [(stream-empty? term-stream)
