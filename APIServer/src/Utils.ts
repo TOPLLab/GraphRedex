@@ -81,8 +81,12 @@ export function makeEnv(...overwrites: Object[]) {
     const filteredEnv = Object.keys(process.env)
         .filter(
             (k /* Keep useful vars */) =>
-                ["ARANGO_SERVER", "ARANGO_PORT"].includes(k) ||
-                k.startsWith("GRAPHREDEX_"),
+                [
+                    "ARANGO_SERVER",
+                    "ARANGO_PORT",
+                    "DISPLAY",
+                    "XAUTHORITY",
+                ].includes(k) || k.startsWith("GRAPHREDEX_"),
         )
         .reduce((res, key) => ((res[key] = process.env[key]), res), {});
     return Object.assign({}, filteredEnv, ...overwrites);
