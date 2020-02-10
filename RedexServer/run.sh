@@ -45,7 +45,6 @@ cat >>$TMPFILE <<HERE
 ($2 "$4" "$5" $6 user:reductions user:term->kv user:read-term)
 HERE
 
-
 if [ "1" = "$GRAPHREDEX_DOCKER" ]; then
     docker run \
         -i \
@@ -56,9 +55,5 @@ if [ "1" = "$GRAPHREDEX_DOCKER" ]; then
         --rm \
         graphredex/racket
 else
-    if [ "1" = "$GRAPHREDEX_XVFB" ]; then
-        xvfb-run -- racket $TMPFILE
-    else
-        racket $TMPFILE
-    fi
+    racket $TMPFILE
 fi

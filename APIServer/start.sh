@@ -123,8 +123,13 @@ else
 fi
 
 if [ $run -eq 1 ]; then
-    echo "Starting server"
-    node index.js "$DATADIR"
+    if [ "1" = "$GRAPHREDEX_XVFB" ]; then
+        echo "Starting server in XVFB"
+        xvfb-run -- node index.js "$DATADIR"
+    else
+        echo "Starting server"
+        node index.js "$DATADIR"
+    fi
 else
     echo "Not running (due -n)"
 fi
