@@ -154,7 +154,7 @@ export default class ForceShower<
     public heatFor(timeout: number = 5000) {
         window.clearTimeout(this.heatTimeout);
         this.simulation
-            .alphaTarget(this.heatTimeout === null ? 0.3 : 0.9)
+            .alphaTarget(this.heatTimeout === null ? 0.3 : 0.7)
             .restart();
         this.heatTimeout = window.setTimeout(() => {
             this.heatTimeout = null;
