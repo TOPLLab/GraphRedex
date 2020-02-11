@@ -310,10 +310,14 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 }
 
 
-
 .graph-nodes .stuck {
+    stroke: red;
+}
+
+.graph-nodes .stuck:not([class*="highlight-"]) {
     fill: red;
 }
+
 .graph-nodes .start {
     fill: greenyellow;
 }
@@ -432,26 +436,19 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      */
     highlightIfGraph(data: any[]): boolean {
         // TODO change to promise
-        if (data.length === 1) {
+        if (data.length === 1 && "nodes" in data[0] && "edges" in data[0]) {
             const renderData = data[0];
-            const renderKeys = Object.keys(renderData);
-            if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
-                const id = genHighlightId();
-                this.highlighted.add({
-                    edges: new Set(
-                        renderData.edges.map((x: EdgeData) => x._id),
-                    ),
-                    nodes: new Set(
-                        renderData.nodes.map((x: NodeData) => x._id),
-                    ),
-                    name: "highlight " + id,
-                    id: id,
-                    colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
-                });
-                this.updateHighlightList();
-                this.shower.update();
-                return true;
-            }
+            const id = genHighlightId();
+            this.highlighted.add({
+                edges: new Set(renderData.edges.map((x: EdgeData) => x._id)),
+                nodes: new Set(renderData.nodes.map((x: NodeData) => x._id)),
+                name: "highlight " + id,
+                id: id,
+                colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
+            });
+            this.updateHighlightList();
+            this.shower.update();
+            return true;
         } else {
             if (data.every((x) => typeof x === "object" && "_id" in x)) {
                 data = data.map((x) => x._id);
