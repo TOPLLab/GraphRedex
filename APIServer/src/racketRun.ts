@@ -91,7 +91,7 @@ export default class ReductionRunner {
                 path.join(this.datadir, lang.path),
                 graph.name,
                 `${lang._key}`,
-                "50",
+                "500",
             ],
             term.term,
         ).then(({ output, errors }) => ({ term: output, errors: errors }));
@@ -115,7 +115,7 @@ export default class ReductionRunner {
                 path.join(this.datadir, lang.path),
                 graph.name,
                 `${lang._key}`,
-                "50",
+                "1000",
             ],
             term,
         ).then(({ output, errors }) => ({
