@@ -303,6 +303,13 @@
               value="Highlight"
               class="pure-button pure-input-1 pure-button-primary"
             />
+            <input
+              data-type="execute"
+              type="submit"
+              value="Custom"
+              id="searchExecuteButton"
+              class="pure-button pure-input-1 pure-button-primary"
+            />
           </div>
         </div>
 
@@ -428,7 +435,17 @@
         });
 
         requirejs(["GraphRedex"], (dbgr) => {
-          new dbgr.default().init();
+          // Load Plugin.js if it exists and pass it on to GraphRedex
+          requirejs(
+            ["Plugin"],
+            (plugin) => {
+              new dbgr.default().init(plugin.default || null);
+            },
+            (_) => {
+              // Plugin could not be loaded
+              new dbgr.default().init();
+            },
+          );
         });
       });
 

@@ -42,6 +42,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected shower: GraphShower<N, E>;
     protected expanding: Set<string> = new Set();
     private highlighted: Set<Hightlights> = new Set();
+    private plugin: any;
 
     constructor(showerConfig: ShowerConfig<N, E> = null) {
         console.log("Booting graph visualizer");
@@ -358,7 +359,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         );
     }
 
-    init() {
+    init(plugin: any = null) {
+        this.plugin = plugin;
         this.setUpCreateLang();
         this.setupDoReductions();
         this.setupExampleSelector();
@@ -475,6 +477,22 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         }
     }
 
+    /**
+     * Give the data from the query to the plugin (if it exists)
+     */
+    private executePlugin(data: any[]) {
+        if (!this.plugin) {
+            throw "Plugin not found";
+        }
+        return this.plugin(
+            {
+                render: (d: any) => this.renderIfGraph(d),
+                highlight: (d: any[]) => this.highlightIfGraph(d),
+                expand: (n: TermMeta, d: number) => this.expandBelow(n, d),
+            },
+            data,
+        );
+    }
     /**
      * Get a list of steps from a given node in the current example that are
      * marked as _real=false. Note that this does not expand the queried node.
@@ -670,6 +688,10 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     protected setupDoQry() {
         const output = document.getElementById("doQryOutput");
         const form = d3.select("#createQry");
+        form.selectAll('input[data-type="execute"]').style(
+            "display",
+            this.plugin ? "" : "none",
+        );
         const submitBtn = form.selectAll('input[type="submit"]');
         submitBtn.on("click", () => {
             d3.event.preventDefault();
@@ -692,6 +714,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         },
                         find: (d: any[]) => {
                             return this.renderIfGraph(d);
+                        },
+                        execute: (d: any[]) => {
+                            return this.executePlugin(d);
                         },
                     }[qryType](data);
                     if (succesfullGraphAction) {
