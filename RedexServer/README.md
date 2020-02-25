@@ -6,7 +6,7 @@ This directory contains the Redex backend for the server
 
 `run.sh` should be called with 5 arguments:
 
-1. "`DebuggerServer`" | "`EchoServer`"
+1. "`EchoServer`"
 2. "`run-echo`"
 3. The base language file (likely something with filename PLTGraphRedex.rkt)
 4. `language._key`

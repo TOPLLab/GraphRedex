@@ -165,7 +165,7 @@ export default class Server {
             ),
         );
 
-        const makeLanguage = (debugging: boolean) =>
+        const makeLanguage = () =>
             this.requireLogin(
                 async (
                     user: User,
@@ -182,7 +182,6 @@ export default class Server {
                                 user,
                                 req.body.name ?? fileName,
                                 file.path,
-                                debugging,
                             );
                             res.jsonp({ ok: true, type: "zip", r: fileName });
                             break;
@@ -191,7 +190,6 @@ export default class Server {
                                 user,
                                 fileName,
                                 file.path,
-                                debugging,
                             );
                             res.jsonp({
                                 ok: true,
@@ -210,14 +208,9 @@ export default class Server {
             );
 
         routeMy.post(
-            "/languages/regular",
+            "/languages",
             this.uploader.single("specification"),
-            makeLanguage(false),
-        );
-        routeMy.post(
-            "/languages/debugger",
-            this.uploader.single("specification"),
-            makeLanguage(true),
+            makeLanguage(),
         );
 
         this.app.post(

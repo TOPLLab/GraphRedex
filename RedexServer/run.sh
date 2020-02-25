@@ -2,7 +2,7 @@
 # Name: Create a temp racket file with the absolute path to the language definition
 # By Robbert Gurdeep Singh
 # Args
-# 1: DebuggerServer | EchoServer
+# 1: EchoServer
 # 2: run-echo
 # 3: file
 # 4: language._key
