@@ -611,7 +611,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             formData.append("specification", fileInput.node().files[0]);
             formData.append("name", fileInputName.property("value"));
 
-            getit("/my/languages/regular", {
+            getit("/my/languages", {
                 method: "POST",
                 body: formData,
             })
