@@ -407,8 +407,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      */
     renderIfGraph(data: any) {
         // TODO change to promise
-        if (data.length === 1) {
-            const renderData = data[0];
+        if (isInputDataArray<N, E>(data)) {
+            const [renderData] = data;
             const renderKeys = Object.keys(renderData);
             if (renderKeys.includes("nodes") && renderKeys.includes("edges")) {
                 if (
@@ -436,12 +436,12 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      */
     highlightIfGraph(data: any[]): boolean {
         // TODO change to promise
-        if (data.length === 1 && "nodes" in data[0] && "edges" in data[0]) {
-            const renderData = data[0];
+        if (isInputDataArray<N, E>(data)) {
+            const [renderData] = data;
             const id = genHighlightId();
             this.highlighted.add({
-                edges: new Set(renderData.edges.map((x: EdgeData) => x._id)),
-                nodes: new Set(renderData.nodes.map((x: NodeData) => x._id)),
+                edges: new Set(renderData.edges.map((x) => x._id)),
+                nodes: new Set(renderData.nodes.map((x) => x._id)),
                 name: "highlight " + id,
                 id: id,
                 colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
@@ -880,4 +880,40 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             body: term,
         });
     }
+}
+
+/**
+ * Checks if the data returned by AQL is renderable by GraphRedex.
+ *
+ * Helper function to check the type of values returned by AQL.
+ *
+ * @param data the result array from ArangoDB
+ */
+function isInputDataArray<N extends GRND, E extends GRED>(
+    data: any[],
+): data is [InputData<N, E>] {
+    if (data.length === 1 && "nodes" in data[0] && "edges" in data[0]) {
+        const [{ nodes, edges }] = data;
+        if (Array.isArray(nodes) && Array.isArray(edges)) {
+            return (
+                nodes.every(
+                    (x) =>
+                        "_id" in x &&
+                        "_key" in x &&
+                        "term" in x &&
+                        "_stuck" in x &&
+                        "_expanded" in x &&
+                        "_formatted" in x,
+                ) &&
+                edges.every(
+                    (x) =>
+                        "_id" in x &&
+                        "_from" in x &&
+                        "_to" in x &&
+                        "reduction" in x,
+                )
+            );
+        }
+    }
+    return false;
 }
