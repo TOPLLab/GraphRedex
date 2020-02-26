@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
+import { promisify } from "util";
 import express = require("express");
 
 export function isReadableFile(absPath: string): Promise<boolean> {
@@ -69,6 +70,49 @@ export function dirListing(path: string): Promise<fs.Dirent[]> {
             }
         });
     });
+}
+
+export async function unzip(location: string, absDir: string) {
+    // TODO: insecure !!! move to utils
+    // unzip  -p example.zip | od | head -n 1001 | wc -l may help
+    // echo $(( $(unzip  --aa -p zipbomb.zip | od -v | head -n 1001 | wc -l) == 1001))
+    await new Promise((resolve, reject) => {
+        const child = spawn(
+            "unzip",
+            [
+                "-aa", // treat ALL files as text
+                "-n", // never overwrite existing files
+                location, // zip-file
+                "-d",
+                absDir, // destination
+            ],
+            {
+                env: { LC_ALL: "C" },
+                stdio: ["pipe", "pipe", "pipe"],
+            },
+        );
+
+        child.stdout.on("data", (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        child.stderr.on("data", (data) => {
+            console.log(`err: ${data}`);
+        });
+
+        child.on("error", reject);
+
+        child.on("close", (code) => {
+            console.log(`unzip exited with code ${code}`);
+            if (code === 0) {
+                resolve(true);
+            } else {
+                reject(false);
+            }
+        });
+    });
+    console.log("Unzipped " + location);
+    await promisify(fs.unlink)(location);
 }
 
 export function asyncMiddleware(fn: express.RequestHandler) {
