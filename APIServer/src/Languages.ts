@@ -1,9 +1,8 @@
-import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import MyDatabase from "./Database";
 import { User } from "./Users";
-import { deleteDir, dirListing, isReadableFile } from "./Utils";
+import { deleteDir, dirListing, isReadableFile, unzip } from "./Utils";
 const { promisify } = require("util");
 
 const BASE_FILENAME = "PLTGraphRedex.rkt";
@@ -113,46 +112,7 @@ export class Languages {
             throw "Invalid filename";
         }
 
-        // TODO: insecure !!! move to utils
-        // unzip  -p example.zip | od | head -n 1001 | wc -l may help
-        // echo $(( $(unzip  --aa -p zipbomb.zip | od -v | head -n 1001 | wc -l) == 1001))
-        await new Promise((resolve, reject) => {
-            const child = spawn(
-                "unzip",
-                [
-                    "-aa", // treat ALL files as text
-                    "-n", // never overwrite existing files
-                    location, // zip-file
-                    "-d",
-                    absDir, // destination
-                ],
-                {
-                    env: { LC_ALL: "C" },
-                    stdio: ["pipe", "pipe", "pipe"],
-                },
-            );
-
-            child.stdout.on("data", (data) => {
-                console.log(`stdout: ${data}`);
-            });
-
-            child.stderr.on("data", (data) => {
-                console.log(`err: ${data}`);
-            });
-
-            child.on("error", reject);
-
-            child.on("close", (code) => {
-                console.log(`unzip exited with code ${code}`);
-                if (code === 0) {
-                    resolve(true);
-                } else {
-                    reject(false);
-                }
-            });
-        });
-        console.log("Unzipped " + location);
-        await promisify(fs.unlink)(location);
+        await unzip(location, absDir);
 
         // Move base dir one up if only one dir in zip
         const files = (await dirListing(absDir)).filter(
