@@ -115,13 +115,12 @@ export class Languages {
         await unzip(location, absDir);
 
         // Move base dir one up if only one dir in zip
-        const files = (await dirListing(absDir)).filter(
+        const rootDirList = (await dirListing(absDir)).filter(
             (x) => !(x.name === "__MACOSX" && x.isDirectory()),
         );
-        console.log(files);
-        if (files.length === 1) {
-            if (files[0].isDirectory()) {
-                lang.dir = path.join(lang.dir, files[0].name);
+        if (rootDirList.length === 1) {
+            if (rootDirList[0].isDirectory()) {
+                lang.dir = path.join(lang.dir, rootDirList[0].name);
                 lang.path = path.join(lang.dir, BASE_FILENAME);
             }
         }
