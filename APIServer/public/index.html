@@ -267,8 +267,14 @@
           <div class="pure-u-1-6">
             <label for="querySelector">Stored Queries</label>
             <select id="querySelector" name="example" class="pure-input-1">
-              <option disabled="" value="">Example</option>
+              <option>Select example first</option>
             </select>
+            <button id="storeQuery" class="pure-button pure-input-1">
+              <svg>
+                <use href="svg.svg#save"></use>
+              </svg>
+              Store
+            </button>
           </div>
           <div class="pure-u-1-2" id="activeHighlights">
             <ul style="column-count: 3;">
@@ -413,9 +419,15 @@
                 fileSelector.property("files")[0].name,
               );
             });
+
             editor.getSession().on("change", () => {
               d3.select("#" + name).property("value", editor.getValue());
             });
+
+            d3.select("#" + name).on("change.ace", () => {
+              editor.setValue(d3.select("#" + name).property("value"));
+            });
+
             d3.select("#" + name + "-ace").style("display", null);
             d3.select("#" + name).style("display", "none");
           }

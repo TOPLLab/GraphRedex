@@ -213,6 +213,64 @@ export default class Server {
             makeLanguage(),
         );
 
+        routeMy.post(
+            "/language/:id([0-9,]+)/qry",
+            express.json({ strict: true }),
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const lang = await this.users.languageOf(user, {
+                        _key: req.params.id,
+                    });
+                    if (
+                        typeof req.body?.query === "string" &&
+                        typeof req.body?.name === "string"
+                    ) {
+                        this.languages.addQry(
+                            lang,
+                            req.body.name,
+                            req.body.query,
+                        );
+                        res.jsonp({ status: "ok" });
+                        return;
+                    } else {
+                        res.status(500).jsonp({
+                            status: "parameters missing, needed query and name",
+                            got: req.body,
+                        });
+                    }
+                },
+            ),
+        );
+
+        routeMy.delete(
+            "/language/:id([0-9,]+)/qry",
+            express.json({ strict: true }),
+            this.requireLogin(
+                async (
+                    user: User,
+                    req: express.Request,
+                    res: express.Response,
+                ) => {
+                    const lang = await this.users.languageOf(user, {
+                        _key: req.params.id,
+                    });
+                    if (typeof req.body?.name === "string") {
+                        this.languages.delQry(lang, req.body.name);
+                        res.jsonp({ status: "ok" });
+                        return;
+                    } else {
+                        res.status(500).jsonp({
+                            status: "parameters missing, needed name",
+                        });
+                    }
+                },
+            ),
+        );
+
         this.app.post(
             "/doTerm/:lang/:name",
             bodyParser.text({ type: "*/*" }),

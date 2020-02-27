@@ -17,6 +17,7 @@ interface Language {
     name: string;
     path: string;
     dir: string;
+    query?: { name: string; query: string }[];
     onDisk?: boolean;
     _key?: Number;
 }
