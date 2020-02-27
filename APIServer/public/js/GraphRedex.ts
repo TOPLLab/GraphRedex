@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import predefinedQueries from "./predefinedQueries.cnf";
 import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
@@ -8,6 +9,12 @@ import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 
 interface RulesDef {
     [key: string]: string;
+}
+
+interface Language {
+    rules: RulesDef;
+    query?: { name: string; query: string }[];
+    _key: string;
 }
 
 interface GRND extends NodeData {
@@ -250,7 +257,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected _curExample: ExampleMeta = null;
-    protected _curLang: Promise<{ rules: RulesDef }> = null;
+    protected _curLang: Promise<Language> = null;
 
     get curExample() {
         return this._curExample;
@@ -258,6 +265,12 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     get curLang() {
         return this._curLang;
+    }
+
+    get curQueries() {
+        return this.curLang
+            .then((l) => l.query || [])
+            .then((l) => [...l, ...predefinedQueries]);
     }
 
     set curExample(example: ExampleMeta | null) {
@@ -286,6 +299,22 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             headers: new Headers([["Content-Type", "application/json"]]),
             body: JSON.stringify({ qry, focus: focus?._id ?? null }),
         });
+    }
+
+    protected async saveQry(
+        name: string,
+        query: string,
+        langInput: Language = null,
+    ): Promise<any[]> {
+        const lang = langInput ?? (await this.curLang);
+        const r = await getit(`my/language/${lang._key}/qry`, {
+            method: "POST",
+            headers: new Headers([["Content-Type", "application/json"]]),
+            body: JSON.stringify({ query, name }),
+        });
+
+        this.setupQrySelector();
+        return r;
     }
 
     protected get svgCSS() {
@@ -756,6 +785,32 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         });
     }
 
+    protected async setupQrySelector() {
+        const select = d3.select("#querySelector");
+        let options = select.selectAll("option").data(await this.curQueries);
+
+        const optionsEnter = options.enter().append("option");
+        options.exit().remove();
+        options = optionsEnter.merge(options as any);
+        options
+            .text((d: any) => d.name)
+            .attr("value", (d: any) => d.query)
+            .attr("disabled", null);
+
+        select
+            .insert("option", ":first-child")
+            .text("Query")
+            .attr("value", "")
+            .attr("selected", "selected")
+            .attr("disabled", "disabled");
+
+        select.on("change", () => {
+            d3.event.preventDefault();
+            d3.select("#qry").property("value", select.property("value"));
+            d3.select("#qry").dispatch("change");
+        });
+    }
+
     protected setupExampleSelector() {
         d3.json("/my/examples").then((data: any[]) => {
             const select = d3.select("#exampleSelector").on("change", () => {
@@ -767,6 +822,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     const data = s.datum();
                     window.setTimeout(() => {
                         this.render(data);
+                        this.setupQrySelector();
                     }, 0);
                 }
             });
@@ -806,6 +862,17 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
     }
 
     protected setUpShowerBtns() {
+        d3.select("#storeQuery").on("click", async () => {
+            d3.event.preventDefault();
+            this.saveQry(
+                prompt("Name for query"),
+                d3.select("#qry").property("value"),
+            )
+                .then(() => alert("saved"))
+                .catch((x) => alert(x));
+            return false;
+        });
+
         d3.select("#treeInfoCloseBtn").on("click", () => {
             d3.select("#treeInfoBar")
                 .classed("closed", true)

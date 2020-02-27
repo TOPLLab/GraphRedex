@@ -16,6 +16,28 @@ export class Languages {
         this.datadir = datadir;
     }
 
+    async addQry(lang: Language, name: string, query: string) {
+        if (name.length < 1) {
+            throw "Cannot store zero length name";
+        }
+        if (name.length < 3) {
+            throw "Query too short";
+        }
+        if (!("query" in lang)) {
+            lang.query = [];
+        }
+        lang.query.push({ name, query });
+        await this.db.languages(true).replace("" + lang._key, lang);
+    }
+
+    async delQry(lang: Language, name: string) {
+        if ("query" in lang) {
+            lang.query = lang.query.filter((x) => x.name !== name);
+
+            await this.db.languages(true).replace("" + lang._key, lang);
+        }
+    }
+
     private async createInDB(
         user: User,
         name: string,
@@ -48,6 +70,11 @@ export class Languages {
         return { lang: langData, absPath: absPath, absDir: absPathDir };
     }
 
+    /**
+     * Check if a language is sucessfuly placed on disk
+     *
+     * If so flag it in the database and add the user as owner
+     */
     private async confirmDisk(lang: Language, user: User): Promise<Language> {
         const absBaseFileName = path.join(this.datadir, lang.path);
         if (
