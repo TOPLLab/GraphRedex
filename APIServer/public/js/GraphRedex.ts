@@ -571,31 +571,37 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     RETURN DISTINCT {_key:v._key,_id:v._id}`)
             ).filter((e) => !this.expanding.has(e._id));
 
-            // Mark all selected nodes as expanding
-            nodes.forEach((n) => this.expanding.add(n._id));
+            if (nodes.length > 0) {
+                // Mark all selected nodes as expanding
+                nodes.forEach((n) => this.expanding.add(n._id));
 
-            this.shower.update(); // and update this in the graph
+                this.shower.update(); // and update this in the graph
 
-            // wait till they are all expanded
-            await Promise.all(
-                nodes.map((n) =>
-                    getit(`/continueTerm/${this.curExample._key}/${n._key}`, {
-                        method: "POST",
-                    })
-                        .then(() => {
-                            this.expanding.delete(n._id);
-                            this.shower.updateNodeData(n._id, (d) => {
-                                d._expanded = true;
-                            });
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                            this.expanding.delete(n._id);
-                        }),
-                ),
-            );
+                // wait till they are all expanded
+                await Promise.all(
+                    nodes.map((n) =>
+                        getit(
+                            `/continueTerm/${this.curExample._key}/${n._key}`,
+                            {
+                                method: "POST",
+                            },
+                        )
+                            .then(() => {
+                                this.expanding.delete(n._id);
+                                this.shower.updateNodeData(n._id, (d) => {
+                                    d._expanded = true;
+                                });
+                            })
+                            .catch((e) => {
+                                console.error(e);
+                                this.expanding.delete(n._id);
+                                this.shower.update();
+                            }),
+                    ),
+                );
 
-            this.render(this.curExample, node._id, node._id);
+                this.render(this.curExample, node._id, node._id);
+            }
         }
     }
 
