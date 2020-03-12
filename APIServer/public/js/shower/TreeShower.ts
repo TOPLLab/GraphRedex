@@ -192,7 +192,8 @@ export default class TreeShower<
                         x + xDelta,
                     );
                 }
-                for (const [arrow, i] of mLast(arrows)) {
+                for (let i = 0; i < arrows.length; i++) {
+                    const arrow = arrows[i];
                     const target = getArrowTarget(arrow);
                     target.shown = true;
                     target.y = ymin + spanPerNode * i + spanPerNode / 2;
