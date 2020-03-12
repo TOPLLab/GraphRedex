@@ -994,8 +994,7 @@ function isInputDataArray<N extends GRND, E extends GRED>(
                         "_key" in x &&
                         "term" in x &&
                         "_stuck" in x &&
-                        "_expanded" in x &&
-                        "_formatted" in x,
+                        "_expanded" in x,
                 ) &&
                 edges.every(
                     (x) =>
