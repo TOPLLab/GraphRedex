@@ -1,6 +1,14 @@
 # GraphRedex
 
-GraphRedex is a tool for ...
+GraphRedex an open-source tool that empowers language designers to interactively
+explore their reduction graphs. From a PLT Redex language definition and a
+program in the language, our tool creates an interactive reduction graph. Using
+GraphRedex for visualizing reduction graphs has three main benefits. First, a
+global exploration mode allows users to obtain a bird's-eye overview of the
+reduction graph and learn its high level workings. Second, a local exploration
+mode lets the programmer closely interact with the reduction rules. Third, a
+query interface allows the programmer to filter out or highlight specific
+features of the reduction graph.
 
 ## Running the server
 
@@ -12,9 +20,10 @@ Clone the repository and run the following in the root dir.
 
 Try `./run -h` to see more options.
 
-A web server will be live at `http://localhost:3000`.
-The default login is `demo:demo`.
-The default password for the `demo` user can be set in `~/graphredex-login.json` (as a hashed password). The contents of this file can be generated be executing the following in the root of this repo:
+A web server will be live at `http://localhost:3000`. The default login is
+`demo:demo`. The default password for the `demo` user can be set in
+`~/graphredex-login.json` (as a hashed password). The contents of this file can
+be generated be executing the following in the root of this repo:
 
 ```bash
 node <<<'require("./APIServer/dist/password.js").hashPassword("PASSWORD").then(x=>console.log(JSON.stringify(x)))'
@@ -66,36 +75,44 @@ brew install arangodb
 /usr/local/opt/arangodb/sbin/arangod &
 ```
 
-**Arch Linux** users can install the `arangodb3` package form the AUR and
-start or enable the service using `systemctl start arangodb3.service`.
+**Arch Linux** users can install the `arangodb3` package form the AUR and start
+or enable the service using `systemctl start arangodb3.service`.
 
 #### Configuration of ArangoDB
 
-Once the database is installed it needs to be initialized with an initial database and two users.
-Configuration of the database is browser based, the default address is http://127.0.0.1:8529.
-The default password for the `root` user is blank `""`.
+Once the database is installed it needs to be initialized with an initial
+database and two users. Configuration of the database is browser based, the
+default address is http://127.0.0.1:8529. The default password for the `root`
+user is blank `""`.
 
 #### Creating users
 
-In order for GraphRedex to work it needs to have two users in the system called `graphredex-qry` and `graphredex`.
-The user `graphredex` has read and write access while the user `graphredex-qry` only has read access.
+In order for GraphRedex to work it needs to have two users in the system called
+`graphredex-qry` and `graphredex`. The user `graphredex` has read and write
+access while the user `graphredex-qry` only has read access.
 
--   In the browser, go to the tab "Users", and create a user called `graphredex-qry` with password `graphredex-qry`.
--   In the browser, go to the tab "Users", and create a user called `graphredex` with password `graphredex`.
+-   In the browser, go to the tab "Users", and create a user called
+    `graphredex-qry` with password `graphredex-qry`.
+-   In the browser, go to the tab "Users", and create a user called `graphredex`
+    with password `graphredex`.
 
 ##### Creating the database
 
-Go to the tab "Databases" and make a database called `graphredex-data` make sure to select `graphredex` as the owner.
+Go to the tab "Databases" and make a database called `graphredex-data` make sure
+to select `graphredex` as the owner.
 
 ##### Setting the permissions
 
-Now that the database is created we still need to make sure that the permissions of the users are correct:
+Now that the database is created we still need to make sure that the permissions
+of the users are correct:
 
 Go to the Users tab and select permissions tab:
 
--   In Users/graphredex in the permissions tab (these should normally already be set):
+-   In Users/graphredex in the permissions tab (these should normally already be
+    set):
 
-    -   give `graphredex` administrative access to the database `graphredex-data`
+    -   give `graphredex` administrative access to the database
+        `graphredex-data`
     -   give `graphredex` read/write access to all collections
         -   Click on `graphredex-data`
         -   Select "Read/Write" access on the line with `*`
@@ -110,29 +127,31 @@ Go to the Users tab and select permissions tab:
 
 ### Running code samples with docker
 
-To run code we receive as input in a docker container, set the `GRAPHREDEX_DOCKER`
-environment variable to `1`.
+To run code we receive as input in a docker container, set the
+`GRAPHREDEX_DOCKER` environment variable to `1`.
 
 ```bash
 GRAPHREDEX_DOCKER=1 ./run  -c
 ```
 
-_Note_: read [RedexServer/README.md](RedexServer/README.md) for security guidelines.
+_Note_: read [RedexServer/README.md](RedexServer/README.md) for security
+guidelines.
 
 ### Allow the use `(require redex)`
 
-This allows you to use [xvfb](https://www.x.org/releases/X11R7.7/doc/man/man1/Xvfb.1.xhtml).
-To emulate having a screen. This is enabled by default in de docker version and comes
-with a performance hit.
+This allows you to use
+[xvfb](https://www.x.org/releases/X11R7.7/doc/man/man1/Xvfb.1.xhtml). To emulate
+having a screen. This is enabled by default in de docker version and comes with
+a performance hit.
 
 ```bash
 GRAPHREDEX_XVFB=1 ./run  -c
 ```
 
-For the moment, you will need to pach xvfb-run with [this path](RedexServer/xvfb.patch)
-to get it to work.
+For the moment, you will need to pach xvfb-run with
+[this path](RedexServer/xvfb.patch) to get it to work.
 
-### Settign the root password of arango for auto setup
+### Setting the root password of AranogDB for auto setup
 
 GraphRedex has an auto-setup feature. This proccess creates the required
 database and users. For this to work the root password of arangoDB is needed.
@@ -142,7 +161,10 @@ user of the DB. This varaiable not be passed to ran code.
 
 ### Using your own plugins from the query pannel
 
-If you create `APIServer/public/dist/Plugin.js` with an AMD style module definition, the search panel will show an extra button named "custom". Clicking this button will invoke the `exports.default` function. The two arguments supplied are:
+If you create `APIServer/public/dist/Plugin.js` with an AMD style module
+definition, the search panel will show an extra button named "custom". Clicking
+this button will invoke the `exports.default` function. The two arguments
+supplied are:
 
 1. The result from the AQL query
 2. A graphredex object with following properties
@@ -155,7 +177,7 @@ The function should return true on success.
 Example content of `Plugin.js`
 
 ```js
-define(["exports"], function(exports) {
+define(["exports"], function (exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = (graphredex, result) => {
@@ -175,4 +197,5 @@ define(["exports"], function(exports) {
 });
 ```
 
-_Tip:_ this file can be autogenerated by creating `Plugin.ts` in `APIServer/public/js` and exporting a default funciton with TypeScript.
+_Tip:_ this file can be autogenerated by creating `Plugin.ts` in
+`APIServer/public/js` and exporting a default funciton with TypeScript.
