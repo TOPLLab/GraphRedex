@@ -3,6 +3,7 @@
 (require redex/reduction-semantics )
 (require redex/pict )
 (require file/convertible)
+(require racket/exn)
 (require "./ArangoDB.rkt")
 
 
@@ -70,13 +71,18 @@
     (bytes->string/utf-8 (convert pict 'svg-bytes))
     )
 
+  (define (secure-trans t)
+    (with-handlers ([ exn:fail? (λ e (list (cons 'error_in_term->kv (exn->string e))))]) (trans t))
+
+    )
+
   (define (make-node-data term)
     (let* (
-           [user-data (trans term)]
+           [user-data (secure-trans term)]
            [full-data (make-hash
                        (append
                         `((term . ,(expr->string term)))
-                        (trans term))) ]
+                        user-data)) ]
            )
       ; Convert pict to svg is it exists
       (cond [(hash-has-key? full-data '_pict)
