@@ -33,10 +33,15 @@
       )
 
     (define (make-hash-of-rule-render)
-      (make-hash 
-       (map 
+      (make-hash
+       (map
         name-render-pair
-        (reduction-relation->rule-names relation)))
+        (if (reduction-relation? relation)
+            (reduction-relation->rule-names relation)
+            '()
+            )
+        )
+       )
       )
 
     (arango-qry
