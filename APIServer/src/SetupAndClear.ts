@@ -2,7 +2,7 @@ import arangojs, { Database } from "arangojs";
 import * as os from "os";
 import * as path from "path";
 import * as readline from "readline";
-import * as request from "request";
+import * as needle from "needle";
 import MyDatabase from "./Database";
 import { isReadableFile } from "./Utils";
 
@@ -240,16 +240,23 @@ async function dbCheck(e: any): Promise<void> {
 }
 
 async function getRootDbAPIConnection(): Promise<
-    (path: string, options?: request.CoreOptions) => Promise<any>
+    (path: string, options?: { method: string; body?: any }) => Promise<any>
 > {
     const db: Database = arangojs({});
     const token = await db.login("root", await getRootPass());
 
-    return (path: string, options: request.CoreOptions = {}) =>
+    return (path: string, options: any = {}) =>
         new Promise((resolve, reject) => {
-            request(
+            needle(
+                "get",
                 "http://localhost:8529" + path,
-                Object.assign({ auth: { bearer: token }, json: true }, options),
+                options.body,
+                {
+                    headers: {
+                        Authorization: "Bearer " + token,
+                    },
+                    json: true,
+                },
                 (_err, _res, body) => {
                     if (!body.error) {
                         resolve(body.result);
