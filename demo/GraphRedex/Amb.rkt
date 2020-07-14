@@ -2,7 +2,7 @@
 (require redex/reduction-semantics)
 (require redex/pict)
 (provide reductions term->kv)
-; A simple nodeterministic model for showcasing non-deterministic debugging. 
+; A simple nodeterministic model for showcasing non-deterministic debugging.
 ; Christophe.Scholliers@UGent.be
 
 
@@ -10,7 +10,7 @@
   (e (amb e ...)
      (+ e ...)
      number)
-  (E (+ number ... E e ...) hole))
+  (E (+ number ... E e ...) (amb number ... E e ...) hole))
 
 
 (define (term->kv exp)
@@ -19,7 +19,7 @@
     (type . ,(match exp [`(amb ,e ...) "ambigous"] [`(+ ,e ...) "addition"] [_ "final"]) )
     )
   )
- 
+
 
 (define reductions
   (reduction-relation
