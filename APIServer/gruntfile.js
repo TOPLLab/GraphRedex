@@ -1,4 +1,5 @@
-module.exports = function(grunt) {
+const path = require("path");
+module.exports = function (grunt) {
     "use strict";
 
     grunt.initConfig({
@@ -6,8 +7,35 @@ module.exports = function(grunt) {
             app: {
                 tsconfig: "./tsconfig.json",
             },
+        },
+        webpack: {
             frontend: {
-                tsconfig: "./tsconfig-frontend.json",
+                entry: "./public/js/GraphRedex.ts",
+                module: {
+                    rules: [
+                        {
+                            test: /\.tsx?$/,
+                            use: {
+                                loader: "ts-loader",
+                                options: {
+                                    configFile: "tsconfig-frontend.json",
+                                },
+                            },
+                            exclude: /node_modules/,
+                        },
+                    ],
+                },
+                resolve: {
+                    extensions: [".tsx", ".ts", ".js"],
+                },
+                externals: {
+                    d3: "d3", // load d3 from cdn if possible
+                },
+                output: {
+                    libraryTarget: "amd", // to amd format for loading with requirejs
+                    filename: "GraphRedex.js",
+                    path: path.resolve(__dirname, "public/dist"),
+                },
             },
         },
         tslint: {
@@ -38,7 +66,7 @@ module.exports = function(grunt) {
             },
             frontend: {
                 files: ["public/js/**/*.ts", "tsconfig-frontend.json"],
-                tasks: ["ts:frontend"],
+                tasks: ["webpack:frontend"],
             },
         },
     });
@@ -47,6 +75,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks("grunt-tslint");
     grunt.loadNpmTasks("grunt-contrib-less");
+    grunt.loadNpmTasks("grunt-webpack");
 
-    grunt.registerTask("default", ["ts", "tslint", "less"]);
+    grunt.registerTask("default", ["ts", "tslint", "less", "webpack"]);
 };
