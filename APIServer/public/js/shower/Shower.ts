@@ -23,11 +23,11 @@ export default abstract class Shower<
     /** zoom handler that will effect the `scene` and `isClose` variables */
     protected zoomHandler: d3.ZoomBehavior<any, any>;
     /** The group that is the immediate child of svg that has zoom transforms */
-    protected scene: d3.Selection<any, any, any, any>;
+    protected scene: d3.Selection<SVGGElement, any, any, any>;
     /** User has zoomed in closely */
     protected isClose: boolean;
     /** A <defs> element in the svg used for defining arrows and shapes */
-    protected defs: d3.Selection<any, any, any, any>;
+    protected defs: d3.Selection<SVGDefsElement, any, any, any>;
 
     /** Parts of the visualization that is rendered */
     protected parts: {
@@ -351,9 +351,9 @@ export default abstract class Shower<
                 .attr(
                     "transform",
                     ({ source: s, target: t }) =>
-                        `rotate(${calcAngle(s, t)},${(s.x + t.x) / 2},${(s.y +
-                            t.y) /
-                            2})`,
+                        `rotate(${calcAngle(s, t)},${(s.x + t.x) / 2},${
+                            (s.y + t.y) / 2
+                        })`,
                 );
         } else {
             this.parts.texts.style("display", "none");
@@ -491,8 +491,8 @@ export default abstract class Shower<
         this.ticked();
 
         // set attributes
-        clone.setAttribute("width", width);
-        clone.setAttribute("height", height);
+        clone.setAttribute("width", width.toString(10));
+        clone.setAttribute("height", height.toString(10));
         clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
 
         // give padding of 5 to view box
@@ -549,8 +549,9 @@ export default abstract class Shower<
                 .append("path")
                 .attr(
                     "d",
-                    `M 0 0 ${markersize} ${markersize /
-                        2} 0 ${markersize} ${markersize / 4} ${markersize / 2}`,
+                    `M 0 0 ${markersize} ${markersize / 2} 0 ${markersize} ${
+                        markersize / 4
+                    } ${markersize / 2}`,
                 )
                 .style("fill", randColor.hexFull);
         }
