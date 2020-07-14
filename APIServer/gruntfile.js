@@ -10,6 +10,7 @@ module.exports = function (grunt) {
         },
         webpack: {
             frontend: {
+                mode: "development",
                 entry: "./public/js/GraphRedex.ts",
                 module: {
                     rules: [
@@ -23,6 +24,10 @@ module.exports = function (grunt) {
                             },
                             exclude: /node_modules/,
                         },
+                        {
+                            test: /\.css$/i,
+                            use: "raw-loader",
+                        },
                     ],
                 },
                 resolve: {
@@ -31,6 +36,7 @@ module.exports = function (grunt) {
                 externals: {
                     d3: "d3", // load d3 from cdn if possible
                 },
+                devtool: "source-map",
                 output: {
                     libraryTarget: "amd", // to amd format for loading with requirejs
                     filename: "GraphRedex.js",

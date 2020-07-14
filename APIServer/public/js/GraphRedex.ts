@@ -6,6 +6,8 @@ import TreeShower from "./shower/TreeShower";
 import { doubleTermDiff } from "./termDiff";
 import { downloadFileLink, genHighlightId, getit, termDiffMaker } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
+/// <reference path="./static-files.d.ts"/>
+import graphRedexGraphCSS from "./GraphRedex-graph.css";
 
 interface RulesDef {
     [key: string]: string;
@@ -322,58 +324,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     protected get svgCSS() {
         return (
-            `.graph-arrows {
-    stroke-width: 2;
-    fill: transparent;
-}
-
-.graph-nodes {
-    cursor: move;
-    fill: rgb(86, 198, 212);
-    stroke: #ffffff;
-    stroke-width: 2;
-}
-
-.graph-nodes .expandable {
-    stroke: grey;
-}
-
-.graph-nodes .limited {
-    stroke: pink;
-}
-
-
-.graph-nodes .stuck {
-    stroke: red;
-}
-
-.graph-nodes .stuck:not([class*="highlight-"]) {
-    fill: red;
-}
-
-.graph-nodes .start {
-    fill: greenyellow;
-}
-
-.graph-nodes .highlighted {
-    stroke: red !important;
-}
-
-
-.graph-nodes .expanding {
-    fill: orange;
-}
-
-.graph-nodes .start.stuck {
-    fill: greenyellow;
-    stroke: red;
-}
-
-.graph-texts {
-    font-size: 5px;
-    font-family: "Noto Sans","Courier New",monospace;
-    font-variant: small-caps;
-}` +
+            graphRedexGraphCSS +
             [...this.highlighted]
                 .map((h) => {
                     let style = `.highlight-${h.id}{fill: ${h.colour};}`;

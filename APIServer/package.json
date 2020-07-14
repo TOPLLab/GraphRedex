@@ -19,6 +19,7 @@
         "multer": "^1.4.1",
         "needle": "^2.5.0",
         "purecss": "^1.0.0",
+        "raw-loader": "^4.0.1",
         "tslint": "^5.11.0",
         "typescript": "^3.7.4",
         "typings": "^2.1.1"
