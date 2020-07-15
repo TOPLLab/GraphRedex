@@ -2,6 +2,7 @@
 
 import * as d3 from "d3";
 import { awaitArray, awaitBoolean, fracToRad, randomColor } from "../util";
+import showerDefaultDefs from "./shower-filters.svg";
 
 export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
     ND,
@@ -83,6 +84,7 @@ export default abstract class Shower<
                 })),
             );
         this.defs = this.svgRoot.append("svg:defs");
+        this.defs.html(showerDefaultDefs);
         this.defs.append("style");
 
         this.scene = this.svgRoot.append("g");
@@ -325,7 +327,9 @@ export default abstract class Shower<
         this.parts.arrows
             .attr(
                 "d",
-                ({ source: s, target: t }) => `M${s.x} ${s.y}L${t.x} ${t.y}`,
+                ({ source: s, target: t }) =>
+                    `M${s.x} ${s.y}v-1v2v-1h1h-2h1L${t.x} ${t.y}`,
+                // add a little plus so chrome gives te line a width and height
             )
             .style("display", (d) =>
                 d.source.shown && d.target.shown ? null : "none",

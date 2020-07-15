@@ -1,0 +1,105 @@
+.graph-arrows {
+  stroke-width: 2;
+  fill: transparent;
+  path:hover {
+    filter:url(#hover);
+  }
+  .selected, .selected:hover{
+    filter:url(#selected);
+  }
+
+  .inaccessible.selected {
+    filter: saturate(0.3) opacity(0.3)
+    drop-shadow(0 0 5px rgba(255, 0, 0, 0.664));
+  }
+
+  .inaccessible {
+    filter: saturate(0.3);
+    opacity: 0.3;
+  }
+
+}
+
+.graph-nodes .inaccessible:not(.selected) {
+  filter: saturate(0.5);
+  opacity: 0.8;
+}
+
+.graph-nodes {
+  cursor: move;
+  fill: rgb(86, 198, 212);
+  stroke: #ffffff;
+  stroke-width: 2;
+
+  .expandable {
+    stroke: grey;
+  }
+
+  .limited {
+    stroke: pink;
+  }
+
+  .stuck {
+    stroke: red;
+  }
+
+  .stuck:not([class*="highlight-"]) {
+    fill: red;
+  }
+
+  .start {
+    fill: greenyellow;
+  }
+
+  .highlighted {
+    stroke: red !important;
+  }
+
+  .expanding {
+    fill: orange;
+  }
+
+  .start.stuck {
+    fill: greenyellow;
+    stroke: red;
+  }
+}
+
+
+.graph-texts {
+  font-size: 5px;
+  font-family: "Noto Sans", "Courier New", monospace;
+  font-variant: small-caps;
+}
+
+
+.bubble {
+  > circle {
+    fill: url("#bubbleGradient") #eee;
+    stroke: transparent;
+  }
+
+  > use {
+    pointer-events: none;
+  }
+
+  > path {
+    fill: #eee;
+    cursor: pointer;
+    mix-blend-mode: darken;
+    stroke: #aaa;
+    stroke-width: 0.5;
+
+    &:hover {
+      fill: #ff2d2d;
+    }
+  }
+
+  > path + use {
+    fill: black;
+  }
+
+  > path:hover + use {
+    fill: white;
+  }
+}

@@ -211,36 +211,6 @@ button[onclick="toggle('createLanguage')"]:hover use {
     text-overflow: ellipsis;
 }
 
-.bubble {
-    > circle {
-        fill: url("../svg.svg#bubbleGradient") #eee;
-        stroke: transparent;
-    }
-
-    > use {
-        pointer-events: none;
-    }
-
-    > path {
-        fill: #eee;
-        cursor: pointer;
-        mix-blend-mode: darken;
-        stroke: #aaa;
-        stroke-width: 0.5;
-
-        &:hover {
-            fill: #ff2d2d;
-        }
-    }
-
-    > path + use {
-        fill: black;
-    }
-
-    > path:hover + use {
-        fill: white;
-    }
-}
 
 #statusSection span {
     &.diff {

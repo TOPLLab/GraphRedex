@@ -10,7 +10,7 @@ module.exports = function (grunt) {
         },
         webpack: {
             frontend: {
-                mode: "development",
+                mode: "production",
                 entry: "./public/js/GraphRedex.ts",
                 module: {
                     rules: [
@@ -26,6 +26,18 @@ module.exports = function (grunt) {
                         },
                         {
                             test: /\.css$/i,
+                            use: "raw-loader",
+                        },
+                        {
+                            test: /\.less$/i,
+                            use: [
+                                { loader: "to-string-loader" },
+                                { loader: "css-loader" },
+                                { loader: "less-loader" },
+                            ],
+                        },
+                        {
+                            test: /\.svg$/i,
                             use: "raw-loader",
                         },
                     ],

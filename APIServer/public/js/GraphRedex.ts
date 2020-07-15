@@ -7,7 +7,7 @@ import { doubleTermDiff } from "./termDiff";
 import { downloadFileLink, genHighlightId, getit, termDiffMaker } from "./util";
 import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
 /// <reference path="./static-files.d.ts"/>
-import graphRedexGraphCSS from "./GraphRedex-graph.css";
+import * as graphRedexGraphCSS from "./GraphRedex-graph.less";
 
 interface RulesDef {
     [key: string]: string;
