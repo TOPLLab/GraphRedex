@@ -83,7 +83,13 @@ module.exports = function (grunt) {
                 tasks: ["less"],
             },
             frontend: {
-                files: ["public/js/**/*.ts", "tsconfig-frontend.json"],
+                files: [
+                    "public/js/**/*.ts",
+                    "public/js/**/*.css",
+                    "public/js/**/*.less",
+                    "public/js/**/*.svg",
+                    "tsconfig-frontend.json",
+                ],
                 tasks: ["webpack:frontend"],
             },
         },
