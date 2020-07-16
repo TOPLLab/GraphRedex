@@ -13,10 +13,12 @@ export default class MyDatabase {
         const dbRO = arangojs({});
         await dbRO.login("graphredex-qry", "graphredex-qry"); // read only access
         dbRO.useDatabase("graphredex-data");
+        dbRO.useBasicAuth("graphredex-qry", "graphredex-qry");
 
         const dbRW = arangojs({});
         await dbRW.login("graphredex", "graphredex"); // rw access
         dbRW.useDatabase("graphredex-data");
+        dbRW.useBasicAuth("graphredex", "graphredex");
         return new MyDatabase(dbRW, dbRO);
     }
 
