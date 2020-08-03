@@ -86,9 +86,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     });
 
                 this.curLang.then((cl) => {
-                    const svg = cl.rules[e.data.reduction];
-                    if (svg) {
-                        d3.select("#ruleInfo").html(svg);
+                    if (cl.rules ?? false) {
+                        const svg = cl.rules[e.data.reduction];
+                        if (svg) {
+                            d3.select("#ruleInfo").html(svg);
+                        }
                     }
                 });
             },
