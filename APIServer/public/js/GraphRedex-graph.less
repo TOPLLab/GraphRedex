@@ -25,6 +25,32 @@
     opacity: 0.8;
 }
 
+@keyframes pulseExpanding {
+    0% {
+        fill: orange;
+
+        stroke-width: 4;
+    }
+
+    25% {
+        stroke-width: 3;
+    }
+
+    50% {
+        fill: darkorange;
+        stroke-width: 4;
+    }
+
+    75% {
+        stroke-width: 3;
+    }
+
+    100% {
+        fill: orange;
+        stroke-width: 4;
+    }
+}
+
 .graph-nodes {
     cursor: move;
     fill: rgb(86, 198, 212);
@@ -60,7 +86,8 @@
     }
 
     .expanding {
-        fill: orange;
+        animation: pulseExpanding 2s infinite;
+        stroke-opacity: 1;
     }
 
     .start.stuck {
