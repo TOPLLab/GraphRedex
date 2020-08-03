@@ -284,7 +284,6 @@ export default abstract class Shower<
         const nodeEnter = p.nodes
             .enter()
             .append("circle")
-            .classed("term-node", true)
             .attr("r", 10)
             .call(this.drag());
         if ("nodeMaker" in this.config) {

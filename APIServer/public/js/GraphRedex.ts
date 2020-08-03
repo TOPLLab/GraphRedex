@@ -360,6 +360,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.setupDoQry();
         this.updateLangs();
         this.setUpShowerBtns();
+        this.setUpLegend();
     }
 
     /**
@@ -990,6 +991,34 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             });
         });
         doRenderBtn();
+    }
+
+    protected setUpLegend() {
+        const things = [
+            { name: "Start", classes: "start" },
+            { name: "Finished", classes: "stuck" },
+            { name: "Expandable", classes: "expandable" },
+        ];
+        let legendSVG = d3.select("#graphLegend");
+        let nodes = things
+            .map(
+                ({ classes }, index) =>
+                    `<circle class="${classes}" r="10" cx="15" cy="${
+                        index * 25 + 15
+                    }"></circle>`,
+            )
+            .join("");
+        let names = things
+            .map(
+                ({ name }, index) =>
+                    `<text x="30" y="${index * 25 + 18}">${name}</text>`,
+            )
+            .join("");
+        console.log(nodes, names);
+        legendSVG.html(
+            `<defs><style>${graphRedexGraphCSS}</style></defs><g class="graph-nodes">${nodes}</g>${names}`,
+        );
+        legendSVG.attr("viewBox", `0 0 150 ${things.length * 25 + 40}`);
     }
 
     private async doTerm(

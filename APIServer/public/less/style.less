@@ -121,6 +121,27 @@ main {
     }
 }
 
+#treeInfoBar:not(.closed) ~ #graphLegend {
+    display: none;
+}
+#treeInfoBar.closed ~ #graphLegend {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 5em;
+    opacity: 0.7;
+    background: white;
+
+    * {
+      pointer-events: none;
+    }
+
+    &:hover{
+      opacity:1;
+      border: 1px solid gray;
+    }
+}
+
 #visulisation {
     margin: -1em;
     width: calc(100% + 2rem);
