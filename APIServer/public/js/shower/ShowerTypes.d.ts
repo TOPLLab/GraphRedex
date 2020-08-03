@@ -1,7 +1,6 @@
 /// <reference path="../_global.d.ts"/>
 interface NodeData {
     _id: string;
-    term: string;
 }
 interface EdgeData {
     _id: string;

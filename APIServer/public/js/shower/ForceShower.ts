@@ -2,23 +2,7 @@ import * as d3 from "d3";
 import Shower from "./Shower";
 import treeForce from "./treeForce";
 
-interface GRND extends NodeData {
-    _id: string;
-    _key: string;
-    term: string;
-    _stuck: boolean;
-    _limited?: boolean;
-    _expanded: boolean;
-}
-interface GRED extends EdgeData {
-    _id: string;
-    _from: string;
-    _to: string;
-    reduction: string;
-    _real: boolean;
-}
-
-interface ForceShowerNode<ND extends GRND> extends ShowerNode<ND> {
+interface ForceShowerNode<ND extends NodeData> extends ShowerNode<ND> {
     id: string;
     data: ND;
     x?: any;
@@ -28,7 +12,7 @@ interface ForceShowerNode<ND extends GRND> extends ShowerNode<ND> {
     ix?: number;
     iy?: number;
 }
-interface ForceShowerEdge<ND extends GRND, ED extends GRED>
+interface ForceShowerEdge<ND extends NodeData, ED extends EdgeData>
     extends ShowerEdge<ND, ED> {
     source: ShowerNode<ND>;
     target: ShowerNode<ND>;
@@ -36,8 +20,8 @@ interface ForceShowerEdge<ND extends GRND, ED extends GRED>
 }
 
 export default class ForceShower<
-    ND extends GRND,
-    ED extends GRED
+    ND extends NodeData,
+    ED extends EdgeData
 > extends Shower<ND, ED, ForceShowerNode<ND>, ForceShowerEdge<ND, ED>> {
     /** d3 force simulation that puts the nodes in the right place */
     private simulation: d3.Simulation<any, any>;

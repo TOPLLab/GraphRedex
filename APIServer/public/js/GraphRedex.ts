@@ -1,13 +1,14 @@
 import * as d3 from "d3";
+
+import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
+/// <reference path="./static-files.d.ts"/>
+import * as graphRedexGraphCSS from "./GraphRedex-graph.less";
 import predefinedQueries from "./predefinedQueries.cnf";
 import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
 import { doubleTermDiff } from "./termDiff";
 import { downloadFileLink, genHighlightId, getit, termDiffMaker } from "./util";
-import { APIDoTermResult, ExampleMeta, TermMeta } from "./_global";
-/// <reference path="./static-files.d.ts"/>
-import * as graphRedexGraphCSS from "./GraphRedex-graph.less";
 
 interface RulesDef {
     [key: string]: string;
@@ -19,15 +20,17 @@ interface Language {
     _key: string;
 }
 
+type Awaitable<D> = D | Promise<D>;
+
 interface GRND extends NodeData {
     _id: string;
     _key: string;
-    term: string;
+    term: Awaitable<string>;
     _stuck: boolean;
     _limited?: boolean;
     _expanded: boolean;
-    _pict?: string;
-    _formatted?: string;
+    _pict?: Awaitable<string>;
+    _formatted?: Awaitable<string>;
 }
 
 interface GRED extends EdgeData {
@@ -62,13 +65,13 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 }
                 return true;
             },
-            edgeSelected: (e) => {
+            edgeSelected: async (e) => {
                 d3.select("#treeInfoBar").classed("closed", false);
                 d3.select("#ruleInfo").text(e.data.reduction);
 
                 const diff = doubleTermDiff(
-                    e.source.data.term,
-                    e.target.data.term,
+                    await e.source.data.term,
+                    await e.target.data.term,
                     termDiffMaker,
                 );
 
@@ -178,20 +181,24 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 });
 
                 let prevURL = null;
-                nodes.on("mouseover", (d) => {
+                nodes.on("mouseover", async (d) => {
+                    d3.select("#statusSection").html("loading");
                     // Get the diffed term
-                    let renderedTerm = this.getRepr(d.data);
+                    let renderedTerm = await this.getRepr(d.data);
 
-                    if ("_pict" in d.data) {
+                    const pictSVG = (await d.data._pict) ?? null;
+                    if (pictSVG !== null) {
                         if (prevURL) {
                             URL.revokeObjectURL(prevURL);
                         }
                         prevURL = URL.createObjectURL(
-                            new Blob([d.data._pict], { type: "image/svg+xml" }),
+                            new Blob([pictSVG], {
+                                type: "image/svg+xml",
+                            }),
                         );
                         const img = document.createElement("img");
                         img.src = prevURL;
-                        img.alt = d.data.term;
+                        img.alt = await d.data.term;
                         img.style.maxWidth = "100%";
                         img.style.userSelect = "all";
                         renderedTerm = img.outerHTML + "<hr/>" + renderedTerm;
@@ -250,15 +257,16 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             },
         };
 
-        this.shower = new ForceShower("#visulisation", config);
+        this.shower = new ForceShower<N, E>("#visulisation", config);
         this.forceNow = true;
     }
 
-    private getRepr(nd: GRND) {
-        if ("_formatted" in nd) {
-            return nd._formatted;
+    private async getRepr(nd: GRND): Promise<string> {
+        const formatted = (await nd._formatted) ?? null;
+        if (formatted !== null) {
+            return formatted;
         }
-        return nd.term;
+        return await nd.term;
     }
 
     protected _curExample: ExampleMeta = null;
@@ -371,7 +379,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 FOR v,e,p IN 0..${steps}
                     OUTBOUND ${start ? `"${start}"` : "@start"} GRAPH @graph
                     OPTIONS {bfs:true,uniqueVertices: 'global'}
-                    RETURN DISTINCT MERGE(v,{"_limited": (LENGTH(p.edges) == ${steps} && v._expanded && !v._stuck)}))
+                    RETURN DISTINCT {_id:v._id, _expanded: v._expanded, _stuck: v._stuck, "_limited": (LENGTH(p.edges) == ${steps} && v._expanded && !v._stuck)})
         LET edges = (
             FOR a in nodes
                 FOR e IN @@edges
@@ -380,10 +388,76 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         RETURN {nodes,edges}`);
 
         if (start) {
-            this.shower.push(data, startPos);
+            this.shower.push(this.makeNodeProxy(data), startPos);
         } else {
-            this.shower.show(data);
+            this.shower.show(this.makeNodeProxy(data));
         }
+    }
+
+    async getNodeData(id: string): Promise<GRND> {
+        const [data] = await this.doQry(`RETURN DOCUMENT("${id}")`);
+        return data;
+    }
+
+    private makeNodeProxy(data: { nodes: any; edges: any }): InputData<N, E> {
+        return {
+            nodes: data.nodes.map((n) => {
+                if (typeof n === "string") {
+                    throw "Cannot create proxy";
+                }
+                let fullValue = null;
+                return new Proxy(n, {
+                    get: (
+                        target: any,
+                        p: string | number | symbol,
+                        _receiver: any,
+                    ) => {
+                        if (p == "_id") return target._id;
+                        if (p == "_key") return target._id.split("/").pop();
+                        if (
+                            ["_stuck", "_limited", "_expanded"].some(
+                                (x) => x === p,
+                            )
+                        )
+                            return target[p];
+                        if (fullValue === null) {
+                            return new Promise((resolve, reject) => {
+                                this.getNodeData(target._id)
+                                    .then((d: GRND) => {
+                                        fullValue = d;
+                                        resolve(fullValue[p]);
+                                    })
+                                    .catch(reject);
+                            });
+                        } else {
+                            return fullValue[p];
+                        }
+                    },
+                    has: (_target: any, p: string | number | symbol) => {
+                        if (
+                            [
+                                "_id",
+                                "_key",
+                                "term",
+                                "_stuck",
+                                "_limited",
+                                "_expanded",
+                            ].some((x) => x === p)
+                        )
+                            return true;
+                        if (fullValue === null) {
+                            throw `called "${String(
+                                p,
+                            )} in ...," on uninitialised node data!`;
+                        }
+                    },
+                    apply: () => {
+                        throw "cannot call on node data!";
+                    },
+                });
+            }),
+            edges: data.edges,
+        };
     }
 
     /**
@@ -471,7 +545,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             {
                 render: (d: any) => this.renderIfGraph(d),
                 highlight: (d: any[]) => this.highlightIfGraph(d),
-                expand: (n: TermMeta, d: number) => this.expandBelow(n, d),
+                expand: (n: N, d: number) => this.expandBelow(n, d),
             },
             data,
         );
@@ -495,8 +569,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * Send a continueTerm query for the given term and re-render that node and
      * its (new) children.
      */
-    protected async expandNode(node: TermMeta) {
-        if (!node._expanded && !this.expanding.has(node._id)) {
+    protected async expandNode(node: N) {
+        if (!(await node._expanded) && !this.expanding.has(node._id)) {
             this.expanding.add(node._id);
             this.shower.update();
             await getit(`/continueTerm/${this.curExample._key}/${node._key}`, {
@@ -513,8 +587,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * @param node node to start from
      * @param depth depth to search for unexpanded
      */
-    protected async expandBelow(node: TermMeta, depth: number = 50) {
-        if (!node._expanded) {
+    protected async expandBelow(node: N, depth: number = 50) {
+        if (!(await node._expanded)) {
             this.expandNode(node);
         } else {
             const nodes: { _id: string; _key: string }[] = (
@@ -585,7 +659,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         );
         hls.select(".colourpicker").style("background", (d) => d.colour);
 
-        //TODO: add colour changing
+        // TODO: add colour changing
         hls.on("dblclick", (d) => {
             let newName = window.prompt("Name", d.name);
             if (newName) {
