@@ -106,7 +106,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         size: 2,
                         icon: "inspect",
                         action: () => {
-                            alert("Stuck????" + node.data.term);
+                            alert("Stuck term:\n" + node.data.term);
                             return false;
                         },
                     });
@@ -976,7 +976,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 )
                 .append("svg")
                 .append("use")
-                .attr("href", `svg.svg#${this.forceNow ? "physics" : "tree"}`);
+                .attr("href", `svg.svg#${this.forceNow ? "tree" : "physics"}`);
         };
 
         toggleRenderBtn.on("click", () => {
