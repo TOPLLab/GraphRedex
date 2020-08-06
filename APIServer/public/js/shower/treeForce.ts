@@ -10,7 +10,7 @@
  */
 export default function (dist: number = 80, getStart: () => string) {
     // private fields
-    let strength: number = 0.5,
+    let strength: number = 0.1,
         nodes: ShowerNode<any>[],
         hasLinks = false,
         nodeDepth: number[],
