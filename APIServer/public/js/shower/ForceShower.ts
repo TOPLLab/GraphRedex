@@ -42,11 +42,11 @@ export default class ForceShower<
                 "link",
                 d3
                     .forceLink<ForceShowerNode<ND>, ForceShowerEdge<ND, ED>>()
-                    .distance((d) => (d.data._real ? 80 : 90))
+                    .distance(80)
                     .strength(1.5)
                     .id((d: ForceShowerNode<ND>) => d.id),
             )
-            .force("charge", d3.forceManyBody().strength(-60))
+            .force("charge", d3.forceManyBody().strength(-55))
             .force("collide", d3.forceCollide(16).strength(0.7))
             .force("long", d3.forceY().strength(0.01));
 
@@ -108,6 +108,8 @@ export default class ForceShower<
             return {
                 id: n._id,
                 data: n,
+                x: Math.random() * 200,
+                y: Math.random() * 10 - 5,
                 shown: true,
                 fx: null,
                 fy: null,
@@ -124,12 +126,14 @@ export default class ForceShower<
     }
 
     public show(data: InputData<ND, ED>) {
+        this.simulation.alpha(0.7);
         this.simulation.alphaTarget(0.3).restart();
         super.show(data);
         this.heatFor();
     }
 
     public push(data: InputData<ND, ED>, startPos: string = null) {
+        this.simulation.alpha(0.5);
         this.simulation.alphaTarget(0.3).restart();
         super.push(data, startPos);
         this.heatFor();
