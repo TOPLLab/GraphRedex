@@ -54,6 +54,10 @@ export default class ForceShower<
             "dfsDepth",
             treeForce(80, () => this.config.rootId),
         );
+        this.svgRoot.on("click", () => {
+            this.selectNode(null);
+            console.log("reset selected node");
+        });
     }
 
     public update() {

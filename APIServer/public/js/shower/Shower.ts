@@ -63,6 +63,7 @@ export default abstract class Shower<
         this.svgRoot = d3.select(svg);
         this.svgRoot.html(""); // empty the element, it is now ours
         this.svgRoot.on("*", null); // remove all listeners
+        this.svgRoot.on("click", null); // remove all listeners
         this.svgRoot
             .attr("focusable", "true") // allow listening for keys
             .attr("tabindex", 0) // allow access for keys
@@ -116,6 +117,7 @@ export default abstract class Shower<
         this.bubble = this.scene
             .insert("g", ".graph-nodes")
             .classed("bubble", true);
+        this._selectedNode = null;
     }
 
     public swapFor(
@@ -146,8 +148,9 @@ export default abstract class Shower<
 
     protected selectNode(node: N) {
         this._selectedNode = node;
-        if (this.config.nodeSelected && node !== null) {
-            if (this.config.nodeSelected(node)) {
+        if (this.config.nodeSelected) {
+            // Node is null (hide bubble) or bubble may be shown (shortcircuit)
+            if (node === null || this.config.nodeSelected(node)) {
                 this.showBubble(node);
             }
         }
@@ -162,59 +165,60 @@ export default abstract class Shower<
         if (node === null) {
             this.bubble.datum(null);
             this.ticked();
-        }
-        if ("nodeOptions" in this.config && this.config.nodeOptions) {
-            this.bubble.html('<circle r="20" cx="0" cy="0"></circle>');
-            const options = await awaitArray(this.config.nodeOptions(node));
-            const s = options.reduce((acc, x) => acc + (x.size || 1), 0);
-            let prevRad = -fracToRad((options[0].size || 1) / s) / 2;
-            let correctTarget = prevRad;
-            for (const option of options) {
-                const target = fracToRad((option.size || 1) / s);
-                correctTarget += target;
-                const iconTarget = prevRad + target / 2;
-                const r = 20,
-                    largearcflag = target > Math.PI, // true if > 180 deg
-                    xs = r * Math.cos(prevRad),
-                    ys = r * Math.sin(prevRad),
-                    xe = r * Math.cos(correctTarget),
-                    ye = r * Math.sin(correctTarget);
+        } else {
+            if ("nodeOptions" in this.config && this.config.nodeOptions) {
+                this.bubble.html('<circle r="20" cx="0" cy="0"></circle>');
+                const options = await awaitArray(this.config.nodeOptions(node));
+                const s = options.reduce((acc, x) => acc + (x.size || 1), 0);
+                let prevRad = -fracToRad((options[0].size || 1) / s) / 2;
+                let correctTarget = prevRad;
+                for (const option of options) {
+                    const target = fracToRad((option.size || 1) / s);
+                    correctTarget += target;
+                    const iconTarget = prevRad + target / 2;
+                    const r = 20,
+                        largearcflag = target > Math.PI, // true if > 180 deg
+                        xs = r * Math.cos(prevRad),
+                        ys = r * Math.sin(prevRad),
+                        xe = r * Math.cos(correctTarget),
+                        ye = r * Math.sin(correctTarget);
 
-                this.bubble
-                    .append("path")
-                    .attr(
-                        "d",
-                        options.length === 1
-                            ? `M${xs} ${ys} A${r},${r} 0 ${
-                                  largearcflag ? 1 : 0
-                              } 1 ${xe} ${ye}`
-                            : `M0 0 L${xs} ${ys} A${r},${r} 0 ${
-                                  largearcflag ? 1 : 0
-                              } 1 ${xe} ${ye}L0 0`,
-                    )
-                    .on("click", async () => {
-                        if (!(await awaitBoolean(option.action()))) {
-                            this.bubble.datum(null);
-                        }
-                    })
-                    .append("title")
-                    .text(option.name);
+                    this.bubble
+                        .append("path")
+                        .attr(
+                            "d",
+                            options.length === 1
+                                ? `M${xs} ${ys} A${r},${r} 0 ${
+                                      largearcflag ? 1 : 0
+                                  } 1 ${xe} ${ye}`
+                                : `M0 0 L${xs} ${ys} A${r},${r} 0 ${
+                                      largearcflag ? 1 : 0
+                                  } 1 ${xe} ${ye}L0 0`,
+                        )
+                        .on("click", async () => {
+                            if (!(await awaitBoolean(option.action()))) {
+                                this.bubble.datum(null);
+                            }
+                        })
+                        .append("title")
+                        .text(option.name);
 
-                const iconx = r * 0.75 * Math.cos(iconTarget),
-                    icony = r * 0.75 * Math.sin(iconTarget),
-                    icondim = r / 5;
-                this.bubble
-                    .append("use")
-                    .attr("height", icondim)
-                    .attr("width", icondim)
-                    .attr("href", `svg.svg#${option.icon || "cogs"}`)
-                    .attr("x", iconx - icondim / 2)
-                    .attr("y", icony - icondim / 2);
-                prevRad = correctTarget;
+                    const iconx = r * 0.75 * Math.cos(iconTarget),
+                        icony = r * 0.75 * Math.sin(iconTarget),
+                        icondim = r / 5;
+                    this.bubble
+                        .append("use")
+                        .attr("height", icondim)
+                        .attr("width", icondim)
+                        .attr("href", `svg.svg#${option.icon || "cogs"}`)
+                        .attr("x", iconx - icondim / 2)
+                        .attr("y", icony - icondim / 2);
+                    prevRad = correctTarget;
+                }
+
+                this.bubble.datum(node);
+                this.ticked();
             }
-
-            this.bubble.datum(node);
-            this.ticked();
         }
     }
 
@@ -297,11 +301,9 @@ export default abstract class Shower<
                 this.selectNode(d);
             });
         } else {
-            if ("nodeSelected" in this.config && this.config.nodeSelected) {
-                nodeEnter.on("click", (d) => {
-                    this.config.nodeSelected(d);
-                });
-            }
+            nodeEnter.on("click", (d) => {
+                this.selectNode(d);
+            });
         }
         p.nodes = nodeEnter.merge(p.nodes);
         p.nodes.exit().remove();
