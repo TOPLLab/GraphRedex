@@ -38,6 +38,7 @@ nav {
     }
 
     overflow: auto;
+    .scrollbars(lighten(@tint, 30%),transparent);
     box-sizing: border-box;
     background: lighten(@tint, 50%);
     height: 100%;
@@ -133,12 +134,12 @@ main {
     background: white;
 
     * {
-      pointer-events: none;
+        pointer-events: none;
     }
 
-    &:hover{
-      opacity:1;
-      border: 1px solid gray;
+    &:hover {
+        opacity: 1;
+        border: 1px solid gray;
     }
 }
 
@@ -160,8 +161,10 @@ header {
     height: 2em;
     text-align: center;
     line-height: 2em;
-    font-size: 2em;
+    font-size: ~"calc(max(1rem,2vw))";
     color: white;
+    position: sticky;
+    top: 0;
 
     img {
         height: 1.5em;
@@ -232,7 +235,6 @@ button[onclick="toggle('createLanguage')"]:hover use {
     text-overflow: ellipsis;
 }
 
-
 #statusSection span {
     &.diff {
         color: red;
@@ -296,6 +298,8 @@ button[onclick="toggle('createLanguage')"]:hover use {
         box-shadow: none;
         margin-top: calc(-100vh + 3rem);
         background: white;
+        padding-bottom: 6rem;
+        box-sizing: border-box;
 
         #ruleInfo {
             width: 100%;
@@ -311,6 +315,8 @@ button[onclick="toggle('createLanguage')"]:hover use {
             width: 45%;
             border: 1px dashed #999;
 
+            .scrollbars(@tint,transparent);
+
             &:first-of-type {
                 margin-right: 2rem;
             }
@@ -320,6 +326,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
     & > pre {
         white-space: pre-line;
         overflow-y: auto;
+        .scrollbars(@tint);
         margin: 0;
 
         & div {
@@ -395,4 +402,22 @@ h6 {
     border-width: 0.125rem;
     border-style: solid;
     margin-right: 1rem;
+}
+
+.scrollbars(@foreground-color, @background-color: mix(@foreground-color, white,  50%)) {
+    & {
+        scrollbar-color: @foreground-color @background-color;
+        scrollbar-width: thin;
+    }
+    &::-webkit-scrollbar-track {
+        background: @background-color;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: @foreground-color;
+        border-radius: 6px;
+        border: 3px solid @background-color;
+    }
+    &::-webkit-scrollbar {
+        width: 11px;
+    }
 }
