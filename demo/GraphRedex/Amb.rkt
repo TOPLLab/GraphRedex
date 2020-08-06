@@ -10,7 +10,7 @@
   (e (amb e ...)
      (+ e ...)
      number)
-  (E (+ number ... E e ...) (amb number ... E e ...) hole))
+  (E (+ number ... E e ...) hole))
 
 
 (define (term->kv exp)
