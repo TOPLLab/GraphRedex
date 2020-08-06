@@ -61,6 +61,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         const config: ShowerConfig<N, E> = showerConfig || {
             nodeSelected: (n: ShowerNode<N>) => {
                 if (!this.forceNow) {
+                    // expand till depth 5 if in tree mode
                     this.expandBelow(n.data, 5);
                 }
                 return true;
