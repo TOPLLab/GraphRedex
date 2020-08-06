@@ -925,7 +925,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         });
 
         d3.select("#reheat").on("click", () => {
-            this.shower.heatFor(5000);
+            this.shower.heat();
         });
         d3.select("#rezoom").on("click", () => {
             this.shower.resetZoom();

@@ -475,7 +475,7 @@ export default abstract class Shower<
      * Heat the visualization,
      * Whatever that may mean
      */
-    public heatFor(_time: number = null) {
+    public heat() {
         return;
     }
 

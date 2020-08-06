@@ -82,7 +82,6 @@ export default class ForceShower<
             data: InputData<ND, ED>,
         ) => Shower<ND, ED, N, E>,
     ) {
-        window.clearTimeout(this.heatTimeout);
         this.simulation.stop();
         this.simulation = null;
         super.swapFor(constructor);
@@ -126,32 +125,27 @@ export default class ForceShower<
     }
 
     public show(data: InputData<ND, ED>) {
+        // Set some heat to get the right position
         this.simulation.alpha(0.7);
-        this.simulation.alphaTarget(0.3).restart();
+        this.simulation.alphaTarget(0).restart();
         super.show(data);
-        this.heatFor();
     }
 
     public push(data: InputData<ND, ED>, startPos: string = null) {
+        // We need less increase in heat for adding to an existing graph
         this.simulation.alpha(0.5);
-        this.simulation.alphaTarget(0.3).restart();
+        this.simulation.alphaTarget(0).restart();
         super.push(data, startPos);
-        this.heatFor();
     }
 
-    private heatTimeout = null;
     /**
-     * Set the alphaTarget to 0.3 for some time (reset to 0 afterwards)
+     * Increase the alpha value of the sim.
+     * (keep in [0.3 - 0.9] when used)
      */
-    public heatFor(timeout: number = 5000) {
-        window.clearTimeout(this.heatTimeout);
+    public heat() {
         this.simulation
-            .alphaTarget(this.heatTimeout === null ? 0.3 : 0.7)
+            .alpha(Math.max(0.3, Math.min(0.9, this.simulation.alpha() + 0.1)))
             .restart();
-        this.heatTimeout = window.setTimeout(() => {
-            this.heatTimeout = null;
-            this.simulation.alphaTarget(0);
-        }, timeout);
     }
 
     protected drag(): d3.DragBehavior<any, ForceShowerNode<ND>, any> {
@@ -159,7 +153,7 @@ export default class ForceShower<
             .drag<any, ForceShowerNode<ND>>()
             .on("start", (d: ForceShowerNode<ND>) => {
                 if (!d3.event.active) {
-                    this.simulation.alphaTarget(0.3).restart();
+                    this.simulation.alpha(0.3).restart();
                 }
                 d.ix = d.ix || d.x;
                 d.iy = d.iy || d.y;
