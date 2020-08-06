@@ -101,17 +101,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             nodeOptions: (node) => {
                 let ret = [] as Array<ShowerOptionData>;
 
-                if (node.data._stuck === true) {
-                    ret.push({
-                        name: "Stuck term info",
-                        size: 2,
-                        icon: "inspect",
-                        action: () => {
-                            alert("Stuck term:\n" + node.data.term);
-                            return false;
-                        },
-                    });
-                } else {
+                if (node.data._stuck === false) {
                     ret.push({
                         name: "Expand node",
                         size: 4,
@@ -132,11 +122,22 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 }
 
                 ret.push({
-                    name: "Show term",
+                    name: "Show term for editing",
                     size: 1,
-                    icon: "info",
+                    icon: "edit",
                     action: () => {
-                        alert("Term\n" + node.data.term);
+                        (async () => {
+                            d3.select("#term").property(
+                                "value",
+                                await node.data.term,
+                            );
+                            (d3
+                                .select("#term")
+                                .node() as HTMLTextAreaElement).dispatchEvent(
+                                new Event("change"),
+                            );
+                            (window as any).toggle("doReduction");
+                        })();
                         return false;
                     },
                 });
