@@ -7,11 +7,11 @@
 </radialGradient>
 
 <filter id="hover"  filterUnits="userspaceOnUse" x="-250%" width="500%" height="500%" y="-250%">
-      <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="#AAA"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#AAA"/>
+  <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="#AAA"/>
+  <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#AAA"/>
 </filter>
 
 <filter id="selected"  filterUnits="userspaceOnUse" x="-250%" width="500%" height="500%" y="-250%">
-      <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="red"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="red"/>
+  <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="red"/>
+  <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="red"/>
 </filter>
