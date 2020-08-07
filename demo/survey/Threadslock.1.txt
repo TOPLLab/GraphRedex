@@ -1,0 +1,16 @@
+((store 0 (x 0) (y 0)) 
+        (threads 
+                 (start 
+                        (getlock x 1 
+                        (getlock y 1 
+                        (set 13 
+                        (releaselock y 1 
+                        (releaselock x 1 
+                        (get)))))))
+                 (start 
+                        (getlock y 2 
+                        (getlock x 2 
+                        (set 42 
+                        (releaselock x 2 
+                        (releaselock y 2 
+                        (get)))))))))
