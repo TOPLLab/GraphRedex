@@ -79,7 +79,6 @@ export function mkRandomColorGenerator(): () => {
         }
         hues.push(degree);
         hues = hues.sort((a, b) => a - b);
-        console.log(degree, hues.join(","));
 
         const d3col = d3.color(`hsl(${degree}, 50%, 50%)`).rgb();
         let r = Math.round(d3col.r).toString(16);

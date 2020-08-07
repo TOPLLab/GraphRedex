@@ -558,7 +558,6 @@ export default abstract class Shower<
         if (t === false) {
             return null;
         }
-        console.log("get color", t);
         if (!this.existingColors.has(t)) {
             const randColor = this.randomColor();
 
