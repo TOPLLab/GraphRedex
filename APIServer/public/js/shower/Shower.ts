@@ -1,7 +1,12 @@
 /// <reference path="./ShowerTypes.d.ts"/>
 
 import * as d3 from "d3";
-import { awaitArray, awaitBoolean, fracToRad, randomColor } from "../util";
+import {
+    awaitArray,
+    awaitBoolean,
+    fracToRad,
+    mkRandomColorGenerator,
+} from "../util";
 import showerDefaultDefs from "./shower-filters.svg";
 
 export type GraphShower<ND extends NodeData, ED extends EdgeData> = Shower<
@@ -53,6 +58,8 @@ export default abstract class Shower<
 
     private _selectedNode: N = null;
     protected bubble: d3.Selection<any, any, any, any>;
+
+    protected randomColor = mkRandomColorGenerator();
 
     /**
      *
@@ -389,6 +396,7 @@ export default abstract class Shower<
      * Reset the view: clear data, remove elements form svg, reset zoom
      */
     public reset() {
+        this.randomColor = mkRandomColorGenerator();
         this.data = { nodes: [], edges: [] };
         this.nodeMap = new Map();
         this.edgeMap = new Map();
@@ -537,8 +545,9 @@ export default abstract class Shower<
         if (t === false) {
             return null;
         }
+        console.log("get color", t);
         if (!this.existingColors.has(t)) {
-            const randColor = randomColor();
+            const randColor = this.randomColor();
 
             this.existingColors.set(t, randColor);
 

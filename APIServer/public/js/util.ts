@@ -43,7 +43,7 @@ export function getit(input: RequestInfo, init: RequestInit): Promise<any> {
 export function fileToText(file: File): Promise<string> {
     return new Promise((resolve) => {
         const reader = new FileReader();
-        reader.onload = function() {
+        reader.onload = function () {
             const text = reader.result as string; // spec says it is a string
             resolve(text);
         };
@@ -51,26 +51,52 @@ export function fileToText(file: File): Promise<string> {
     });
 }
 /**
- * Get a random colour with 50% saturation and lightness (good contrast on white)
+ * Get a random colour with 50% saturation and lightness (good contrast on
+ * white)
  */
-export function randomColor(): { hex: string; hexFull: string; d3: d3.Color } {
-    const d3col = d3
-        .color(`hsl(${Math.floor(Math.random() * 360)}, 50%, 50%)`)
-        .rgb();
-    let r = Math.round(d3col.r).toString(16);
-    let g = Math.round(d3col.g).toString(16);
-    let b = Math.round(d3col.b).toString(16);
-    if (d3col.r < 16) {
-        r = "0" + r;
-    }
-    if (d3col.g < 16) {
-        g = "0" + g;
-    }
-    if (d3col.b < 16) {
-        b = "0" + b;
-    }
-    const hex = r + g + b;
-    return { hex: hex, hexFull: "#" + hex, d3: d3col };
+export function mkRandomColorGenerator(): () => {
+    hex: string;
+    hexFull: string;
+    d3: d3.Color;
+} {
+    let hues = [];
+    return () => {
+        let degree = Math.floor(Math.random() * 360);
+        switch (hues.length) {
+            case 0:
+                // push
+                break;
+            case 1:
+                degree = (180 + hues[0]) % 360;
+                break;
+            default:
+                let [start, , size] = hues
+                    .map((v, i, a) => [v, a[(i + 1) % a.length]])
+                    .map(([a, b]) => [a, b, a < b ? b - a : b - a + 360])
+                    .sort((a, b) => a[2] - b[2])
+                    .pop();
+                degree = Math.round((360 + start + size / 2) % 360);
+        }
+        hues.push(degree);
+        hues = hues.sort((a, b) => a - b);
+        console.log(degree, hues.join(","));
+
+        const d3col = d3.color(`hsl(${degree}, 50%, 50%)`).rgb();
+        let r = Math.round(d3col.r).toString(16);
+        let g = Math.round(d3col.g).toString(16);
+        let b = Math.round(d3col.b).toString(16);
+        if (d3col.r < 16) {
+            r = "0" + r;
+        }
+        if (d3col.g < 16) {
+            g = "0" + g;
+        }
+        if (d3col.b < 16) {
+            b = "0" + b;
+        }
+        const hex = r + g + b;
+        return { hex: hex, hexFull: "#" + hex, d3: d3col };
+    };
 }
 
 export function downloadFileLink(

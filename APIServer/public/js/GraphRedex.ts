@@ -8,7 +8,13 @@ import ForceShower from "./shower/ForceShower";
 import { GraphShower } from "./shower/Shower";
 import TreeShower from "./shower/TreeShower";
 import { doubleTermDiff } from "./termDiff";
-import { downloadFileLink, genHighlightId, getit, termDiffMaker } from "./util";
+import {
+    downloadFileLink,
+    genHighlightId,
+    mkRandomColorGenerator,
+    getit,
+    termDiffMaker,
+} from "./util";
 
 interface RulesDef {
     [key: string]: string;
@@ -342,9 +348,18 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     let style = `.highlight-${h.id}{fill: ${h.colour};}`;
                     style += [...this.highlighted]
                         .filter((x) => x.id < h.id)
-                        .map((x) =>
-                            `.highlight-${h.id}.highlight-${x.id}{
-                                    fill: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><linearGradient id='grad'><stop offset='50%' stop-color='${h.colour}'/><stop offset='50%' stop-color='${x.colour}'/></linearGradient></svg>#grad");
+                        .map(
+                            (x) =>
+                                `.highlight-${h.id}.highlight-${x.id}{
+                                    fill: url("data:image/svg+xml,` +
+                                `<svg xmlns='http://www.w3.org/2000/svg'>` +
+                                `<linearGradient id='grad'>` +
+                                `<stop offset='50%' stop-color='${window.encodeURIComponent(
+                                    h.colour,
+                                )}'/>` +
+                                `<stop offset='50%' stop-color='${window.encodeURIComponent(
+                                    x.colour,
+                                )}'/></linearGradient></svg>#grad");
                                   } `.replace(/\s\s*/, " "),
                         );
 
@@ -498,6 +513,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * Render a graph of the argument if it is an array of length 1
      * whose only element has a nodes and edges key
      */
+    private randomColor = mkRandomColorGenerator();
     highlightIfGraph(data: any[]): boolean {
         // TODO change to promise
         if (isInputDataArray<N, E>(data)) {
@@ -508,7 +524,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 nodes: new Set(renderData.nodes.map((x) => x._id)),
                 name: "highlight " + id,
                 id: id,
-                colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
+                colour: this.randomColor().hexFull,
             });
             this.updateHighlightList();
             this.shower.update();
