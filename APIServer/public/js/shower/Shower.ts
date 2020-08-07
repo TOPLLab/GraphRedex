@@ -26,6 +26,8 @@ export default abstract class Shower<
     protected width: number = 1000;
     protected height: number = 1000;
 
+    private brand: d3.Selection<SVGImageElement, any, any, any>;
+
     /** zoom handler that will effect the `scene` and `isClose` variables */
     protected zoomHandler: d3.ZoomBehavior<any, any>;
     /** The group that is the immediate child of svg that has zoom transforms */
@@ -125,6 +127,16 @@ export default abstract class Shower<
             .insert("g", ".graph-nodes")
             .classed("bubble", true);
         this._selectedNode = null;
+
+        this.brand = this.svgRoot
+            .append("image")
+            .attr("xlink:href", "svg.svg")
+            .attr("preserveAspectRatio", "xMidYmid meet")
+            .attr("width", 600)
+            .attr("height", 600)
+            .attr("x", -300)
+            .attr("y", -300)
+            .attr("opacity", "0.05");
     }
 
     public swapFor(
@@ -396,6 +408,7 @@ export default abstract class Shower<
      * Reset the view: clear data, remove elements form svg, reset zoom
      */
     public reset() {
+        this.brand.remove();
         this.randomColor = mkRandomColorGenerator();
         this.data = { nodes: [], edges: [] };
         this.nodeMap = new Map();
