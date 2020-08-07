@@ -11,8 +11,8 @@ import { doubleTermDiff } from "./termDiff";
 import {
     downloadFileLink,
     genHighlightId,
-    mkRandomColorGenerator,
     getit,
+    mkRandomColorGenerator,
     termDiffMaker,
 } from "./util";
 
@@ -69,6 +69,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 if (!this.forceNow) {
                     // expand till depth 5 if in tree mode
                     this.expandBelow(n.data, 5);
+                    this.fillSidebar(n.data);
                 }
                 return true;
             },
@@ -190,67 +191,8 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     }
                 });
 
-                let prevURL = null;
-                nodes.on("mouseover", async (d) => {
-                    d3.select("#statusSection").html("loading");
-                    // Get the diffed term
-                    let renderedTerm = await this.getRepr(d.data);
-
-                    const pictSVG = (await d.data._pict) ?? null;
-                    if (pictSVG !== null) {
-                        if (prevURL) {
-                            URL.revokeObjectURL(prevURL);
-                        }
-                        prevURL = URL.createObjectURL(
-                            new Blob([pictSVG], {
-                                type: "image/svg+xml",
-                            }),
-                        );
-                        const img = document.createElement("img");
-                        img.src = prevURL;
-                        img.alt = await d.data.term;
-                        img.style.maxWidth = "100%";
-                        img.style.userSelect = "all";
-                        renderedTerm = img.outerHTML + "<hr/>" + renderedTerm;
-                    }
-
-                    d3.select("#statusSection").html(`
-                    <table class="pure-table pure-table-horizontal stretch"><thead>
-                    <tr><th>Key</th><th>Value</th></tr></thead><tbody>
-                    ${Object.keys(d.data)
-                        .filter(
-                            (x) =>
-                                !(
-                                    x.startsWith("_") ||
-                                    x === "repr" ||
-                                    x === "term"
-                                ),
-                        )
-                        .map(
-                            (x) =>
-                                `<tr><td>${x}</td><td>${d.data[x]}</td></tr>`,
-                        )
-                        .join("")}
-                    ${[...this.highlighted]
-                        .filter((h) => h.nodes.has(d.data._id))
-                        .map((h) => `<tr><td>in</td><td>${h.name}</td></tr>`)
-                        .join("")}
-                    </tbody></table>
-                    <hr>
-                    <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre>
-                    ${
-                        d.data._stuck
-                            ? "<br>This term has no further reductions."
-                            : ""
-                    }
-                    ${
-                        d.data._limited || !d.data._expanded
-                            ? `<br>Double click node or single click and choose:
-                                <svg width='1em' height='1em'>
-                                    <use href='svg.svg#expand'></use>
-                                </svg>.`
-                            : ""
-                    }`);
+                nodes.on("mouseover", (d) => {
+                    this.fillSidebar(d.data);
                 });
             },
             nodeUpdate: (nodes) => {
@@ -279,6 +221,65 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         return await nd.term;
     }
 
+    private prevPictSVGURL: string = null;
+    private async fillSidebar(nd: N) {
+        d3.select("#statusSection").html("loading");
+        // Get the diffed term
+        let renderedTerm = await this.getRepr(nd);
+
+        const pictSVG = (await nd._pict) ?? null;
+        if (pictSVG !== null) {
+            if (this.prevPictSVGURL) {
+                URL.revokeObjectURL(this.prevPictSVGURL);
+            }
+            this.prevPictSVGURL = URL.createObjectURL(
+                new Blob([pictSVG], {
+                    type: "image/svg+xml",
+                }),
+            );
+            const img = document.createElement("img");
+            img.src = this.prevPictSVGURL;
+            img.alt = await nd.term;
+            img.style.maxWidth = "100%";
+            img.style.userSelect = "all";
+            renderedTerm = img.outerHTML + "<hr/>" + renderedTerm;
+        }
+
+        d3.select("#statusSection").html(`
+                    <table class="pure-table pure-table-horizontal stretch"><thead>
+                    <tr><th>Key</th><th>Value</th></tr></thead><tbody>
+                    ${Object.getOwnPropertyNames(nd)
+                        .filter(
+                            (x) =>
+                                !(
+                                    x.startsWith("_") ||
+                                    x === "repr" ||
+                                    x === "term"
+                                ),
+                        )
+                        .map((x) => `<tr><td>${x}</td><td>${nd[x]}</td></tr>`)
+                        .join("")}
+                    ${[...this.highlighted]
+                        .filter((h) => h.nodes.has(nd._id))
+                        .map((h) => `<tr><td>in</td><td>${h.name}</td></tr>`)
+                        .join("")}
+                    </tbody></table>
+                    <hr>
+                    <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre>
+                    ${
+                        nd._stuck
+                            ? "<br>This term has no further reductions."
+                            : ""
+                    }
+                    ${
+                        nd._limited || !nd._expanded
+                            ? `<br>Double click node or single click and choose:
+                                <svg width='1em' height='1em'>
+                                    <use href='svg.svg#expand'></use>
+                                </svg>.`
+                            : ""
+                    }`);
+    }
     protected _curExample: ExampleMeta = null;
     protected _curLang: Promise<Language> = null;
 
@@ -470,6 +471,14 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                 p,
                             )} in ...," on uninitialised node data!`;
                         }
+                    },
+                    ownKeys(_target: any) {
+                        if (fullValue === null) {
+                            throw `called ownKeys on uninitialised node data!`;
+                        }
+                        console.log("keys", Reflect.ownKeys(fullValue));
+
+                        return Reflect.ownKeys(fullValue);
                     },
                     apply: () => {
                         throw "cannot call on node data!";
