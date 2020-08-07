@@ -56,7 +56,6 @@ export default class ForceShower<
         );
         this.svgRoot.on("click", () => {
             this.selectNode(null);
-            console.log("reset selected node");
         });
     }
 
