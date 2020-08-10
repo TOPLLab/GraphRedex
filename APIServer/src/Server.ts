@@ -175,12 +175,13 @@ export default class Server {
                     const file: MulterDiskFile = req["file"]; // tslint:disable-line
                     const filenameParts = file.originalname.split(".");
                     const extension: string = filenameParts.pop();
-                    const fileName: string = filenameParts.join(".");
+                    const fileName: string =
+                        req.body.name ?? filenameParts.join(".");
                     switch (extension) {
                         case "zip":
                             await this.languages.createFormZip(
                                 user,
-                                req.body.name ?? fileName,
+                                fileName,
                                 file.path,
                             );
                             res.jsonp({ ok: true, type: "zip", r: fileName });
