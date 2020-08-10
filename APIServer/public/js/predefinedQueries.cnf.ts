@@ -1,6 +1,6 @@
 export default [
     {
-        name: "All path to selected",
+        name: "All paths to selected",
         query: `LET backReachable = FLATTEN(
 		FOR v IN 0..1000 INBOUND @focus GRAPH @graph
 			OPTIONS {bfs:true,uniqueVertices: 'global'}
@@ -22,7 +22,21 @@ LET edges = (FOR e IN @@edges
 RETURN {nodes,edges}`,
     },
     {
-        name: "Shortest to all stuck",
+        name: "Shortest path to selected",
+        query: `
+				LET path = (
+								FOR v,e IN OUTBOUND SHORTEST_PATH
+										@start TO @focus GRAPH @graph
+												RETURN {v,e})
+
+				// convert to needed format
+				RETURN {
+						edges: (FOR d in path FILTER d.e != null RETURN DISTINCT d.e),
+						nodes: (FOR d in path FILTER d.v != null RETURN DISTINCT d.v)
+				}`,
+    },
+    {
+        name: "Shortest path to all stuck",
         query: `// find all stuck nodes
 				LET stuckNodes = (FOR n in @@nodes FILTER n._stuck RETURN n)
 
