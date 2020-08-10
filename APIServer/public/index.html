@@ -256,19 +256,12 @@
         ></div>
 
         <textarea name="qry" id="qry" class="pure-input-1">
- LET nodes = (
-                            FOR v,e,p IN 0..300
-                            OUTBOUND @start GRAPH @graph
-                            OPTIONS {bfs:true,uniqueVertices: 'global'}
-                            FILTER p.edges[*]._real NONE == false
-                            RETURN DISTINCT v)
-                            LET edges = (
-                FOR a in nodes
-                            FOR e IN @@edges
-                            FILTER e._from == a._id OR e._to == a._id
-                            RETURN DISTINCT e)
-                            RETURN {nodes,edges}</textarea
-        >
+// Example highlight query to select nodes with a certain value for field
+
+FOR n in @@nodes
+FILTER n["field"] > 0 // condition to filter on
+RETURN n
+        </textarea>
         <div class="pure-g">
           <div class="pure-u-1-6">
             <label for="querySelector">Stored Queries</label>
