@@ -991,6 +991,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             }
         });
 
+        d3.select("#resetFilters").on("click", () => {
+            this.reset();
+            this.render(this.curExample);
+        });
+
         const toggleRenderBtn = d3.select("#toggleRender");
         const doRenderBtn = () => {
             toggleRenderBtn.html("");
