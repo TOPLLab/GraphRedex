@@ -125,7 +125,7 @@ export default class ForceShower<
 
     public show(data: InputData<ND, ED>) {
         // Set some heat to get the right position
-        this.simulation.alpha(0.7);
+        this.simulation.alpha(0.8);
         this.simulation.alphaTarget(0).restart();
         super.show(data);
     }

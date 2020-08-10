@@ -331,6 +331,9 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         langInput: Language = null,
     ): Promise<any[]> {
         const lang = langInput ?? (await this.curLang);
+        if ((name ?? false) === false || lang === null) {
+            throw "No name or example selected";
+        }
         const r = await getit(`my/language/${lang._key}/qry`, {
             method: "POST",
             headers: new Headers([["Content-Type", "application/json"]]),
@@ -393,6 +396,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         startPos: string = null,
     ) {
         this.curExample = example;
+        this.setupQrySelector();
         this.shower.setRoot(this.curExample.baseTerm);
         const steps = 300;
 
@@ -493,7 +497,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
      * Render a graph of the argument if it is an array of length 1
      * whose only element has a nodes and edges key
      */
-    renderIfGraph(data: any) {
+    renderIfGraph(data: any[]) {
         // TODO change to promise
         if (isInputDataArray<N, E>(data)) {
             const [renderData] = data;
@@ -513,7 +517,17 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return true;
             }
         } else {
-            throw "Rendering nodes is not implemented yet";
+            if (data.every((x) => typeof x === "object" && "_id" in x)) {
+                if (
+                    confirm(
+                        "Returned data does not conain any edges. Make a highlight instead?",
+                    )
+                ) {
+                    return this.highlightIfGraph(data);
+                }
+            } else {
+                throw "Rendering nodes is not implemented yet";
+            }
         }
         return false;
     }
@@ -555,7 +569,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 nodes: new Set(d.filter((n) => n.startsWith(`${prefix}/`))),
                 name: "highlight " + id,
                 id: id,
-                colour: `hsl(${this.highlighted.size * 37}, 100%, 50%)`,
+                colour: this.randomColor().hexFull,
             });
 
             this.updateHighlightList();
@@ -681,15 +695,30 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 this.updateHighlightList();
                 this.shower.update();
             });
-        highlightsEnter.append("span").classed("name", true);
+        highlightsEnter.append("abbr").classed("name", true);
+        highlightsEnter
+            .append("svg")
+            .classed("delHighlight", true)
+            .attr("width", "1em")
+            .attr("height", "1em")
+            .html(`<use fill="#e74c3c" href="svg.svg#remove"></use>`);
 
         hls = highlightsEnter.merge(hls as any);
-        hls.select(".name").text(
-            (d) => d.name + `(${d.nodes.size},${d.edges.size})`,
+        hls.select(".name").text((d) => d.name);
+        hls.select(".name").attr(
+            "title",
+            (d) => `nodes: ${d.nodes.size} | edges:  ${d.edges.size}`,
         );
-        hls.select(".colourpicker").style("background", (d) => d.colour);
 
-        // TODO: add colour changing
+        hls.select(".colourpicker").style("background", (d) => d.colour);
+        hls.select(".delHighlight").on("click", (d) => {
+            if (confirm(`Delete ${d.name}?`)) {
+                this.highlighted.delete(d);
+                this.updateHighlightList();
+                this.shower.update();
+            }
+        });
+
         hls.on("dblclick", (d) => {
             let newName = window.prompt("Name", d.name);
             if (newName) {
@@ -813,6 +842,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         },
                     }[qryType](data);
                     if (succesfullGraphAction) {
+                        output.textContent = "";
                         form.classed("closed", true);
                     } else {
                         output.textContent += JSON.stringify(
@@ -823,7 +853,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     }
                 })
                 .catch((error) => {
-                    output.textContent = "ERROR:" + error;
+                    if (typeof error === "string" && error[0] === "<") {
+                        output.innerHTML = error;
+                    } else {
+                        output.textContent = "ERROR:" + error;
+                    }
                 });
         });
     }
@@ -836,7 +870,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             options.exit().remove();
             options = optionsEnter.merge(options as any);
             options
-                .text((d: any) => d.name + " - " + d._key)
+                .text((d: any) => d.name)
                 .attr("value", (d: any) => d._key)
                 .attr("disabled", null);
 
@@ -846,12 +880,18 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 .attr("value", "")
                 .attr("selected", "selected")
                 .attr("disabled", "disabled");
+
+            // preselect only lang (if only one)
+            if (data.length === 1) {
+                options.attr("selected", "selected");
+            }
         });
     }
 
     protected async setupQrySelector() {
         const select = d3.select("#querySelector");
         let options = select.selectAll("option").data(await this.curQueries);
+        console.log(await this.curQueries);
 
         const optionsEnter = options.enter().append("option");
         options.exit().remove();
@@ -886,7 +926,6 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     const data = s.datum();
                     window.setTimeout(() => {
                         this.render(data);
-                        this.setupQrySelector();
                     }, 0);
                 }
             });
@@ -900,10 +939,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 .attr("disabled", null)
                 .text(
                     (d: any) =>
-                        d.name +
-                        " - " +
-                        d._key +
-                        (curKey === d._key ? " (current)" : ""),
+                        d.name + (curKey === d._key ? " (current)" : ""),
                 )
                 .property("selected", (d) =>
                     curKey === d._key ? "selected" : null,
@@ -923,17 +959,18 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.shower.reset();
         this.highlighted.clear();
         this.updateHighlightList();
+        (window as any).toggle(null);
     }
 
     protected setUpShowerBtns() {
         d3.select("#storeQuery").on("click", async () => {
             d3.event.preventDefault();
-            this.saveQry(
-                prompt("Name for query"),
-                d3.select("#qry").property("value"),
-            )
-                .then(() => alert("saved"))
-                .catch((x) => alert(x));
+            const name = prompt("Name for query");
+            if (name) {
+                this.saveQry(name, d3.select("#qry").property("value"))
+                    .then(() => alert("saved"))
+                    .catch((x) => alert(x));
+            }
             return false;
         });
 
@@ -977,6 +1014,26 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             linkEl.click();
         });
 
+        d3.select("#deleteCurQry").on("click", async () => {
+            d3.event.preventDefault();
+            const qryName = (d3
+                .select("#querySelector")
+                .node() as HTMLSelectElement).selectedOptions.item(0).text;
+            if (confirm("Do you want to delete\n" + qryName)) {
+                getit("my/language/" + (await this.curLang)._key + "/qry", {
+                    method: "DELETE",
+                    headers: new Headers([
+                        ["Content-Type", "application/json"],
+                    ]),
+                    body: JSON.stringify({ name: qryName }),
+                })
+                    .then(() => {
+                        alert("removed");
+                    })
+                    .catch((e) => alert(e));
+            }
+            return false;
+        });
         d3.select("#deleteCurExample").on("click", () => {
             if (confirm("Do you want to delete\n" + this.curExample.name)) {
                 getit("my/example/" + this.curExample._key, {

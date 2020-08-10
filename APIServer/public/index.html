@@ -268,12 +268,19 @@ RETURN n
             <select id="querySelector" name="example" class="pure-input-1">
               <option>Select example first</option>
             </select>
-            <button id="storeQuery" class="pure-button pure-input-1">
+            <div class="pure-button-group">
+            <button id="storeQuery" class="pure-button pure-input-3-4">
               <svg>
                 <use href="svg.svg#save"></use>
               </svg>
               Store
             </button>
+        <button class="pure-button pure-input-1-4" id="deleteCurQry">
+          <svg width="1em" height="1em">
+            <use fill="#e74c3c" href="svg.svg#remove"></use>
+          </svg>
+          &nbsp;
+          </div>
           </div>
           <div class="pure-u-1-2" id="activeHighlights">
             <ul style="column-count: 3;">
@@ -468,8 +475,25 @@ RETURN n
             e.classList.add("closed");
           }
         });
-        document.getElementById(elID).classList.toggle("closed");
+        if(elID!=null){
+          document.getElementById(elID).classList.toggle("closed");
+        }
       };
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    var isEscape = false;
+    if ("key" in evt) {
+        isEscape = (evt.key === "Escape" || evt.key === "Esc");
+    } else {
+        isEscape = (evt.keyCode === 27);
+    }
+
+    if (isEscape) {
+      toggle(null)
+      document.getElementById("treeInfoBar").classList.add("closed")
+      document.getElementById("treeInfoBar").classList.remove("max")
+    }
+};
     </script>
   </body>
 </html>

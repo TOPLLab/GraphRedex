@@ -122,10 +122,19 @@ main {
     }
 }
 
-#treeInfoBar:not(.closed) ~ #graphLegend {
+#treeInfoBar:not(.closed) ~ #graphLegend ,
+form:not(.closed) ~ #graphLegend {
     display: none;
 }
-#treeInfoBar.closed ~ #graphLegend {
+
+#resetFilters {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: #565656;
+}
+
+#graphLegend {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -226,7 +235,7 @@ button[onclick="toggle('createLanguage')"]:hover use {
 
     svg {
         display: inline-block;
-        margin-bottom: -0.2ex;
+        .svg-margin-correct();
         width: 1em;
         height: 1em;
     }
@@ -394,6 +403,22 @@ h6 {
     }
 }
 
+#activeHighlights > ul {
+    list-style-type: none;
+
+    & > li {
+        .delHighlight {
+            display: none;
+            margin-left: 0.5em;
+            cursor: pointer;
+            .svg-margin-correct();
+        }
+        &:hover .delHighlight {
+            display: inline-block;
+        }
+    }
+}
+
 .colourpicker {
     display: inline-block;
     width: 0.5rem;
@@ -420,4 +445,8 @@ h6 {
     &::-webkit-scrollbar {
         width: 11px;
     }
+}
+
+.svg-margin-correct() {
+    margin-bottom: -0.2ex;
 }
