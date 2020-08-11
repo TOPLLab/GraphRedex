@@ -221,6 +221,22 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         return await nd.term;
     }
 
+    private sidebarCellHTML(v: any): string {
+        if (Array.isArray(v)) {
+            return (
+                "<table>" +
+                v
+                    .map(
+                        (cv) => `<tr><td>${this.sidebarCellHTML(cv)}</td></tr>`,
+                    )
+                    .join("") +
+                "</table>"
+            );
+        }
+
+        return v.toString();
+    }
+
     private prevPictSVGURL: string = null;
     private async fillSidebar(nd: N) {
         d3.select("#statusSection").html("loading");
@@ -257,7 +273,12 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                                     x === "term"
                                 ),
                         )
-                        .map((x) => `<tr><td>${x}</td><td>${nd[x]}</td></tr>`)
+                        .map(
+                            (x) =>
+                                `<tr><td>${x}</td><td>${this.sidebarCellHTML(
+                                    nd[x],
+                                )}</td></tr>`,
+                        )
                         .join("")}
                     ${[...this.highlighted]
                         .filter((h) => h.nodes.has(nd._id))
