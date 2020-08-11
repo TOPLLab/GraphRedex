@@ -1,14 +1,6 @@
 #lang racket
-;  ________                    .__      __________           .___
-; /  _____/___________  ______ |  |__   \______   \ ____   __| _/____ ___  ___
-;/   \  __\_  __ \__  \ \____ \|  |  \   |       _// __ \ / __ |/ __ \\  \/  /
-;\    \_\  \  | \// __ \|  |_> >   Y  \  |    |   \  ___// /_/ \  ___/ >    <
-; \______  /__|  (____  /   __/|___|  /  |____|_  /\___  >____ |\___  >__/\_ \
-;        \/           \/|__|        \/          \/     \/     \/    \/      \/
-;
 ; Example to show how to use GraphRedex.
 ; This is an adapted version of the threads example from the plt-redex example repository
-;
 (require redex)
 (provide reductions term->kv)
 
@@ -47,7 +39,7 @@
 
    (-->
     ((store v_0 (x_1 v_1) ...) (in-hole tc_1 (set v_2 e_1)))
-    ;------------------------------------------------------------------------------- [get]
+    ;------------------------------------------------------------------------------- [set]
     ((store v_2 (x_1 v_1) ...) (in-hole tc_1 e_1))
     set)
 
@@ -93,19 +85,38 @@
         (_formatted . ,(pretty-format exp 30))
         ))]))
 
-(define theone '((store 5  (x 0) (y 0))
-                 (threads
-                  (start
-                   (getlock x 1
-                            (getlock y 1
-                                     (releaselock y 1
-                                                  (releaselock x 1 1)))))
-                  (start
-                   (getlock y 2
-                            (getlock x 2
-                                     (set (+ 2 (get) ) (releaselock x 2 (releaselock y 2 (get)))))
-                   ))
-                 ))
-  )
+(define theTerm
+'((store 5 (x 0) (y 0))
+        (threads
+                (start
+                        (getlock x 1
+                        (getlock y 1
+                        (releaselock y 1
+                        (releaselock x 1
+                        1)))))
+                (start
+                        (getlock y 2
+                        (getlock x 2
+                        (set (+ 2 (get))
+                        (releaselock x 2
+                        (releaselock y 2
+                        (get))))))))))
 
-;(traces reductions theone)
+(define aSimpleDemo '((store 0 (x 0) (y 0))
+        (threads
+                 (start
+                        (getlock x 1
+                        (getlock y 1
+                        (releaselock x 1
+                        (releaselock y 1
+                        0)))))
+                 (start
+                        (getlock x 2
+                        (getlock y 2
+                        (releaselock x 2
+                        (releaselock y 2
+                        0))))))))
+
+(define (main)
+(traces reductions theTerm)
+)
