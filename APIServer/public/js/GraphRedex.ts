@@ -993,6 +993,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
         this.shower.reset();
         this.highlighted.clear();
         this.updateHighlightList();
+        this.setupExampleSelector();
         (window as any).toggle(null);
     }
 
@@ -1075,10 +1076,10 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 })
                     .then(() => {
                         alert("removed");
+                        this.curExample = null;
+                        this.reset();
                     })
                     .catch(errorAlert);
-                this.curExample = null;
-                this.reset();
             }
         });
 
