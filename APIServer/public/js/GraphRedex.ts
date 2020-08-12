@@ -538,7 +538,10 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                 return true;
             }
         } else {
-            if (data.every((x) => typeof x === "object" && "_id" in x)) {
+            if (
+                data.length > 0 &&
+                data.every((x) => typeof x === "object" && "_id" in x)
+            ) {
                 if (
                     confirm(
                         "Returned data does not conain any edges. Make a highlight instead?",
@@ -547,7 +550,11 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     return this.highlightIfGraph(data);
                 }
             } else {
-                throw "Rendering nodes is not implemented yet";
+                if (data.length == 0) {
+                    throw "result is empty ";
+                } else {
+                    throw "Rendering nodes is not implemented yet";
+                }
             }
         }
         return false;
@@ -781,10 +788,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     this.updateLangs();
                     form.classed("closed", true);
                 })
-                .catch((e) => {
-                    console.log("ERROR", e);
-                    alert("something went wrong\n\n" + e);
-                });
+                .catch(errorAlert);
 
             return false;
         });
@@ -812,17 +816,22 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     output.textContent = "success";
                     form.classed("closed", true);
                 })
-                .catch((e) => {
+                .catch((data) => {
+                    console.error([data]);
                     submitBtn.attr("disabled", null);
-                    output.textContent = JSON.stringify(e, null, 2);
-                    if ("e" in data) {
-                        output.textContent = data.e;
+                    if (typeof data == "object") {
+                        output.textContent = JSON.stringify(data, null, 2);
+                        if ("err" in data) {
+                            output.textContent = data.err;
 
-                        if ("errors" in data) {
-                            const errEl = document.createElement("pre");
-                            errEl.textContent = data.errors;
-                            output.appendChild(errEl);
+                            if ("errors" in data) {
+                                const errEl = document.createElement("pre");
+                                errEl.textContent = data.errors;
+                                output.appendChild(errEl);
+                            }
                         }
+                    } else {
+                        output.textContent = data;
                     }
                 });
         });
@@ -874,10 +883,14 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     }
                 })
                 .catch((error) => {
-                    if (typeof error === "string" && error[0] === "<") {
-                        output.innerHTML = error;
+                    if (typeof error === "object") {
+                        output.textContent = error.err ?? JSON.stringify(error);
                     } else {
-                        output.textContent = "ERROR:" + error;
+                        if (typeof error === "string" && error[0] === "<") {
+                            output.innerHTML = error;
+                        } else {
+                            output.textContent = "ERROR:" + error;
+                        }
                     }
                 });
         });
@@ -990,7 +1003,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             if (name) {
                 this.saveQry(name, d3.select("#qry").property("value"))
                     .then(() => alert("saved"))
-                    .catch((x) => alert(x));
+                    .catch(errorAlert);
             }
             return false;
         });
@@ -1051,7 +1064,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     .then(() => {
                         alert("removed");
                     })
-                    .catch((e) => alert(e));
+                    .catch(errorAlert);
             }
             return false;
         });
@@ -1063,7 +1076,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     .then(() => {
                         alert("removed");
                     })
-                    .catch((e) => alert(e));
+                    .catch(errorAlert);
                 this.curExample = null;
                 this.reset();
             }
@@ -1182,4 +1195,17 @@ function isInputDataArray<N extends GRND, E extends GRED>(
         }
     }
     return false;
+}
+
+function errorAlert(e: any) {
+    console.error("ERROR", e);
+    if (typeof e === "object") {
+        if (e.err ?? false) {
+            alert("something went wrong\n\n" + e.err);
+        } else {
+            alert("something went wrong\n\n" + JSON.stringify(e));
+        }
+    } else {
+        alert("something went wrong\n\n" + e);
+    }
 }

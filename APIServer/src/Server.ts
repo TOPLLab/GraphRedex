@@ -172,7 +172,10 @@ export default class Server {
                     req: express.Request,
                     res: express.Response,
                 ) => {
-                    const file: MulterDiskFile = req["file"]; // tslint:disable-line
+                    const file: MulterDiskFile = req["file"] ?? null; // tslint:disable-line
+                    if (file === null) {
+                        throw "no file found";
+                    }
                     const filenameParts = file.originalname.split(".");
                     const extension: string = filenameParts.pop();
                     const fileName: string =
@@ -290,6 +293,8 @@ export default class Server {
                         .run(req.params.name, user, lang, term)
                         .then((example) => {
                             res.status(201).jsonp({
+                                ok: true,
+                                succes: true,
                                 lang: lang,
                                 term: term,
                                 output: example.baseTerm,
@@ -298,10 +303,12 @@ export default class Server {
                         })
                         .catch((e) => {
                             res.status(500).jsonp({
+                                ok: false,
+                                succes: false,
                                 lang: lang,
                                 term: term,
                                 output: null,
-                                e: "something went wrong",
+                                err: "something went wrong",
                                 errors: e.toString(),
                             });
                         });
@@ -341,6 +348,20 @@ export default class Server {
                 },
             ),
         );
+
+        this.app.use((err, _req, res, next) => {
+            if (res.headersSent) {
+                console.error(err, "headers sent!!");
+                return next(err);
+            }
+            res.status(500);
+            console.error(err, "hey");
+            if (typeof err === "string") {
+                res.jsonp({ succes: false, ok: false, err: err });
+            } else {
+                res.jsonp({ succes: false, ok: false, err: err.toString() });
+            }
+        });
     }
 
     /* Helper functions allowing async */
