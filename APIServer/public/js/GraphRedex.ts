@@ -32,7 +32,7 @@ interface GRND extends NodeData {
     _id: string;
     _key: string;
     term: Awaitable<string>;
-    _stuck: boolean;
+    _stuck?: boolean;
     _limited?: boolean;
     _expanded: boolean;
     _pict?: Awaitable<string>;
@@ -108,7 +108,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
             nodeOptions: (node) => {
                 let ret = [] as Array<ShowerOptionData>;
 
-                if (node.data._stuck === false) {
+                if ((node.data._stuck ?? false) === false) {
                     ret.push({
                         name: "Expand node",
                         size: 4,
@@ -172,7 +172,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                         "start",
                         (d) => d.data._id === this.curExample.baseTerm,
                     )
-                    .classed("stuck", (d) => d.data._stuck);
+                    .classed("stuck", (d) => d.data._stuck ?? false);
 
                 nodes.on("dblclick", (d) => {
                     d3.event.preventDefault();
@@ -288,7 +288,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
                     <hr>
                     <pre style="max-width: 100%;white-space: pre-wrap;">${renderedTerm}</pre>
                     ${
-                        nd._stuck
+                        nd._stuck ?? false
                             ? "<br>This term has no further reductions."
                             : ""
                     }
@@ -1182,8 +1182,8 @@ function isInputDataArray<N extends GRND, E extends GRED>(
                         "_id" in x &&
                         "_key" in x &&
                         "term" in x &&
-                        "_stuck" in x &&
-                        "_expanded" in x,
+                        "_expanded" in x &&
+                        ("_stuck" in x || x._expanded === false),
                 ) &&
                 edges.every(
                     (x) =>
