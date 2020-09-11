@@ -32,7 +32,7 @@ require(process.env.ENV === "DEVELOP" || process.env.GRAPHREDEX_UNSAFE === "1"
                 console.info("  systemctl start arangodb3.service");
                 break;
             default:
-                console.log(e.code || e);
+                console.log(e);
         }
         process.exit(1);
     })

@@ -126,6 +126,7 @@ export function makeEnv(...overwrites: Object[]) {
         .filter(
             (k /* Keep useful vars */) =>
                 [
+                    "PATH",
                     "ARANGO_SERVER",
                     "ARANGO_PORT",
                     "DISPLAY",

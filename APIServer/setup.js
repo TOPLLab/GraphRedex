@@ -12,7 +12,7 @@ require("./dist/SetupAndClear.js")
                 "error",
             );
         } else {
-            console.log(e.code);
+            console.log("bad",e.code);
             switch (e.code) {
                 case "ECONNREFUSED":
                     console.log("Possible reasons:");

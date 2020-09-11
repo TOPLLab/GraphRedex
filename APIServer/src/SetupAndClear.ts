@@ -166,10 +166,11 @@ async function dbCheck(e: any): Promise<void> {
                 { name: "graphredex-qry", access: "ro" },
             ];
 
-            console.log("Getting users");
+            console.log("Getting users:");
             const users: Map<string, any> = new Map(
-                (await api("/_db/_system/_api/user/")).map((u) => [u.user, u]),
+                (await api("/_db/_system/_api/user/").catch(console.error)).map((u) => [u.user, u]),
             );
+            console.log(`Users found: ${[...users.keys()].join(", ")}`);
 
             for (const { name: userName } of graphredexUsers) {
                 console.log(`Checking ${userName}`);
@@ -248,7 +249,7 @@ async function getRootDbAPIConnection(): Promise<
     return (path: string, options: any = {}) =>
         new Promise((resolve, reject) => {
             needle(
-                "get",
+                options.method ?? "get",
                 "http://localhost:8529" + path,
                 options.body,
                 {
@@ -257,20 +258,23 @@ async function getRootDbAPIConnection(): Promise<
                     },
                     json: true,
                 },
-                (_err, _res, body) => {
-                    if (!body.error) {
-                        resolve(body.result);
-                    } else {
-                        reject(body);
-                    }
-                },
-            );
+            )
+            .then(({body}) => {
+                if (!body.error) {
+                    console.log(body);
+                    resolve(body.result);
+                } else {
+                    reject(body);
+                }
+            })
+            .catch(e => reject(e));
         });
 }
 
 function getRootPass(): Promise<string> {
     return new Promise((resolve) => {
         if ("ARANGO_ROOT_PASSWORD" in process.env) {
+            console.log("Got root pass from env");
             resolve(process.env.ARANGO_ROOT_PASSWORD);
         } else {
             console.log("Type root password:");

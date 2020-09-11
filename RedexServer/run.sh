@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # Name: Create a temp racket file with the absolute path to the language definition
 # By Robbert Gurdeep Singh
 # Args
