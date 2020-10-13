@@ -137,6 +137,15 @@ GRAPHREDEX_DOCKER=1 ./run  -c
 _Note_: read [RedexServer/README.md](RedexServer/README.md) for security
 guidelines.
 
+### Set reduction limit
+
+You can set a limit on the number of reductions preformed by default by setting
+the environment variable `GRAPHREDEX_COUNT` (default: 1000).
+
+```bash
+GRAPHREDEX_COUNT=100 ./run -c
+```
+
 ### Allow the use `(require redex)`
 
 This allows you to use

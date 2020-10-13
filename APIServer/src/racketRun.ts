@@ -115,7 +115,7 @@ export default class ReductionRunner {
                 path.join(this.datadir, lang.path),
                 graph.name,
                 `${lang._key}`,
-                "1000",
+                process.env.GRAPHREDEX_COUNT ?? "1000",
             ],
             term,
         ).then(({ output, errors }) => ({
