@@ -24,8 +24,7 @@
         "raw-loader": "^4.0.1",
         "to-string-loader": "^1.1.6",
         "tslint": "^5.11.0",
-        "typescript": "^3.7.4",
-        "typings": "^2.1.1"
+        "typescript": "^3.7.4"
     },
     "name": "GraphRedexAPI",
     "version": "0.0.1",
