@@ -447,10 +447,7 @@ export default class GraphRedex<N extends GRND, E extends GRED> {
 
     private makeNodeProxy(data: { nodes: any; edges: any }): InputData<N, E> {
         return {
-            nodes: data.nodes.map((n) => {
-                if (typeof n === "string") {
-                    throw "Cannot create proxy";
-                }
+            nodes: data.nodes.map((n:{_id:string, _expanded:boolean, _stuck: boolean, _limited: boolean}) => {
                 let fullValue = null;
                 return new Proxy(n, {
                     get: (
