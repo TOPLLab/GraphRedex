@@ -11,7 +11,10 @@ module.exports = function (grunt) {
         webpack: {
             frontend: {
                 mode: "production",
-                entry: "./public/js/GraphRedex.ts",
+                entry: {
+                    GraphRedex: "./public/js/GraphRedex.ts",
+                    util: "./public/js/util.ts",
+                },
                 module: {
                     rules: [
                         {
@@ -51,7 +54,7 @@ module.exports = function (grunt) {
                 devtool: "source-map",
                 output: {
                     libraryTarget: "amd", // to amd format for loading with requirejs
-                    filename: "GraphRedex.js",
+                    filename: "[name].js",
                     path: path.resolve(__dirname, "public/dist"),
                 },
             },
