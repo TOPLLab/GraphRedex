@@ -83,7 +83,7 @@ if [ $needsBuild -eq 1 ]; then
             echo "could install depenencies, is yarn instlled?"
             exit 1
         )
-    yarn run grunt ||
+    NODE_OPTIONS=--openssl-legacy-provider yarn run grunt ||
         (
             echo "could not build the server"
             exit 1
